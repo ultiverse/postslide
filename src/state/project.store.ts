@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Project, SlideBlock } from '@/types/domain'
+import type { Project, Slide, SlideBlock } from '@/types/domain'
 
 interface ProjectState {
   project: Project
@@ -16,6 +16,7 @@ interface ProjectState {
   removeSlide: (id: string) => void
   moveSlideUp: (id: string) => void
   moveSlideDown: (id: string) => void
+  reorderSlides: (slides: Slide[]) => void
 
   // Block-level
   addBlock: (slideId: string, kind: SlideBlock['kind']) => void
@@ -97,6 +98,8 @@ export const useProject = create<ProjectState>((set) => ({
       ;[slides[idx], slides[idx + 1]] = [slides[idx + 1], slides[idx]]
       return { project: { ...s.project, slides } }
     }),
+  reorderSlides: (slides) =>
+    set((s) => ({ project: { ...s.project, slides } })),
 
   // Block-level
   addBlock: (slideId, kind) =>

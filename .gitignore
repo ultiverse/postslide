@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Vite HMR generated files
+src/**/*.js
+src/**/*.jsx
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
