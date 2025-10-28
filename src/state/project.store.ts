@@ -4,10 +4,12 @@ import type { Project, Slide, SlideBlock } from '@/types/domain'
 interface ProjectState {
   project: Project
   selectedSlideId: string | null
+  showGrid: boolean
 
   // Project-level
   setProject: (p: Project) => void
   updateProjectTitle: (title: string) => void
+  toggleGrid: () => void
 
   // Slide-level
   setSelectedSlide: (id: string | null) => void
@@ -46,11 +48,13 @@ const seed: Project = {
 export const useProject = create<ProjectState>((set) => ({
   project: seed,
   selectedSlideId: seed.slides[0]?.id || null,
+  showGrid: false,
 
   // Project-level
   setProject: (p) => set({ project: p }),
   updateProjectTitle: (title) =>
     set((s) => ({ project: { ...s.project, title } })),
+  toggleGrid: () => set((s) => ({ showGrid: !s.showGrid })),
 
   // Slide-level
   setSelectedSlide: (id) => set({ selectedSlideId: id }),

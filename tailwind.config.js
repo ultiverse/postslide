@@ -50,26 +50,5 @@ export default {
       },
     },
   },
-  plugins: [require("@tailwindcss/typography"), require("daisyui")],
-  daisyui: {
-    themes: [
-      {
-        slidepost: {
-          primary: "#4a67ff",
-          "primary-content": "#ffffff",
-          secondary: "#3a52d6",
-          accent: "#0891b2",
-          neutral: "#1f2937",
-          "base-100": "#ffffff",
-          "base-200": "#f5f5f5",
-          "base-300": "#e5e7eb",
-          info: "#06b6d4",
-          success: "#22c55e",
-          warning: "#f59e0b",
-          error: "#ef4444",
-        },
-      },
-      "light",
-    ],
-  },
+  plugins: [require("@tailwindcss/typography")],
 };

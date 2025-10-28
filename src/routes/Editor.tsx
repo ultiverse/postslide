@@ -3,6 +3,7 @@ import { useProject } from '@/state/project.store';
 import { useAutosave } from '@/hooks/useAutosave';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { SortableSlideCard } from '@/components/SortableSlideCard';
+import Canvas from '@/components/Canvas/Canvas';
 import type { SlideBlock } from '@/types/domain';
 import {
     DndContext,
@@ -118,7 +119,7 @@ export default function Editor() {
                 <div className="p-3 border-t border-neutral-200">
                     <button
                         onClick={addSlide}
-                        className="btn btn-primary btn-sm w-full cursor-pointer"
+                        className="w-full px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 active:bg-brand-700 transition-colors cursor-pointer"
                     >
                         <span className="text-lg">+</span> Add Slide
                     </button>
@@ -126,35 +127,31 @@ export default function Editor() {
             </aside>
 
             {/* Center Canvas */}
-            <main className="flex items-center justify-center p-8 bg-neutral-50">
-                <div className="w-[540px] h-[540px] bg-white shadow-soft rounded-xl2 border border-neutral-200">
-                    <div className="flex flex-col items-center justify-center text-center p-8 h-full">
-                        <h2 className="text-2xl font-bold text-neutral-900 mb-6">{project.title}</h2>
-                        {selectedSlide && selectedSlide.blocks.length > 0 && (
-                            <div className="prose prose-neutral max-w-none">
-                                {selectedSlide.blocks.map((block) => (
-                                    <div key={block.id}>
-                                        {block.kind === 'title' && 'text' in block && (
-                                            <h1 className="text-3xl font-bold text-neutral-900 mb-4">{block.text}</h1>
-                                        )}
-                                        {block.kind === 'subtitle' && 'text' in block && (
-                                            <h2 className="text-xl text-neutral-700 mb-4">{block.text}</h2>
-                                        )}
-                                        {block.kind === 'body' && 'text' in block && (
-                                            <p className="text-neutral-700 mb-4">{block.text}</p>
-                                        )}
-                                        {block.kind === 'bullets' && (
-                                            <ul className="list-disc list-inside mb-4 text-left text-neutral-700">
-                                                {block.bullets.map((bullet, i) => (
-                                                    <li key={i}>{bullet}</li>
-                                                ))}
-                                            </ul>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+            <main className="flex items-center justify-center bg-neutral-50 relative">
+                <Canvas />
+                {/* Grid Toggle */}
+                <div className="absolute top-4 right-4 bg-white rounded-lg shadow-md border border-neutral-200 px-4 py-3">
+                    <label className="flex items-center gap-3 cursor-pointer select-none">
+                        <span className="text-sm font-medium text-neutral-700">Show Grid</span>
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-checked={useProject(s => s.showGrid)}
+                            onClick={() => useProject.getState().toggleGrid()}
+                            className="relative inline-flex h-6 w-12 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
+                            style={{
+                                backgroundColor: useProject(s => s.showGrid) ? '#4a67ff' : '#d1d5db'
+                            }}
+                        >
+                            <span
+                                aria-hidden="true"
+                                className="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out"
+                                style={{
+                                    transform: useProject(s => s.showGrid) ? 'translateX(1.5rem)' : 'translateX(0)'
+                                }}
+                            />
+                        </button>
+                    </label>
                 </div>
             </main>
 
@@ -166,15 +163,15 @@ export default function Editor() {
 
                 <div className="p-4 space-y-6">
                     {/* Project Section */}
-                    <div className="form-control">
-                        <label className="label pb-1">
-                            <span className="label-text font-semibold text-neutral-800">Project Title</span>
+                    <div className="space-y-1.5">
+                        <label className="block text-sm font-semibold text-neutral-800">
+                            Project Title
                         </label>
                         <input
                             type="text"
                             value={project.title}
                             onChange={(e) => updateProjectTitle(e.target.value)}
-                            className="input input-bordered input-sm bg-white border-neutral-200 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                            className="w-full px-3 py-2 text-sm bg-white border border-neutral-200 rounded-lg focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-colors"
                             placeholder="Enter project title"
                         />
                     </div>
@@ -184,14 +181,14 @@ export default function Editor() {
                         <div className="bg-neutral-100 -mx-4 px-4 py-3 space-y-2">
                             <button
                                 onClick={() => duplicateSlide(selectedSlide.id)}
-                                className="btn btn-outline btn-sm w-full cursor-pointer hover:bg-white border-neutral-300 text-neutral-800"
+                                className="w-full px-4 py-2 text-sm font-medium text-neutral-800 bg-white border border-neutral-300 rounded-lg hover:bg-neutral-50 active:bg-neutral-100 transition-colors cursor-pointer"
                             >
                                 📋 Duplicate
                             </button>
                             <button
                                 onClick={() => removeSlide(selectedSlide.id)}
                                 disabled={project.slides.length === 1}
-                                className="btn btn-error btn-outline btn-sm w-full cursor-pointer hover:bg-error/10"
+                                className="w-full px-4 py-2 text-sm font-medium text-error bg-white border border-error rounded-lg hover:bg-error/10 active:bg-error/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 🗑️ Delete Slide
                             </button>
@@ -201,7 +198,14 @@ export default function Editor() {
                     {/* Blocks Section */}
                     {selectedSlide && (
                         <>
-                            <div className="divider">Content Blocks</div>
+                            <div className="relative py-4">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-neutral-300"></div>
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="px-2 bg-white text-neutral-600 font-medium">Content Blocks</span>
+                                </div>
+                            </div>
                             <div className="space-y-3">
                                 {selectedSlide.blocks.map((block, idx) => (
                                     <div key={block.id} className="bg-neutral-50 border border-neutral-200 rounded-lg p-3 space-y-2.5 shadow-sm hover:shadow-md transition-shadow">
@@ -209,7 +213,7 @@ export default function Editor() {
                                             <select
                                                 value={block.kind}
                                                 onChange={(e) => convertBlockKind(selectedSlide.id, block.id, e.target.value as SlideBlock['kind'])}
-                                                className="select select-bordered select-xs flex-1 bg-white border-neutral-300 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                                                className="flex-1 px-2 py-1 text-xs bg-white border border-neutral-300 rounded-md focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-colors"
                                             >
                                                 <option value="title">Title</option>
                                                 <option value="subtitle">Subtitle</option>
@@ -218,7 +222,7 @@ export default function Editor() {
                                             </select>
                                             <button
                                                 onClick={() => removeBlock(selectedSlide.id, block.id)}
-                                                className="btn btn-error btn-outline btn-xs cursor-pointer"
+                                                className="px-2 py-1 text-xs font-medium text-error bg-white border border-error rounded-md hover:bg-error/10 active:bg-error/20 transition-colors cursor-pointer"
                                             >
                                                 ✕
                                             </button>
@@ -236,7 +240,7 @@ export default function Editor() {
                                                                 newBullets[bulletIdx] = e.target.value;
                                                                 updateBullets(selectedSlide.id, block.id, newBullets);
                                                             }}
-                                                            className="input input-bordered input-xs flex-1 bg-white border-neutral-300 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                                                            className="flex-1 px-2 py-1 text-xs bg-white border border-neutral-300 rounded-md focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-colors"
                                                             placeholder="Bullet point"
                                                         />
                                                         <button
@@ -244,7 +248,7 @@ export default function Editor() {
                                                                 const newBullets = block.bullets.filter((_, i) => i !== bulletIdx);
                                                                 updateBullets(selectedSlide.id, block.id, newBullets);
                                                             }}
-                                                            className="btn btn-ghost btn-xs text-error cursor-pointer"
+                                                            className="px-2 py-1 text-xs text-error hover:bg-error/10 rounded-md transition-colors cursor-pointer"
                                                         >
                                                             ✕
                                                         </button>
@@ -252,7 +256,7 @@ export default function Editor() {
                                                 ))}
                                                 <button
                                                     onClick={() => updateBullets(selectedSlide.id, block.id, [...block.bullets, ''])}
-                                                    className="btn btn-outline btn-xs w-full cursor-pointer"
+                                                    className="w-full px-2 py-1 text-xs font-medium text-neutral-700 bg-white border border-neutral-300 rounded-md hover:bg-neutral-50 active:bg-neutral-100 transition-colors cursor-pointer"
                                                 >
                                                     + Add Bullet
                                                 </button>
@@ -262,7 +266,7 @@ export default function Editor() {
                                                 value={block.text}
                                                 onChange={(e) => updateBlock(selectedSlide.id, block.id, e.target.value)}
                                                 rows={block.kind === 'body' ? 4 : 2}
-                                                className="textarea textarea-bordered textarea-sm resize-none bg-white border-neutral-300 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                                                className="w-full px-3 py-2 text-sm bg-white border border-neutral-300 rounded-md resize-none focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-colors"
                                                 placeholder={`Enter ${block.kind}...`}
                                             />
                                         ) : null}
@@ -271,14 +275,14 @@ export default function Editor() {
                                             <button
                                                 onClick={() => moveBlockUp(selectedSlide.id, block.id)}
                                                 disabled={idx === 0}
-                                                className="btn btn-ghost btn-xs flex-1 cursor-pointer disabled:cursor-not-allowed"
+                                                className="flex-1 px-2 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-100 active:bg-neutral-200 rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 ↑
                                             </button>
                                             <button
                                                 onClick={() => moveBlockDown(selectedSlide.id, block.id)}
                                                 disabled={idx === selectedSlide.blocks.length - 1}
-                                                className="btn btn-ghost btn-xs flex-1 cursor-pointer disabled:cursor-not-allowed"
+                                                className="flex-1 px-2 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-100 active:bg-neutral-200 rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 ↓
                                             </button>
@@ -287,29 +291,29 @@ export default function Editor() {
                                 ))}
 
                                 <div className="space-y-2">
-                                    <label className="label-text font-semibold">Add Block</label>
+                                    <label className="block text-sm font-semibold text-neutral-800">Add Block</label>
                                     <div className="grid grid-cols-2 gap-2">
                                         <button
                                             onClick={() => addBlock(selectedSlide.id, 'title')}
-                                            className="btn btn-outline btn-xs cursor-pointer"
+                                            className="px-3 py-1.5 text-xs font-medium text-neutral-700 bg-white border border-neutral-300 rounded-md hover:bg-neutral-50 active:bg-neutral-100 transition-colors cursor-pointer"
                                         >
                                             + Title
                                         </button>
                                         <button
                                             onClick={() => addBlock(selectedSlide.id, 'subtitle')}
-                                            className="btn btn-outline btn-xs cursor-pointer"
+                                            className="px-3 py-1.5 text-xs font-medium text-neutral-700 bg-white border border-neutral-300 rounded-md hover:bg-neutral-50 active:bg-neutral-100 transition-colors cursor-pointer"
                                         >
                                             + Subtitle
                                         </button>
                                         <button
                                             onClick={() => addBlock(selectedSlide.id, 'body')}
-                                            className="btn btn-outline btn-xs cursor-pointer"
+                                            className="px-3 py-1.5 text-xs font-medium text-neutral-700 bg-white border border-neutral-300 rounded-md hover:bg-neutral-50 active:bg-neutral-100 transition-colors cursor-pointer"
                                         >
                                             + Body
                                         </button>
                                         <button
                                             onClick={() => addBlock(selectedSlide.id, 'bullets')}
-                                            className="btn btn-outline btn-xs cursor-pointer"
+                                            className="px-3 py-1.5 text-xs font-medium text-neutral-700 bg-white border border-neutral-300 rounded-md hover:bg-neutral-50 active:bg-neutral-100 transition-colors cursor-pointer"
                                         >
                                             + Bullets
                                         </button>

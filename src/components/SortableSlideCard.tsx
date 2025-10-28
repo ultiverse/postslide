@@ -42,13 +42,13 @@ export function SortableSlideCard({
         <div
             ref={setNodeRef}
             style={style}
-            className={`card transition-all border ${
+            className={`rounded-lg transition-all border ${
                 isSelected
                     ? 'bg-brand-500 text-white shadow-md border-brand-600'
                     : 'bg-neutral-100 hover:bg-neutral-200 border-neutral-200'
             }`}
         >
-            <div className="card-body p-2.5">
+            <div className="p-2.5">
                 <div className="flex items-center gap-2">
                     <div
                         {...attributes}
@@ -69,7 +69,7 @@ export function SortableSlideCard({
                                 onMoveUp();
                             }}
                             disabled={index === 0}
-                            className="btn btn-ghost btn-xs h-4 min-h-0 px-1 cursor-pointer disabled:cursor-not-allowed"
+                            className="h-4 px-1 text-xs hover:bg-black/10 rounded transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Move up"
                         >
                             ▲
@@ -80,13 +80,15 @@ export function SortableSlideCard({
                                 onMoveDown();
                             }}
                             disabled={index === totalSlides - 1}
-                            className="btn btn-ghost btn-xs h-4 min-h-0 px-1 cursor-pointer disabled:cursor-not-allowed"
+                            className="h-4 px-1 text-xs hover:bg-black/10 rounded transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Move down"
                         >
                             ▼
                         </button>
                     </div>
-                    <span className="badge badge-sm badge-ghost">{index + 1}</span>
+                    <span className={`px-2 py-0.5 text-xs font-medium rounded ${
+                        isSelected ? 'bg-white/20' : 'bg-neutral-200 text-neutral-700'
+                    }`}>{index + 1}</span>
                     <div
                         className="flex-1 cursor-pointer"
                         onClick={onSelect}
