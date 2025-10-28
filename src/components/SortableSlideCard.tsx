@@ -1,5 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
 import type { SlideBlock } from '@/types/domain';
 
 interface SortableSlideCardProps {
@@ -42,11 +43,12 @@ export function SortableSlideCard({
         <div
             ref={setNodeRef}
             style={style}
-            className={`rounded-lg transition-all border ${
+            className={`rounded-lg transition-all border cursor-pointer ${
                 isSelected
-                    ? 'bg-brand-500 text-white shadow-md border-brand-600'
-                    : 'bg-neutral-100 hover:bg-neutral-200 border-neutral-200'
+                    ? 'bg-brand-50 border-brand-500 shadow-sm ring-1 ring-brand-500'
+                    : 'bg-white hover:bg-neutral-50 border-neutral-200 hover:border-neutral-300'
             }`}
+            onClick={onSelect}
         >
             <div className="p-2.5">
                 <div className="flex items-center gap-2">
@@ -54,13 +56,12 @@ export function SortableSlideCard({
                         {...attributes}
                         {...listeners}
                         className={`cursor-grab active:cursor-grabbing p-1 rounded transition-colors ${
-                            isSelected ? 'hover:bg-brand-600' : 'hover:bg-neutral-300'
+                            isSelected ? 'hover:bg-brand-100 text-brand-700' : 'hover:bg-neutral-100 text-neutral-600'
                         }`}
                         title="Drag to reorder"
+                        onClick={(e) => e.stopPropagation()}
                     >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M3 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm0 4a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm0 4a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm5-8a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm0 4a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm0 4a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm5-8a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm0 4a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm0 4a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
-                        </svg>
+                        <GripVertical className="w-4 h-4" />
                     </div>
                     <div className="flex flex-col gap-0.5">
                         <button
@@ -69,10 +70,12 @@ export function SortableSlideCard({
                                 onMoveUp();
                             }}
                             disabled={index === 0}
-                            className="h-4 px-1 text-xs hover:bg-black/10 rounded transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={`h-4 px-0.5 rounded transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center ${
+                                isSelected ? 'hover:bg-brand-100 text-brand-700' : 'hover:bg-neutral-100 text-neutral-600'
+                            }`}
                             title="Move up"
                         >
-                            ▲
+                            <ChevronUp className="h-3 w-3" />
                         </button>
                         <button
                             onClick={(e) => {
@@ -80,29 +83,22 @@ export function SortableSlideCard({
                                 onMoveDown();
                             }}
                             disabled={index === totalSlides - 1}
-                            className="h-4 px-1 text-xs hover:bg-black/10 rounded transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={`h-4 px-0.5 rounded transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center ${
+                                isSelected ? 'hover:bg-brand-100 text-brand-700' : 'hover:bg-neutral-100 text-neutral-600'
+                            }`}
                             title="Move down"
                         >
-                            ▼
+                            <ChevronDown className="h-3 w-3" />
                         </button>
                     </div>
                     <span className={`px-2 py-0.5 text-xs font-medium rounded ${
-                        isSelected ? 'bg-white/20' : 'bg-neutral-200 text-neutral-700'
+                        isSelected ? 'bg-brand-500 text-white' : 'bg-neutral-200 text-neutral-700'
                     }`}>{index + 1}</span>
-                    <div
-                        className="flex-1 cursor-pointer"
-                        onClick={onSelect}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                onSelect();
-                            }
-                        }}
-                    >
-                        <p className="text-sm line-clamp-2">
-                            {slideTitle}
+                    <div className="flex-1 min-w-0">
+                        <p className={`text-sm line-clamp-2 ${
+                            isSelected ? 'text-brand-900 font-medium' : 'text-neutral-700'
+                        } ${!slideTitle || slideTitle.trim() === '' ? 'text-neutral-400 italic' : ''}`}>
+                            {slideTitle || 'Untitled slide'}
                         </p>
                     </div>
                 </div>
