@@ -4,6 +4,7 @@ import type { ArtboardSpec, TextStyle, Theme } from '@/lib/types/design';
 import { contentRect, isOverflow } from '@/lib/layout/grid';
 import { createMeasurer } from '@/lib/layout/measure';
 import { layoutBullets } from '@/lib/layout/bullets';
+import GridOverlay from "@/components/canvas/GridOverlay";
 
 type Props = {
   slide: Slide | null;
@@ -90,34 +91,21 @@ export function CanvasRenderer({ slide, spec, theme, fontsReady, showGrid }: Pro
 
   return (
     <div className="relative shadow-xl rounded-2xl overflow-hidden" style={artboardStyle}>
-      {/* Baseline grid (dev only) */}
-      {showGrid && (
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent ${spec.baseline - 1}px, rgba(59, 130, 246, 0.1) ${spec.baseline - 1}px, rgba(59, 130, 246, 0.1) ${spec.baseline}px)`,
-          }}
-        />
-      )}
-
-      {/* Safe area indicator (dev only) */}
-      {showGrid && (
-        <div
-          className="absolute pointer-events-none border-2 border-dashed border-blue-400/30"
-          style={{
-            left: spec.safeInset,
-            top: spec.safeInset,
-            width: spec.width - 2 * spec.safeInset,
-            height: spec.height - 2 * spec.safeInset,
-          }}
-        />
-      )}
+      <GridOverlay
+        spec={spec}
+        show={!!showGrid}
+        showBaseline
+        showSafeArea
+        // Optional columns example:
+        // columns={{ count: 4, gap: 24, color: "rgb(37,99,235)", alpha: 0.08 }}
+        baseline={{ majorEvery: 4 }}
+      />
 
       {/* Loading skeleton */}
       {!fontsReady && (
         <div className="absolute inset-0 flex items-center justify-center bg-neutral-100">
           <div className="w-full h-full animate-pulse bg-gradient-to-r from-neutral-200 via-neutral-100 to-neutral-200 bg-[length:200%_100%]"
-               style={{ animation: 'shimmer 1.5s infinite' }} />
+            style={{ animation: 'shimmer 1.5s infinite' }} />
         </div>
       )}
 
@@ -134,7 +122,7 @@ export function CanvasRenderer({ slide, spec, theme, fontsReady, showGrid }: Pro
 }
 
 // Text block component
-function TextBlock({ renderBlock }: { renderBlock: any }) {
+function TextBlock({ renderBlock }: { renderBlock: any; }) {
   const { block, style, layout, frame, overflow } = renderBlock;
 
   return (
@@ -176,7 +164,7 @@ function TextBlock({ renderBlock }: { renderBlock: any }) {
 }
 
 // Bullet block component
-function BulletBlock({ renderBlock }: { renderBlock: any }) {
+function BulletBlock({ renderBlock }: { renderBlock: any; }) {
   const { block, style, layout, frame, overflow } = renderBlock;
 
   return (

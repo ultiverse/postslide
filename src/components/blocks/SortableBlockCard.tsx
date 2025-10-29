@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { BlockCard } from './ui/BlockCard';
+import { BlockCard } from '@/components/blocks/BlockCard';
 
 interface SortableBlockCardProps {
   id: string;

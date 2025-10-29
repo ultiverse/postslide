@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { useProject } from '@/state/project.store';
 import { useAutosave } from '@/hooks/useAutosave';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { SortableSlideCard } from '@/components/SortableSlideCard';
-import Canvas from '@/components/Canvas/Canvas';
+import { SortableSlideCard } from '@/components/slides/SortableSlideCard';
+import Canvas from '@/components/canvas';
 import { IconButton } from '@/components/ui/IconButton';
-import { SortableBlockCard } from '@/components/SortableBlockCard';
+import { SortableBlockCard } from '@/components/blocks/SortableBlockCard';
 import type { SlideBlock } from '@/types/domain';
 import {
     DndContext,
