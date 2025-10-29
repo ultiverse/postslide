@@ -27,7 +27,8 @@ interface ProjectState {
   removeBlock: (slideId: string, blockId: string) => void
   moveBlockUp: (slideId: string, blockId: string) => void
   moveBlockDown: (slideId: string, blockId: string) => void
-  convertBlockKind: (slideId: string, blockId: string, newKind: SlideBlock['kind']) => void
+  convertBlockKind: (slideId: string, blockId: string, newKind: SlideBlock['kind']) => void,
+  reorderBlocks: (slideId: string, blocks: SlideBlock[]) => void
 }
 
 const seed: Project = {
@@ -224,4 +225,24 @@ export const useProject = create<ProjectState>((set) => ({
         }),
       },
     })),
+    reorderBlocks: (slideId, blocks) =>
+      set((s) => {
+        // Optional safety checks to avoid corrupting state
+        const target = s.project.slides.find((sl) => sl.id === slideId);
+        if (!target) return s;
+
+        const existingIds = new Set(target.blocks.map((b) => b.id));
+        const sameLength = blocks.length === target.blocks.length;
+        const onlyExisting = blocks.every((b) => existingIds.has(b.id));
+        if (!sameLength || !onlyExisting) return s;
+
+        return {
+          project: {
+            ...s.project,
+            slides: s.project.slides.map((sl) =>
+              sl.id === slideId ? { ...sl, blocks: [...blocks] } : sl,
+            ),
+          },
+        };
+      }),
 }))

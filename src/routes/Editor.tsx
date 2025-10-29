@@ -5,6 +5,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { SortableSlideCard } from '@/components/SortableSlideCard';
 import Canvas from '@/components/Canvas/Canvas';
 import { IconButton } from '@/components/ui/IconButton';
+import { SortableBlockCard } from '@/components/SortableBlockCard';
 import type { SlideBlock } from '@/types/domain';
 import {
     DndContext,
@@ -13,7 +14,7 @@ import {
     PointerSensor,
     useSensor,
     useSensors,
-    DragEndEvent,
+    type DragEndEvent,
 } from '@dnd-kit/core';
 import {
     arrayMove,
@@ -21,14 +22,7 @@ import {
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import {
-    Plus,
-    Copy,
-    Trash2,
-    X,
-    ChevronUp,
-    ChevronDown,
-} from 'lucide-react';
+import { Plus, Copy, Trash2, X } from 'lucide-react';
 
 const MIN_WIDTH = 1024;
 
@@ -53,6 +47,8 @@ export default function Editor() {
     const moveBlockUp = useProject((s) => s.moveBlockUp);
     const moveBlockDown = useProject((s) => s.moveBlockDown);
     const convertBlockKind = useProject((s) => s.convertBlockKind);
+    const reorderBlocks = useProject((s) => s.reorderBlocks);
+    const showGrid = useProject((s) => s.showGrid);
 
     const selectedSlide = project.slides.find((s) => s.id === selectedSlideId);
 
@@ -61,21 +57,37 @@ export default function Editor() {
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
-        })
+        }),
     );
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
+        if (!over || active.id === over.id) return;
 
-        if (over && active.id !== over.id) {
-            const oldIndex = project.slides.findIndex((s) => s.id === active.id);
-            const newIndex = project.slides.findIndex((s) => s.id === over.id);
-            const newSlides = arrayMove(project.slides, oldIndex, newIndex);
-            reorderSlides(newSlides);
-        }
+        const oldIndex = project.slides.findIndex((s) => s.id === active.id);
+        const newIndex = project.slides.findIndex((s) => s.id === over.id);
+        if (oldIndex < 0 || newIndex < 0) return;
+
+        const newSlides = arrayMove(project.slides, oldIndex, newIndex);
+        reorderSlides(newSlides);
     };
 
-    const [w, setW] = useState<number>(window.innerWidth);
+    const handleBlockDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!selectedSlide || !over || active.id === over.id) return;
+
+        const oldIndex = selectedSlide.blocks.findIndex((b) => b.id === active.id);
+        const newIndex = selectedSlide.blocks.findIndex((b) => b.id === over.id);
+        if (oldIndex < 0 || newIndex < 0) return;
+
+        const newBlocks = arrayMove(selectedSlide.blocks, oldIndex, newIndex);
+        reorderBlocks(selectedSlide.id, newBlocks);
+    };
+
+    // SSR-safe initial width
+    const [w, setW] = useState<number>(() =>
+        typeof window !== 'undefined' ? window.innerWidth : MIN_WIDTH,
+    );
     useEffect(() => {
         const onResize = () => setW(window.innerWidth);
         window.addEventListener('resize', onResize);
@@ -86,30 +98,30 @@ export default function Editor() {
         return (
             <div className="h-dvh grid place-items-center p-6 text-center">
                 <div>
-                    <h2 className="text-xl font-semibold mb-2">Desktop required</h2>
-                    <p>Please use a screen at least {MIN_WIDTH}px wide to edit. You can still preview on mobile.</p>
+                    <h2 className="mb-2 text-xl font-semibold">Desktop required</h2>
+                    <p>
+                        Please use a screen at least {MIN_WIDTH}px wide to edit. You can still
+                        preview on mobile.
+                    </p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="grid grid-cols-[280px_minmax(0,1fr)_320px] h-dvh bg-neutral-50">
+        <div className="grid h-dvh grid-cols-[280px_minmax(0,1fr)_320px] bg-gradient-to-br from-brand-50 via-white to-accent-400/5">
             {/* Left Sidebar - Slides List */}
-            <aside className="bg-white border-r border-neutral-200 flex flex-col">
-                <div className="p-4 border-b border-neutral-200">
-                    <h2 className="text-lg font-bold text-neutral-900">Slides</h2>
+            <aside className="flex flex-col border-r border-brand-200/50 bg-white/80 shadow-sm backdrop-blur-sm">
+                <div className="border-b border-brand-200/50 bg-gradient-to-r from-brand-500 to-accent-500 p-4">
+                    <h2 className="text-lg font-bold text-white">Slides</h2>
                 </div>
-                <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                >
+
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext
                         items={project.slides.map((s) => s.id)}
                         strategy={verticalListSortingStrategy}
                     >
-                        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                        <div className="flex-1 space-y-2 overflow-y-auto p-3">
                             {project.slides.map((s, idx) => (
                                 <SortableSlideCard
                                     key={s.id}
@@ -125,10 +137,11 @@ export default function Editor() {
                         </div>
                     </SortableContext>
                 </DndContext>
-                <div className="p-3 border-t border-neutral-200">
+
+                <div className="border-t border-brand-200/50 bg-gradient-to-r from-brand-50/50 to-accent-50/30 p-3">
                     <button
                         onClick={addSlide}
-                        className="w-full px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 active:bg-brand-700 transition-colors cursor-pointer flex items-center justify-center gap-2"
+                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-brand-500 to-accent-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:from-brand-600 hover:to-accent-600 hover:shadow-md active:from-brand-700 active:to-accent-700"
                     >
                         <Plus className="h-4 w-4" />
                         Add Slide
@@ -137,28 +150,25 @@ export default function Editor() {
             </aside>
 
             {/* Center Canvas */}
-            <main className="flex items-center justify-center bg-neutral-50 relative">
+            <main className="relative flex items-center justify-center">
                 <Canvas />
+
                 {/* Grid Toggle */}
-                <div className="absolute top-4 right-4 bg-white rounded-lg shadow-md border border-neutral-200 px-4 py-3">
-                    <label className="flex items-center gap-3 cursor-pointer select-none">
+                <div className="absolute right-4 top-4 rounded-lg border border-neutral-200 bg-white px-4 py-3 shadow-md">
+                    <label className="flex select-none items-center gap-3 cursor-pointer">
                         <span className="text-sm font-medium text-neutral-700">Show Grid</span>
                         <button
                             type="button"
                             role="switch"
-                            aria-checked={useProject(s => s.showGrid)}
+                            aria-checked={showGrid}
                             onClick={() => useProject.getState().toggleGrid()}
                             className="relative inline-flex h-6 w-12 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
-                            style={{
-                                backgroundColor: useProject(s => s.showGrid) ? '#4a67ff' : '#d1d5db'
-                            }}
+                            style={{ backgroundColor: showGrid ? '#4a67ff' : '#d1d5db' }}
                         >
                             <span
                                 aria-hidden="true"
                                 className="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out"
-                                style={{
-                                    transform: useProject(s => s.showGrid) ? 'translateX(1.5rem)' : 'translateX(0)'
-                                }}
+                                style={{ transform: showGrid ? 'translateX(1.5rem)' : 'translateX(0)' }}
                             />
                         </button>
                     </label>
@@ -166,32 +176,30 @@ export default function Editor() {
             </main>
 
             {/* Right Sidebar - Inspector */}
-            <aside className="bg-white border-l border-neutral-200 flex flex-col overflow-y-auto">
-                <div className="p-4 border-b border-neutral-200">
-                    <h2 className="text-lg font-bold text-neutral-900">Inspector</h2>
+            <aside className="flex flex-col overflow-y-auto border-l border-brand-200/50 bg-white/80 shadow-sm backdrop-blur-sm">
+                <div className="border-b border-brand-200/50 bg-gradient-to-r from-accent-500 to-brand-500 p-4">
+                    <h2 className="text-lg font-bold text-white">Inspector</h2>
                 </div>
 
-                <div className="p-4 space-y-6">
+                <div className="space-y-6 p-4">
                     {/* Project Section */}
                     <div className="space-y-1.5">
-                        <label className="block text-sm font-semibold text-neutral-800">
-                            Project Title
-                        </label>
+                        <label className="block text-sm font-semibold text-neutral-800">Project Title</label>
                         <input
                             type="text"
                             value={project.title}
                             onChange={(e) => updateProjectTitle(e.target.value)}
-                            className="w-full px-3 py-2 text-sm bg-white border border-neutral-200 rounded-lg focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-colors"
+                            className="w-full rounded-lg border border-brand-200 bg-white px-3 py-2 text-sm transition-colors focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-500/20"
                             placeholder="Enter project title"
                         />
                     </div>
 
                     {/* Slide Controls */}
                     {selectedSlide && (
-                        <div className="bg-neutral-100 -mx-4 px-4 py-3 space-y-2">
+                        <div className="-mx-4 space-y-2 border-y border-brand-200/30 bg-gradient-to-r from-brand-50/50 to-accent-50/30 px-4 py-3">
                             <button
                                 onClick={() => duplicateSlide(selectedSlide.id)}
-                                className="w-full px-4 py-2 text-sm font-medium text-neutral-800 bg-white border border-neutral-300 rounded-lg hover:bg-neutral-50 active:bg-neutral-100 transition-colors cursor-pointer flex items-center justify-center gap-2"
+                                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-brand-300 bg-white px-4 py-2 text-sm font-medium text-brand-700 shadow-sm transition-all hover:bg-brand-50 hover:shadow active:bg-brand-100"
                             >
                                 <Copy className="h-4 w-4" />
                                 Duplicate
@@ -199,7 +207,7 @@ export default function Editor() {
                             <button
                                 onClick={() => removeSlide(selectedSlide.id)}
                                 disabled={project.slides.length === 1}
-                                className="w-full px-4 py-2 text-sm font-medium text-error bg-white border border-error rounded-lg hover:bg-error/10 active:bg-error/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-error bg-white px-4 py-2 text-sm font-medium text-error shadow-sm transition-all hover:bg-error/10 hover:shadow active:bg-error/20 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 <Trash2 className="h-4 w-4" />
                                 Delete Slide
@@ -212,136 +220,149 @@ export default function Editor() {
                         <>
                             <div className="relative py-4">
                                 <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-neutral-300"></div>
+                                    <div className="w-full border-t border-neutral-300" />
                                 </div>
                                 <div className="relative flex justify-center text-sm">
-                                    <span className="px-2 bg-white text-neutral-600 font-medium">Content Blocks</span>
+                                    <span className="bg-white px-2 font-medium text-neutral-600">
+                                        Content Blocks
+                                    </span>
                                 </div>
                             </div>
-                            <div className="space-y-3">
-                                {selectedSlide.blocks.map((block, idx) => (
-                                    <div key={block.id} className="bg-neutral-50 border border-neutral-200 rounded-lg p-3 space-y-2.5 shadow-sm hover:shadow-md transition-shadow">
-                                        <div className="flex items-center gap-2">
-                                            <select
-                                                value={block.kind}
-                                                onChange={(e) => convertBlockKind(selectedSlide.id, block.id, e.target.value as SlideBlock['kind'])}
-                                                className="flex-1 px-2 py-1 text-xs bg-white border border-neutral-300 rounded-md focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-colors"
-                                            >
-                                                <option value="title">Title</option>
-                                                <option value="subtitle">Subtitle</option>
-                                                <option value="body">Body</option>
-                                                <option value="bullets">Bullets</option>
-                                            </select>
-                                            <IconButton
-                                                icon={X}
-                                                onClick={() => removeBlock(selectedSlide.id, block.id)}
-                                                variant="destructive"
-                                                size="xs"
-                                                title="Remove block"
-                                            />
-                                        </div>
 
-                                        {block.kind === 'bullets' ? (
-                                            <div className="space-y-1">
-                                                {block.bullets.map((bullet, bulletIdx) => (
-                                                    <div key={bulletIdx} className="flex gap-1">
-                                                        <input
-                                                            type="text"
-                                                            value={bullet}
-                                                            onChange={(e) => {
-                                                                const newBullets = [...block.bullets];
-                                                                newBullets[bulletIdx] = e.target.value;
-                                                                updateBullets(selectedSlide.id, block.id, newBullets);
-                                                            }}
-                                                            className="flex-1 px-2 py-1 text-xs bg-white border border-neutral-300 rounded-md focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-colors"
-                                                            placeholder="Bullet point"
+                            <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCenter}
+                                onDragEnd={handleBlockDragEnd}
+                            >
+                                <SortableContext
+                                    items={selectedSlide.blocks.map((b) => b.id)}
+                                    strategy={verticalListSortingStrategy}
+                                >
+                                    <div className="space-y-3">
+                                        {selectedSlide.blocks.map((block, idx) => (
+                                            <SortableBlockCard
+                                                id={block.id}
+                                                key={block.id}
+                                                onMoveUp={() => moveBlockUp(selectedSlide.id, block.id)}
+                                                onMoveDown={() => moveBlockDown(selectedSlide.id, block.id)}
+                                                onRemove={() => removeBlock(selectedSlide.id, block.id)}
+                                                canMoveUp={idx > 0}
+                                                canMoveDown={idx < selectedSlide.blocks.length - 1}
+                                            >
+                                                <div className="space-y-2.5">
+                                                    <select
+                                                        value={block.kind}
+                                                        onChange={(e) =>
+                                                            convertBlockKind(
+                                                                selectedSlide.id,
+                                                                block.id,
+                                                                e.target.value as SlideBlock['kind'],
+                                                            )
+                                                        }
+                                                        className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                                                    >
+                                                        <option value="title">Title</option>
+                                                        <option value="subtitle">Subtitle</option>
+                                                        <option value="body">Body</option>
+                                                        <option value="bullets">Bullets</option>
+                                                    </select>
+
+                                                    {block.kind === 'bullets' ? (
+                                                        <div className="space-y-1">
+                                                            {block.bullets.map((bullet, bulletIdx) => (
+                                                                <div key={bulletIdx} className="flex gap-1">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={bullet}
+                                                                        onChange={(e) => {
+                                                                            const newBullets = [...block.bullets];
+                                                                            newBullets[bulletIdx] = e.target.value;
+                                                                            updateBullets(selectedSlide.id, block.id, newBullets);
+                                                                        }}
+                                                                        className="flex-1 rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                                                                        placeholder="Bullet point"
+                                                                    />
+                                                                    <IconButton
+                                                                        icon={X}
+                                                                        onClick={() => {
+                                                                            const newBullets = block.bullets.filter(
+                                                                                (_, i) => i !== bulletIdx,
+                                                                            );
+                                                                            updateBullets(selectedSlide.id, block.id, newBullets);
+                                                                        }}
+                                                                        variant="ghost"
+                                                                        size="xs"
+                                                                        title="Remove bullet"
+                                                                        className="text-error hover:bg-error/10"
+                                                                    />
+                                                                </div>
+                                                            ))}
+
+                                                            <button
+                                                                onClick={() =>
+                                                                    updateBullets(selectedSlide.id, block.id, [
+                                                                        ...block.bullets,
+                                                                        '',
+                                                                    ])
+                                                                }
+                                                                className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
+                                                            >
+                                                                <Plus className="h-3 w-3" />
+                                                                Add Bullet
+                                                            </button>
+                                                        </div>
+                                                    ) : 'text' in block ? (
+                                                        <textarea
+                                                            value={block.text}
+                                                            onChange={(e) =>
+                                                                updateBlock(selectedSlide.id, block.id, e.target.value)
+                                                            }
+                                                            rows={block.kind === 'body' ? 4 : 2}
+                                                            className="w-full resize-none rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                                                            placeholder={`Enter ${block.kind}...`}
                                                         />
-                                                        <IconButton
-                                                            icon={X}
-                                                            onClick={() => {
-                                                                const newBullets = block.bullets.filter((_, i) => i !== bulletIdx);
-                                                                updateBullets(selectedSlide.id, block.id, newBullets);
-                                                            }}
-                                                            variant="ghost"
-                                                            size="xs"
-                                                            title="Remove bullet"
-                                                            className="text-error hover:bg-error/10"
-                                                        />
-                                                    </div>
-                                                ))}
-                                                <button
-                                                    onClick={() => updateBullets(selectedSlide.id, block.id, [...block.bullets, ''])}
-                                                    className="w-full px-2 py-1 text-xs font-medium text-neutral-700 bg-white border border-neutral-300 rounded-md hover:bg-neutral-50 active:bg-neutral-100 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-                                                >
-                                                    <Plus className="h-3 w-3" />
-                                                    Add Bullet
-                                                </button>
-                                            </div>
-                                        ) : 'text' in block ? (
-                                            <textarea
-                                                value={block.text}
-                                                onChange={(e) => updateBlock(selectedSlide.id, block.id, e.target.value)}
-                                                rows={block.kind === 'body' ? 4 : 2}
-                                                className="w-full px-3 py-2 text-sm bg-white border border-neutral-300 rounded-md resize-none focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-colors"
-                                                placeholder={`Enter ${block.kind}...`}
-                                            />
-                                        ) : null}
-
-                                        <div className="flex gap-1">
-                                            <button
-                                                onClick={() => moveBlockUp(selectedSlide.id, block.id)}
-                                                disabled={idx === 0}
-                                                className="flex-1 px-2 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-100 active:bg-neutral-200 rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
-                                                title="Move up"
-                                            >
-                                                <ChevronUp className="h-3 w-3" />
-                                                Up
-                                            </button>
-                                            <button
-                                                onClick={() => moveBlockDown(selectedSlide.id, block.id)}
-                                                disabled={idx === selectedSlide.blocks.length - 1}
-                                                className="flex-1 px-2 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-100 active:bg-neutral-200 rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
-                                                title="Move down"
-                                            >
-                                                <ChevronDown className="h-3 w-3" />
-                                                Down
-                                            </button>
-                                        </div>
+                                                    ) : null}
+                                                </div>
+                                            </SortableBlockCard>
+                                        ))}
                                     </div>
-                                ))}
+                                </SortableContext>
+                            </DndContext>
 
-                                <div className="space-y-2">
-                                    <label className="block text-sm font-semibold text-neutral-800">Add Block</label>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <button
-                                            onClick={() => addBlock(selectedSlide.id, 'title')}
-                                            className="px-3 py-1.5 text-xs font-medium text-neutral-700 bg-white border border-neutral-300 rounded-md hover:bg-neutral-50 active:bg-neutral-100 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-                                        >
-                                            <Plus className="h-3 w-3" />
-                                            Title
-                                        </button>
-                                        <button
-                                            onClick={() => addBlock(selectedSlide.id, 'subtitle')}
-                                            className="px-3 py-1.5 text-xs font-medium text-neutral-700 bg-white border border-neutral-300 rounded-md hover:bg-neutral-50 active:bg-neutral-100 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-                                        >
-                                            <Plus className="h-3 w-3" />
-                                            Subtitle
-                                        </button>
-                                        <button
-                                            onClick={() => addBlock(selectedSlide.id, 'body')}
-                                            className="px-3 py-1.5 text-xs font-medium text-neutral-700 bg-white border border-neutral-300 rounded-md hover:bg-neutral-50 active:bg-neutral-100 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-                                        >
-                                            <Plus className="h-3 w-3" />
-                                            Body
-                                        </button>
-                                        <button
-                                            onClick={() => addBlock(selectedSlide.id, 'bullets')}
-                                            className="px-3 py-1.5 text-xs font-medium text-neutral-700 bg-white border border-neutral-300 rounded-md hover:bg-neutral-50 active:bg-neutral-100 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-                                        >
-                                            <Plus className="h-3 w-3" />
-                                            Bullets
-                                        </button>
-                                    </div>
+                            {/* Add Block */}
+                            <div className="space-y-2">
+                                <label className="block text-sm font-semibold text-neutral-800">
+                                    Add Block
+                                </label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        onClick={() => addBlock(selectedSlide.id, 'title')}
+                                        className="flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
+                                    >
+                                        <Plus className="h-3 w-3" />
+                                        Title
+                                    </button>
+                                    <button
+                                        onClick={() => addBlock(selectedSlide.id, 'subtitle')}
+                                        className="flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
+                                    >
+                                        <Plus className="h-3 w-3" />
+                                        Subtitle
+                                    </button>
+                                    <button
+                                        onClick={() => addBlock(selectedSlide.id, 'body')}
+                                        className="flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
+                                    >
+                                        <Plus className="h-3 w-3" />
+                                        Body
+                                    </button>
+                                    <button
+                                        onClick={() => addBlock(selectedSlide.id, 'bullets')}
+                                        className="flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
+                                    >
+                                        <Plus className="h-3 w-3" />
+                                        Bullets
+                                    </button>
                                 </div>
                             </div>
                         </>
