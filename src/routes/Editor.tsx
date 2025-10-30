@@ -4,7 +4,7 @@ import { useAutosave } from '@/hooks/useAutosave';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { SortableSlideCard } from '@/components/slides/SortableSlideCard';
 import Canvas from '@/components/canvas';
-import { IconButton } from '@/components/ui/IconButton';
+import { IconButton, Toggle } from '@/components/ui';
 import { SortableBlockCard } from '@/components/blocks/SortableBlockCard';
 import type { SlideBlock } from '@/types/domain';
 import {
@@ -155,23 +155,11 @@ export default function Editor() {
 
                 {/* Grid Toggle */}
                 <div className="absolute right-4 top-4 rounded-lg border border-neutral-200 bg-white px-4 py-3 shadow-md">
-                    <label className="flex select-none items-center gap-3 cursor-pointer">
-                        <span className="text-sm font-medium text-neutral-700">Show Grid</span>
-                        <button
-                            type="button"
-                            role="switch"
-                            aria-checked={showGrid}
-                            onClick={() => useProject.getState().toggleGrid()}
-                            className="relative inline-flex h-6 w-12 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
-                            style={{ backgroundColor: showGrid ? '#4a67ff' : '#d1d5db' }}
-                        >
-                            <span
-                                aria-hidden="true"
-                                className="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out"
-                                style={{ transform: showGrid ? 'translateX(1.5rem)' : 'translateX(0)' }}
-                            />
-                        </button>
-                    </label>
+                    <Toggle
+                        label="Show Grid"
+                        checked={showGrid}
+                        onCheckedChange={useProject.getState().toggleGrid}
+                    />
                 </div>
             </main>
 
