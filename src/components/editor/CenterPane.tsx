@@ -1,6 +1,6 @@
 import { useProject } from '@/state/project.store';
 import Canvas from '@/components/canvas';
-import { IconButton, Toggle } from '@/components/ui';
+import { IconButton } from '@/components/ui';
 import { Copy, Trash2, Grid3x3 } from 'lucide-react';
 
 export function CenterPane() {
@@ -14,11 +14,15 @@ export function CenterPane() {
     const selectedSlide = project.slides.find((s) => s.id === selectedSlideId);
 
     return (
-        <main className="relative flex items-center justify-center">
-            <Canvas />
+        <main className="relative">
+            <div className="fixed inset-0 left-[280px] right-[320px] flex justify-center pt-8 overflow-y-auto">
+                <div className="flex-shrink-0">
+                    <Canvas />
+                </div>
+            </div>
 
             {/* Toolbar */}
-            <div className="absolute right-4 top-4 flex items-center gap-2 rounded-lg border border-neutral-200 bg-white p-2 shadow-md">
+            <div className="fixed right-[calc(320px+1rem)] top-4 flex items-center gap-2 rounded-lg border border-neutral-200 bg-white p-2 shadow-md z-10">
                 {/* Slide Controls */}
                 {selectedSlide && (
                     <>
