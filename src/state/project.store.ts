@@ -49,7 +49,7 @@ const seed: Project = {
 export const useProject = create<ProjectState>((set) => ({
   project: seed,
   selectedSlideId: seed.slides[0]?.id || null,
-  showGrid: false,
+  showGrid: true,
 
   // Project-level
   setProject: (p) => set({ project: p }),
