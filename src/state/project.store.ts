@@ -61,7 +61,13 @@ export const useProject = create<ProjectState>((set) => ({
   setSelectedSlide: (id) => set({ selectedSlideId: id }),
   addSlide: () =>
     set((s) => {
-      const newSlide = { id: crypto.randomUUID(), templateId: 'minimal-pro', blocks: [] }
+      const newSlide = {
+        id: crypto.randomUUID(),
+        templateId: 'minimal-pro',
+        blocks: [
+          { id: crypto.randomUUID(), kind: 'title' as const, text: '' }
+        ]
+      }
       return {
         project: { ...s.project, slides: [...s.project.slides, newSlide] },
         selectedSlideId: newSlide.id,

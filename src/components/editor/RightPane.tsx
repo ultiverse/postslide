@@ -178,25 +178,25 @@ export function RightPane() {
                                                 onRemove={() => removeBlock(selectedSlide.id, block.id)}
                                                 canMoveUp={idx > 0}
                                                 canMoveDown={idx < selectedSlide.blocks.length - 1}
+                                                headerContent={
+                                                    <select
+                                                        value={block.kind}
+                                                        onChange={(e) =>
+                                                            convertBlockKind(
+                                                                selectedSlide.id,
+                                                                block.id,
+                                                                e.target.value as SlideBlock['kind'],
+                                                            )
+                                                        }
+                                                        className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                                                    >
+                                                        <option value="title">Title</option>
+                                                        <option value="subtitle">Subtitle</option>
+                                                        <option value="body">Body</option>
+                                                        <option value="bullets">Bullets</option>
+                                                    </select>
+                                                }
                                             >
-                                            <div className="space-y-2.5">
-                                                <select
-                                                    value={block.kind}
-                                                    onChange={(e) =>
-                                                        convertBlockKind(
-                                                            selectedSlide.id,
-                                                            block.id,
-                                                            e.target.value as SlideBlock['kind'],
-                                                        )
-                                                    }
-                                                    className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                                                >
-                                                    <option value="title">Title</option>
-                                                    <option value="subtitle">Subtitle</option>
-                                                    <option value="body">Body</option>
-                                                    <option value="bullets">Bullets</option>
-                                                </select>
-
                                                 {block.kind === 'bullets' ? (
                                                     <div className="space-y-1">
                                                         {block.bullets.map((bullet, bulletIdx) => (
@@ -252,8 +252,7 @@ export function RightPane() {
                                                         placeholder={`Enter ${block.kind}...`}
                                                     />
                                                 ) : null}
-                                            </div>
-                                        </SortableBlockCard>
+                                            </SortableBlockCard>
                                         </div>
                                     ))}
                                 </div>

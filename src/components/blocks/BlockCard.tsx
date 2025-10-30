@@ -12,6 +12,7 @@ interface BlockCardProps {
   canMoveUp?: boolean;
   canMoveDown?: boolean;
   dragHandleProps?: React.ButtonHTMLAttributes<HTMLButtonElement>;
+  headerContent?: React.ReactNode;
 }
 
 const BlockCard = React.forwardRef<HTMLDivElement, BlockCardProps>(
@@ -25,6 +26,7 @@ const BlockCard = React.forwardRef<HTMLDivElement, BlockCardProps>(
       canMoveUp = true,
       canMoveDown = true,
       dragHandleProps,
+      headerContent,
       ...props
     },
     ref
@@ -55,8 +57,11 @@ const BlockCard = React.forwardRef<HTMLDivElement, BlockCardProps>(
             <GripVertical className="w-4 h-4" />
           </button>
 
-          {/* Spacer */}
-          <div className="flex-1" />
+          {/* Header content (e.g., select dropdown) */}
+          {headerContent && <div className="flex-1 min-w-0">{headerContent}</div>}
+
+          {/* Spacer (only if no header content) */}
+          {!headerContent && <div className="flex-1" />}
 
           {/* Control buttons */}
           <div className="flex items-center gap-1">

@@ -62,18 +62,20 @@ export default function Canvas() {
       const containerWidth = container.clientWidth;
       const containerHeight = container.clientHeight;
 
-      // Account for padding and toolbar
-      // Toolbar is ~56px (40px height + 16px margin), plus top padding (32px)
-      const toolbarHeight = 88;
-      const availableWidth = containerWidth - 64; // 32px padding on each side
-      const availableHeight = containerHeight - toolbarHeight - 32; // toolbar + bottom padding
+      // Account for padding - just breathing room for top/bottom
+      // Top padding (32px from pt-8) + small bottom margin
+      const verticalPadding = 48;
+      const horizontalPadding = 32; // 16px on each side
 
-      // Calculate scale to fit within available space (use 90% for safe margins)
-      const scaleX = (availableWidth / spec.width) * 0.9;
-      const scaleY = (availableHeight / spec.height) * 0.9;
+      const availableWidth = containerWidth - horizontalPadding;
+      const availableHeight = containerHeight - verticalPadding;
+
+      // Calculate scale to fit within available space (use 95% to maximize usage)
+      const scaleX = (availableWidth / spec.width) * 0.95;
+      const scaleY = (availableHeight / spec.height) * 0.95;
 
       // Use the smaller scale to ensure it fits both dimensions
-      const optimalScale = Math.min(scaleX, scaleY, 0.6); // Cap at 0.6
+      const optimalScale = Math.min(scaleX, scaleY, 0.8); // Increased cap to 0.8
 
       setScale(optimalScale);
     };
