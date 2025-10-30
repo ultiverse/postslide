@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react';
 import { useProject } from '@/state/project.store';
 import { SortableBlockCard } from '@/components/blocks/SortableBlockCard';
 import { IconButton } from '@/components/ui';
@@ -33,6 +34,42 @@ export function RightPane() {
 
     const selectedSlide = project.slides.find((s) => s.id === selectedSlideId);
 
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsDropdownOpen(false);
+            }
+        };
+
+        if (isDropdownOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isDropdownOpen]);
+
+    const handleAddBlock = (kind: SlideBlock['kind']) => {
+        if (selectedSlide) {
+            addBlock(selectedSlide.id, kind);
+            setIsDropdownOpen(false);
+
+            // Scroll to the new block after it's been added
+            setTimeout(() => {
+                const blockCards = document.querySelectorAll('[data-block-card]');
+                const lastBlock = blockCards[blockCards.length - 1];
+                if (lastBlock) {
+                    lastBlock.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }, 100);
+        }
+    };
+
     // Drag and drop sensors
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -55,8 +92,56 @@ export function RightPane() {
 
     return (
         <aside className="flex flex-col overflow-y-auto border-l border-brand-200/50 bg-white/80 shadow-sm backdrop-blur-sm">
-            <div className="border-b border-brand-200/50 bg-gradient-to-r from-accent-500 to-brand-500 p-4">
-                <h2 className="text-lg font-bold text-white">Inspector</h2>
+            <div className="relative border-b border-brand-200/50 bg-gradient-to-r from-accent-500 to-brand-500 p-4">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-bold text-white">Inspector</h2>
+                    {selectedSlide && (
+                        <div ref={dropdownRef} className="relative">
+                            <IconButton
+                                icon={Plus}
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                className="text-white hover:bg-white/20"
+                                title="Add Block"
+                            />
+                            {isDropdownOpen && (
+                                <div className="absolute right-0 top-full mt-2 w-40 rounded-lg border border-neutral-200 bg-white shadow-lg z-20">
+                                    <div className="py-1">
+                                        <button
+                                            onClick={() => handleAddBlock('title')}
+                                            className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                                        >
+                                            <Plus className="h-3 w-3" />
+                                            Title
+                                        </button>
+                                        <button
+                                            onClick={() => handleAddBlock('subtitle')}
+                                            className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                                        >
+                                            <Plus className="h-3 w-3" />
+                                            Subtitle
+                                        </button>
+                                        <button
+                                            onClick={() => handleAddBlock('body')}
+                                            className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                                        >
+                                            <Plus className="h-3 w-3" />
+                                            Body
+                                        </button>
+                                        <button
+                                            onClick={() => handleAddBlock('bullets')}
+                                            className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                                        >
+                                            <Plus className="h-3 w-3" />
+                                            Bullets
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="space-y-6 p-4">
@@ -85,15 +170,15 @@ export function RightPane() {
                             >
                                 <div className="space-y-3">
                                     {selectedSlide.blocks.map((block, idx) => (
-                                        <SortableBlockCard
-                                            id={block.id}
-                                            key={block.id}
-                                            onMoveUp={() => moveBlockUp(selectedSlide.id, block.id)}
-                                            onMoveDown={() => moveBlockDown(selectedSlide.id, block.id)}
-                                            onRemove={() => removeBlock(selectedSlide.id, block.id)}
-                                            canMoveUp={idx > 0}
-                                            canMoveDown={idx < selectedSlide.blocks.length - 1}
-                                        >
+                                        <div key={block.id} data-block-card>
+                                            <SortableBlockCard
+                                                id={block.id}
+                                                onMoveUp={() => moveBlockUp(selectedSlide.id, block.id)}
+                                                onMoveDown={() => moveBlockDown(selectedSlide.id, block.id)}
+                                                onRemove={() => removeBlock(selectedSlide.id, block.id)}
+                                                canMoveUp={idx > 0}
+                                                canMoveDown={idx < selectedSlide.blocks.length - 1}
+                                            >
                                             <div className="space-y-2.5">
                                                 <select
                                                     value={block.kind}
@@ -169,47 +254,11 @@ export function RightPane() {
                                                 ) : null}
                                             </div>
                                         </SortableBlockCard>
+                                        </div>
                                     ))}
                                 </div>
                             </SortableContext>
                         </DndContext>
-
-                        {/* Add Block */}
-                        <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-neutral-800">
-                                Add Block
-                            </label>
-                            <div className="grid grid-cols-2 gap-2">
-                                <button
-                                    onClick={() => addBlock(selectedSlide.id, 'title')}
-                                    className="flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
-                                >
-                                    <Plus className="h-3 w-3" />
-                                    Title
-                                </button>
-                                <button
-                                    onClick={() => addBlock(selectedSlide.id, 'subtitle')}
-                                    className="flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
-                                >
-                                    <Plus className="h-3 w-3" />
-                                    Subtitle
-                                </button>
-                                <button
-                                    onClick={() => addBlock(selectedSlide.id, 'body')}
-                                    className="flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
-                                >
-                                    <Plus className="h-3 w-3" />
-                                    Body
-                                </button>
-                                <button
-                                    onClick={() => addBlock(selectedSlide.id, 'bullets')}
-                                    className="flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
-                                >
-                                    <Plus className="h-3 w-3" />
-                                    Bullets
-                                </button>
-                            </div>
-                        </div>
                     </>
                 ) : (
                     <div className="text-center text-sm text-neutral-500 py-8">
