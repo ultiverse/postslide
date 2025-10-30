@@ -1,8 +1,6 @@
-import { ButtonHTMLAttributes, forwardRef } from 'react';
-import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '@/lib/utils';
+import { cva } from 'class-variance-authority';
 
-const iconButtonVariants = cva(
+export const iconButtonVariants = cva(
   'inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
@@ -25,27 +23,3 @@ const iconButtonVariants = cva(
     },
   }
 );
-
-export interface IconButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof iconButtonVariants> {
-  icon: React.ComponentType<{ className?: string }>;
-}
-
-const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
-  ({ className, variant, size, icon: Icon, ...props }, ref) => {
-    return (
-      <button
-        className={cn(iconButtonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
-      >
-        <Icon className="h-4 w-4" />
-      </button>
-    );
-  }
-);
-
-IconButton.displayName = 'IconButton';
-
-export { IconButton, iconButtonVariants };

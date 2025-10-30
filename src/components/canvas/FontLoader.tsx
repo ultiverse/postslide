@@ -21,7 +21,6 @@ type Props = {
  */
 export default function FontLoader({ head, body, children }: Props) {
   const [ready, setReady] = useState(false);
-  const [error, setError] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -56,12 +55,10 @@ export default function FontLoader({ head, body, children }: Props) {
 
         if (mounted) {
           setReady(true);
-          setError(false);
         }
       } catch (err) {
         console.error('Font loading error:', err);
         if (mounted) {
-          setError(true);
           setReady(true); // Fail open to avoid blocking render
         }
       }
@@ -75,7 +72,7 @@ export default function FontLoader({ head, body, children }: Props) {
       loadedFaces.forEach(face => {
         try {
           document.fonts.delete(face);
-        } catch (e) {
+        } catch {
           // Ignore cleanup errors
         }
       });

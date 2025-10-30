@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { BlockCard } from './ui/BlockCard';
+import { BlockCard } from '@/components/blocks/BlockCard';
 
 interface SortableBlockCardProps {
   id: string;
@@ -10,6 +10,7 @@ interface SortableBlockCardProps {
   onRemove?: () => void;
   canMoveUp?: boolean;
   canMoveDown?: boolean;
+  headerContent?: React.ReactNode;
 }
 
 export function SortableBlockCard({
@@ -20,6 +21,7 @@ export function SortableBlockCard({
   onRemove,
   canMoveUp,
   canMoveDown,
+  headerContent,
 }: SortableBlockCardProps) {
   const {
     attributes,
@@ -45,6 +47,7 @@ export function SortableBlockCard({
         onRemove={onRemove}
         canMoveUp={canMoveUp}
         canMoveDown={canMoveDown}
+        headerContent={headerContent}
       >
         {children}
       </BlockCard>

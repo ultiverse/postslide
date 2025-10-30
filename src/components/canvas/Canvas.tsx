@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from 'react';
 import { ErrorBoundary } from './ErrorBoundary';
 import FontLoader from './FontLoader';
 import { CanvasRenderer } from './CanvasRenderer';
@@ -48,6 +49,42 @@ export default function Canvas() {
 
   const selectedSlide = project.slides.find(s => s.id === selectedSlideId) ?? null;
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0.4);
+
+  useEffect(() => {
+    const updateScale = () => {
+      if (!containerRef.current) return;
+
+      const container = containerRef.current.parentElement;
+      if (!container) return;
+
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
+
+      // Account for padding - just breathing room for top/bottom
+      // Top padding (32px from pt-8) + small bottom margin
+      const verticalPadding = 48;
+      const horizontalPadding = 32; // 16px on each side
+
+      const availableWidth = containerWidth - horizontalPadding;
+      const availableHeight = containerHeight - verticalPadding;
+
+      // Calculate scale to fit within available space (use 95% to maximize usage)
+      const scaleX = (availableWidth / spec.width) * 0.95;
+      const scaleY = (availableHeight / spec.height) * 0.95;
+
+      // Use the smaller scale to ensure it fits both dimensions
+      const optimalScale = Math.min(scaleX, scaleY, 0.8); // Increased cap to 0.8
+
+      setScale(optimalScale);
+    };
+
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+  }, []);
+
   // Use brand fonts from project if available, otherwise defaults
   const headFont = project.brand?.fontHead
     ? { ...defaultFonts.head, family: project.brand.fontHead }
@@ -64,22 +101,20 @@ export default function Canvas() {
   };
 
   return (
-    <div className="flex items-center justify-center w-full h-full p-8">
-      <ErrorBoundary>
-        <FontLoader head={headFont} body={bodyFont}>
-          {fontsReady => (
-            <div style={{ transform: 'scale(0.5)', transformOrigin: 'center' }}>
-              <CanvasRenderer
-                slide={selectedSlide}
-                spec={spec}
-                theme={theme}
-                fontsReady={fontsReady}
-                showGrid={showGrid}
-              />
-            </div>
-          )}
-        </FontLoader>
-      </ErrorBoundary>
-    </div>
+    <ErrorBoundary>
+      <FontLoader head={headFont} body={bodyFont}>
+        {fontsReady => (
+          <div ref={containerRef} style={{ transform: `scale(${scale})`, transformOrigin: 'top center' }}>
+            <CanvasRenderer
+              slide={selectedSlide}
+              spec={spec}
+              theme={theme}
+              fontsReady={fontsReady}
+              showGrid={showGrid}
+            />
+          </div>
+        )}
+      </FontLoader>
+    </ErrorBoundary>
   );
 }
