@@ -37,7 +37,8 @@ export function SortableSlideCard({
         opacity: isDragging ? 0.5 : 1,
     };
 
-    const slideTitle = slide.blocks[0] && 'text' in slide.blocks[0] ? slide.blocks[0].text : 'Untitled slide';
+    const blockText = slide.blocks[0] && 'text' in slide.blocks[0] ? slide.blocks[0].text : '';
+    const slideTitle = blockText.trim() === '' ? 'Untitled slide' : blockText;
 
     return (
         <div
@@ -97,8 +98,8 @@ export function SortableSlideCard({
                     <div className="flex-1 min-w-0">
                         <p className={`text-sm line-clamp-2 ${
                             isSelected ? 'text-brand-900 font-medium' : 'text-neutral-700'
-                        } ${!slideTitle || slideTitle.trim() === '' ? 'text-neutral-400 italic' : ''}`}>
-                            {slideTitle || 'Untitled slide'}
+                        } ${slideTitle === 'Untitled slide' ? 'text-neutral-400 italic' : ''}`}>
+                            {slideTitle}
                         </p>
                     </div>
                 </div>

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { GripVertical, ChevronUp, ChevronDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { IconButton } from '@/components/ui/IconButton';
+import { IconButton } from '@/components/ui/Button/IconButton';
 
 interface BlockCardProps {
   children: React.ReactNode;

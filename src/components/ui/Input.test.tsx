@@ -13,8 +13,9 @@ describe('Input', () => {
   it('renders with default type text', () => {
     render(<Input data-testid="test-input" />);
 
-    const input = screen.getByTestId('test-input');
-    expect(input).toHaveAttribute('type', 'text');
+    const input = screen.getByTestId('test-input') as HTMLInputElement;
+    // When type is not specified, HTML defaults to 'text' but the attribute may not be present
+    expect(input.type).toBe('text');
   });
 
   it('supports different input types', () => {
@@ -220,6 +221,7 @@ describe('Input', () => {
     render(<Input autoFocus data-testid="test-input" />);
 
     const input = screen.getByTestId('test-input');
-    expect(input).toHaveAttribute('autoFocus');
+    // React's autoFocus prop becomes the autofocus HTML attribute (lowercase)
+    expect(input).toHaveFocus();
   });
 });

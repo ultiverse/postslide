@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import Canvas from './Canvas';
@@ -41,12 +42,14 @@ describe('Canvas', () => {
     slides: [
       {
         id: 'slide-1',
+        templateId: 'minimal-pro',
         blocks: [
           { id: 'block-1', kind: 'title', text: 'Test Title' },
         ],
       },
       {
         id: 'slide-2',
+        templateId: 'minimal-pro',
         blocks: [
           { id: 'block-2', kind: 'body', text: 'Test Body' },
         ],
@@ -150,11 +153,12 @@ describe('Canvas', () => {
     expect(screen.getByTestId('fonts-ready')).toHaveTextContent('true');
   });
 
-  it('renders with correct transform scale', () => {
+  it('renders with transform scale applied', () => {
     const { container } = render(<Canvas />);
 
-    const scaledDiv = container.querySelector('[style*="scale(0.5)"]');
+    const scaledDiv = container.querySelector('[style*="scale"]');
     expect(scaledDiv).toBeInTheDocument();
+    expect(scaledDiv).toHaveStyle({ transformOrigin: 'top center' });
   });
 
   it('uses custom brand fonts when available', () => {

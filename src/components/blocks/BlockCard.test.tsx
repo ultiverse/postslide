@@ -215,7 +215,7 @@ describe('BlockCard', () => {
   });
 
   it('has proper content section', () => {
-    const { container } = render(
+    render(
       <BlockCard>
         <div data-testid="inner-content">Test</div>
       </BlockCard>

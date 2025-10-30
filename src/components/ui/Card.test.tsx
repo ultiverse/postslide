@@ -24,9 +24,9 @@ describe('Card', () => {
   });
 
   it('applies custom className', () => {
-    render(<Card className="custom-card">Content</Card>);
+    render(<Card className="custom-card" data-testid="card">Content</Card>);
 
-    const card = screen.getByText('Content').parentElement;
+    const card = screen.getByTestId('card');
     expect(card).toHaveClass('custom-card');
   });
 
@@ -57,24 +57,24 @@ describe('CardHeader', () => {
   });
 
   it('applies default header styles', () => {
-    const { container } = render(
+    render(
       <Card>
-        <CardHeader>Header</CardHeader>
+        <CardHeader data-testid="header">Header</CardHeader>
       </Card>
     );
 
-    const header = screen.getByText('Header').parentElement;
+    const header = screen.getByTestId('header');
     expect(header).toHaveClass('flex', 'flex-col', 'space-y-1.5', 'p-6');
   });
 
   it('applies custom className', () => {
     render(
       <Card>
-        <CardHeader className="custom-header">Header</CardHeader>
+        <CardHeader className="custom-header" data-testid="header">Header</CardHeader>
       </Card>
     );
 
-    const header = screen.getByText('Header').parentElement;
+    const header = screen.getByTestId('header');
     expect(header).toHaveClass('custom-header');
   });
 
@@ -108,12 +108,12 @@ describe('CardTitle', () => {
     render(
       <Card>
         <CardHeader>
-          <CardTitle>Title</CardTitle>
+          <CardTitle data-testid="title">Title</CardTitle>
         </CardHeader>
       </Card>
     );
 
-    const title = screen.getByText('Title').parentElement;
+    const title = screen.getByTestId('title');
     expect(title).toHaveClass('font-semibold', 'leading-none', 'tracking-tight');
   });
 
@@ -121,12 +121,12 @@ describe('CardTitle', () => {
     render(
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Title</CardTitle>
+          <CardTitle className="text-2xl" data-testid="title">Title</CardTitle>
         </CardHeader>
       </Card>
     );
 
-    const title = screen.getByText('Title').parentElement;
+    const title = screen.getByTestId('title');
     expect(title).toHaveClass('text-2xl');
   });
 
@@ -162,12 +162,12 @@ describe('CardDescription', () => {
     render(
       <Card>
         <CardHeader>
-          <CardDescription>Description</CardDescription>
+          <CardDescription data-testid="description">Description</CardDescription>
         </CardHeader>
       </Card>
     );
 
-    const description = screen.getByText('Description').parentElement;
+    const description = screen.getByTestId('description');
     expect(description).toHaveClass('text-sm', 'text-muted-foreground');
   });
 
@@ -175,12 +175,12 @@ describe('CardDescription', () => {
     render(
       <Card>
         <CardHeader>
-          <CardDescription className="italic">Description</CardDescription>
+          <CardDescription className="italic" data-testid="description">Description</CardDescription>
         </CardHeader>
       </Card>
     );
 
-    const description = screen.getByText('Description').parentElement;
+    const description = screen.getByTestId('description');
     expect(description).toHaveClass('italic');
   });
 
@@ -211,24 +211,24 @@ describe('CardContent', () => {
   });
 
   it('applies default content styles', () => {
-    const { container } = render(
+    render(
       <Card>
-        <CardContent>Content</CardContent>
+        <CardContent data-testid="content">Content</CardContent>
       </Card>
     );
 
-    const content = screen.getByText('Content').parentElement;
+    const content = screen.getByTestId('content');
     expect(content).toHaveClass('p-6', 'pt-0');
   });
 
   it('applies custom className', () => {
     render(
       <Card>
-        <CardContent className="custom-content">Content</CardContent>
+        <CardContent className="custom-content" data-testid="content">Content</CardContent>
       </Card>
     );
 
-    const content = screen.getByText('Content').parentElement;
+    const content = screen.getByTestId('content');
     expect(content).toHaveClass('custom-content');
   });
 
@@ -259,22 +259,22 @@ describe('CardFooter', () => {
   it('applies default footer styles', () => {
     render(
       <Card>
-        <CardFooter>Footer</CardFooter>
+        <CardFooter data-testid="footer">Footer</CardFooter>
       </Card>
     );
 
-    const footer = screen.getByText('Footer').parentElement;
+    const footer = screen.getByTestId('footer');
     expect(footer).toHaveClass('flex', 'items-center', 'p-6', 'pt-0');
   });
 
   it('applies custom className', () => {
     render(
       <Card>
-        <CardFooter className="justify-end">Footer</CardFooter>
+        <CardFooter className="justify-end" data-testid="footer">Footer</CardFooter>
       </Card>
     );
 
-    const footer = screen.getByText('Footer').parentElement;
+    const footer = screen.getByTestId('footer');
     expect(footer).toHaveClass('justify-end');
   });
 

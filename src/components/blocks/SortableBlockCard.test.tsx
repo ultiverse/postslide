@@ -5,7 +5,16 @@ import { SortableBlockCard } from './SortableBlockCard';
 
 // Mock the BlockCard component
 vi.mock('./BlockCard', () => ({
-  BlockCard: ({ children, onMoveUp, onMoveDown, onRemove, canMoveUp, canMoveDown, dragHandleProps }: any) => (
+  BlockCard: ({ children, onMoveUp, onMoveDown, onRemove, canMoveUp, canMoveDown, dragHandleProps }: {
+    children: React.ReactNode;
+    onMoveUp?: () => void;
+    onMoveDown?: () => void;
+    onRemove?: () => void;
+    canMoveUp?: boolean;
+    canMoveDown?: boolean;
+    dragHandleProps?: Record<string, unknown>;
+    headerContent?: React.ReactNode;
+  }) => (
     <div data-testid="block-card">
       <button data-testid="drag-handle" {...dragHandleProps}>Drag</button>
       {onMoveUp && (
@@ -167,7 +176,7 @@ describe('SortableBlockCard', () => {
   });
 
   it('wraps BlockCard in a div with useSortable ref', () => {
-    const { container } = renderWithDndContext(
+    renderWithDndContext(
       <SortableBlockCard {...defaultProps} />
     );
 
