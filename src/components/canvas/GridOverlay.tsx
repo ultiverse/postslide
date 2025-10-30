@@ -70,7 +70,7 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
   )`;
 
     // Optional columns background (n columns with optional gap)
-    const colBg =
+    const columnData =
         columns &&
         buildColumnsBackground({
             width: spec.width,
@@ -90,12 +90,14 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
                 />
             )}
 
-            {columns && (
+            {columns && columnData && (
                 <div
                     className="absolute inset-0"
                     style={{
-                        backgroundImage: colBg!,
-                        backgroundSize: "100% 100%",
+                        backgroundImage: columnData.backgroundImage,
+                        backgroundPosition: columnData.backgroundPosition,
+                        backgroundSize: columnData.backgroundSize,
+                        backgroundRepeat: "no-repeat",
                     }}
                 />
             )}
@@ -128,16 +130,35 @@ function toRgba(input: string, alpha: number) {
 }
 
 function buildColumnsBackground(opts: { width: number; count: number; gap: number; color: string; }) {
-    const { count, gap, color } = opts;
+    const { width, count, gap, color } = opts;
     if (count <= 0) return undefined;
 
+    // Calculate column width accounting for gaps
+    // Total gap space = gap * (count - 1)
+    // Total column space = width - total gap space
+    // Each column width = total column space / count
+    const totalGapSpace = gap * (count - 1);
+    const totalColumnSpace = width - totalGapSpace;
+    const columnWidth = totalColumnSpace / count;
+
     // Draw vertical guides as 1px lines at each column boundary
-    // Using multiple linear-gradients to place the lines across the width
+    // Position them at: columnWidth, columnWidth + gap, columnWidth + gap + columnWidth, etc.
     const parts: string[] = [];
+    const positions: string[] = [];
+    const sizes: string[] = [];
+
     for (let i = 1; i < count; i++) {
-        parts.push(
-            `linear-gradient(to bottom, ${color}, ${color})` // 1px vertical line
-        );
+        const position = i * columnWidth + (i - 1) * gap + gap / 2;
+        parts.push(`linear-gradient(to right, transparent calc(50% - 0.5px), ${color} calc(50% - 0.5px), ${color} calc(50% + 0.5px), transparent calc(50% + 0.5px))`);
+        positions.push(`${position}px 0`);
+        sizes.push(`${gap}px 100%`);
     }
-    return parts.join(", ");
+
+    return parts.length > 0
+        ? {
+              backgroundImage: parts.join(", "),
+              backgroundPosition: positions.join(", "),
+              backgroundSize: sizes.join(", "),
+          }
+        : undefined;
 }

@@ -42,7 +42,7 @@ export function CanvasRenderer({ slide, spec, theme, fontsReady, showGrid }: Pro
     let currentY = cr.y;
     const blockGap = 24; // Gap between blocks
 
-    return slide.blocks.map((block, idx) => {
+    return slide.blocks.map((block) => {
       const style: TextStyle = getStyleForBlock(block, theme);
       const frameX = cr.x;
       const frameW = cr.w;
@@ -110,7 +110,7 @@ export function CanvasRenderer({ slide, spec, theme, fontsReady, showGrid }: Pro
       )}
 
       {/* Render blocks */}
-      {fontsReady && slide && renderedBlocks.map((rb, i) => {
+      {fontsReady && slide && renderedBlocks.map((rb) => {
         if (rb.block.kind === 'bullets') {
           return <BulletBlock key={rb.block.id} renderBlock={rb} />;
         }
@@ -122,8 +122,9 @@ export function CanvasRenderer({ slide, spec, theme, fontsReady, showGrid }: Pro
 }
 
 // Text block component
+/* eslint-disable @typescript-eslint/no-explicit-any */
 function TextBlock({ renderBlock }: { renderBlock: any; }) {
-  const { block, style, layout, frame, overflow } = renderBlock;
+  const { style, layout, frame, overflow } = renderBlock;
 
   return (
     <div
@@ -165,7 +166,7 @@ function TextBlock({ renderBlock }: { renderBlock: any; }) {
 
 // Bullet block component
 function BulletBlock({ renderBlock }: { renderBlock: any; }) {
-  const { block, style, layout, frame, overflow } = renderBlock;
+  const { style, layout, frame, overflow } = renderBlock;
 
   return (
     <div
