@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import type { Project, Slide, SlideBlock } from '@/types/domain'
+import type { Project, Slide, SlideBlock, ImageBlock, BackgroundBlock, DecorativeBlock } from '@/types/domain'
+import { createBlock } from '@/lib/constants/blocks'
 
 interface ProjectState {
   project: Project
@@ -13,17 +14,22 @@ interface ProjectState {
 
   // Slide-level
   setSelectedSlide: (id: string | null) => void
-  addSlide: () => void
+  addSlide: (templateId?: string) => void
   duplicateSlide: (id: string) => void
   removeSlide: (id: string) => void
   moveSlideUp: (id: string) => void
   moveSlideDown: (id: string) => void
   reorderSlides: (slides: Slide[]) => void
+  applyTemplateToSlide: (slideId: string, templateId: string) => void
+  applyTemplateToAllSlides: (templateId: string) => void
 
   // Block-level
   addBlock: (slideId: string, kind: SlideBlock['kind']) => void
   updateBlock: (slideId: string, blockId: string, text: string) => void
   updateBullets: (slideId: string, blockId: string, bullets: string[]) => void
+  updateImageBlock: (slideId: string, blockId: string, updates: Partial<ImageBlock>) => void
+  updateBackgroundBlock: (slideId: string, blockId: string, updates: Partial<BackgroundBlock>) => void
+  updateDecorativeBlock: (slideId: string, blockId: string, updates: Partial<DecorativeBlock>) => void
   removeBlock: (slideId: string, blockId: string) => void
   moveBlockUp: (slideId: string, blockId: string) => void
   moveBlockDown: (slideId: string, blockId: string) => void
@@ -59,11 +65,11 @@ export const useProject = create<ProjectState>((set) => ({
 
   // Slide-level
   setSelectedSlide: (id) => set({ selectedSlideId: id }),
-  addSlide: () =>
+  addSlide: (templateId = 'minimal-pro') =>
     set((s) => {
       const newSlide = {
         id: crypto.randomUUID(),
-        templateId: 'minimal-pro',
+        templateId, // Use provided templateId or default
         blocks: [
           { id: crypto.randomUUID(), kind: 'title' as const, text: '' }
         ]
@@ -111,6 +117,22 @@ export const useProject = create<ProjectState>((set) => ({
     }),
   reorderSlides: (slides) =>
     set((s) => ({ project: { ...s.project, slides } })),
+  applyTemplateToSlide: (slideId, templateId) =>
+    set((s) => ({
+      project: {
+        ...s.project,
+        slides: s.project.slides.map((sl) =>
+          sl.id === slideId ? { ...sl, templateId } : sl
+        ),
+      },
+    })),
+  applyTemplateToAllSlides: (templateId) =>
+    set((s) => ({
+      project: {
+        ...s.project,
+        slides: s.project.slides.map((sl) => ({ ...sl, templateId })),
+      },
+    })),
 
   // Block-level
   addBlock: (slideId, kind) =>
@@ -121,12 +143,7 @@ export const useProject = create<ProjectState>((set) => ({
           sl.id === slideId
             ? {
                 ...sl,
-                blocks: [
-                  ...sl.blocks,
-                  kind === 'bullets'
-                    ? { id: crypto.randomUUID(), kind, bullets: [''] }
-                    : { id: crypto.randomUUID(), kind, text: '' },
-                ],
+                blocks: [...sl.blocks, createBlock(kind)],
               }
             : sl,
         ),
@@ -158,6 +175,54 @@ export const useProject = create<ProjectState>((set) => ({
                 ...sl,
                 blocks: sl.blocks.map((b) =>
                   b.id === blockId && b.kind === 'bullets' ? { ...b, bullets } : b,
+                ),
+              }
+            : sl,
+        ),
+      },
+    })),
+  updateImageBlock: (slideId, blockId, updates) =>
+    set((s) => ({
+      project: {
+        ...s.project,
+        slides: s.project.slides.map((sl) =>
+          sl.id === slideId
+            ? {
+                ...sl,
+                blocks: sl.blocks.map((b) =>
+                  b.id === blockId && b.kind === 'image' ? { ...b, ...updates } : b,
+                ),
+              }
+            : sl,
+        ),
+      },
+    })),
+  updateBackgroundBlock: (slideId, blockId, updates) =>
+    set((s) => ({
+      project: {
+        ...s.project,
+        slides: s.project.slides.map((sl) =>
+          sl.id === slideId
+            ? {
+                ...sl,
+                blocks: sl.blocks.map((b) =>
+                  b.id === blockId && b.kind === 'background' ? { ...b, ...updates } : b,
+                ),
+              }
+            : sl,
+        ),
+      },
+    })),
+  updateDecorativeBlock: (slideId, blockId, updates) =>
+    set((s) => ({
+      project: {
+        ...s.project,
+        slides: s.project.slides.map((sl) =>
+          sl.id === slideId
+            ? {
+                ...sl,
+                blocks: sl.blocks.map((b) =>
+                  b.id === blockId && b.kind === 'decorative' ? { ...b, ...updates } : b,
                 ),
               }
             : sl,

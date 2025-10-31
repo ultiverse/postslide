@@ -2,6 +2,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
 import type { SlideBlock } from '@/types/domain';
+import { isTextBlock } from '@/lib/constants/blocks';
 
 interface SortableSlideCardProps {
     slide: { id: string; blocks: SlideBlock[] };
@@ -37,7 +38,9 @@ export function SortableSlideCard({
         opacity: isDragging ? 0.5 : 1,
     };
 
-    const blockText = slide.blocks[0] && 'text' in slide.blocks[0] ? slide.blocks[0].text : '';
+    // Find the first text block (title, subtitle, or body) for the slide title
+    const firstTextBlock = slide.blocks.find(block => isTextBlock(block) && 'text' in block);
+    const blockText = firstTextBlock && 'text' in firstTextBlock ? firstTextBlock.text : '';
     const slideTitle = blockText.trim() === '' ? 'Untitled slide' : blockText;
 
     return (

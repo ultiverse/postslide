@@ -137,7 +137,7 @@ export function LeftPane() {
 
             <div className="border-t border-brand-200/50 bg-gradient-to-r from-brand-50/50 to-accent-50/30 p-3">
                 <button
-                    onClick={addSlide}
+                    onClick={() => addSlide()}
                     className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-brand-500 to-accent-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:from-brand-600 hover:to-accent-600 hover:shadow-md active:from-brand-700 active:to-accent-700"
                 >
                     <Plus className="h-4 w-4" />
