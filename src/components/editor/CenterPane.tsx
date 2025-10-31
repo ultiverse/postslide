@@ -14,7 +14,15 @@ export function CenterPane() {
     const selectedSlide = project.slides.find((s) => s.id === selectedSlideId);
 
     return (
-        <main className="relative">
+        <main className="relative bg-neutral-50" style={{
+            backgroundImage: `repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255, 255, 255, 0.2) 10px,
+                rgba(255, 255, 255, 0.2) 20px
+            )`
+        }}>
             <div className="fixed inset-0 left-[280px] right-[320px] flex justify-center pt-8 overflow-y-auto">
                 <div className="flex-shrink-0">
                     <Canvas />
