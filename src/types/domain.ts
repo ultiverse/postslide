@@ -36,7 +36,12 @@ export type DecorativeBlock = {
 
 export type SlideBlock = TextBlock | ImageBlock | BackgroundBlock | DecorativeBlock
 
-export type Slide = { id: string; templateId?: string; blocks: SlideBlock[] }
+export type Slide = {
+  id: string
+  templateId?: string
+  layoutId?: string // Optional: specific layout from template schema
+  blocks: SlideBlock[]
+}
 
 export type Project = {
   id: string
@@ -49,11 +54,42 @@ export type Brand = { primary: string; fontHead: string; fontBody: string }
 
 export type CoverStyle = 'title-heavy' | 'image-forward' | 'stat'
 
+// --- Schema-based Template System (New) ---
+
+export type LayoutKind = 'title' | 'two-col' | 'list' | 'stat' | 'quote' | 'cover'
+
+export type SlotType = 'text' | 'image' | 'bullets' | 'number'
+
+export type SlotStyle = 'h1' | 'h2' | 'body' | 'caption'
+
+export type LayoutSlot = {
+  id: string
+  type: SlotType
+  style?: SlotStyle
+  props?: Record<string, unknown>
+}
+
+export type LayoutDefinition = {
+  id: string // e.g., "title-slide", "content", "stat"
+  kind: LayoutKind
+  slots: LayoutSlot[]
+}
+
+export type TemplateSchema = {
+  id: string
+  name: string
+  description?: string
+  layouts: LayoutDefinition[]
+}
+
+// --- Template Type (Updated) ---
+
 export type Template = {
   id: string
   name: string
   description?: string
-  layout: (slide: Slide, brand: Brand) => ReactElement
+  schema?: TemplateSchema // Optional: new schema-based definition
+  layout: (slide: Slide, brand: Brand) => ReactElement // Still React for now
   defaults: Partial<Slide>
   coverStyle?: CoverStyle
 }

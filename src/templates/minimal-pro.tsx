@@ -1,4 +1,4 @@
-import type { Template, Slide, Brand, TextBlock } from '@/types/domain';
+import type { Template, Slide, Brand, TextBlock, TemplateSchema } from '@/types/domain';
 import type { ArtboardSpec, TextStyle, Theme } from '@/lib/types/design';
 import { contentRect, isOverflow } from '@/lib/layout/grid';
 import { createMeasurer } from '@/lib/layout/measure';
@@ -6,6 +6,7 @@ import { layoutBullets } from '@/lib/layout/bullets';
 import { useMemo } from 'react';
 import { ImageBlockRenderer, BackgroundBlockRenderer, DecorativeBlockRenderer } from '@/components/canvas/BlockRenderer';
 import { isTextBlock } from '@/lib/constants/blocks';
+import { renderSlideFromSchema } from '@/lib/layouts';
 
 /**
  * Minimal Pro Template
@@ -314,13 +315,37 @@ function OverflowBadge() {
   );
 }
 
+// Schema definition for Minimal Pro
+const minimalProSchema: TemplateSchema = {
+  id: 'minimal-pro',
+  name: 'Minimal Pro',
+  description: 'Clean, professional layout with vertical block stacking and generous spacing',
+  layouts: [
+    {
+      id: 'default',
+      kind: 'list',
+      slots: [
+        { id: 'title', type: 'text', style: 'h1' },
+        { id: 'body', type: 'text', style: 'body' },
+        { id: 'bullets', type: 'bullets', style: 'body' },
+      ],
+    },
+  ],
+};
+
 export const minimalPro: Template = {
   id: 'minimal-pro',
   name: 'Minimal Pro',
   description: 'Clean, professional layout with vertical block stacking and generous spacing',
-  layout: (slide: Slide, brand: Brand) => (
-    <MinimalProLayout slide={slide} brand={brand} />
-  ),
+  schema: minimalProSchema,
+  layout: (slide: Slide, brand: Brand) => {
+    // Use schema-driven renderer if schema is available
+    if (minimalProSchema) {
+      return renderSlideFromSchema(minimalProSchema, slide, brand);
+    }
+    // Fallback to original implementation
+    return <MinimalProLayout slide={slide} brand={brand} />;
+  },
   defaults: {
     // Note: IDs will be generated when blocks are actually created
     blocks: [

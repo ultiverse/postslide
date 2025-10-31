@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { Project, Slide, SlideBlock, ImageBlock, BackgroundBlock, DecorativeBlock } from '@/types/domain'
 import { createBlock } from '@/lib/constants/blocks'
+import { getLayout, matchSlideToLayout } from '@/lib/layouts/utils'
 
 interface ProjectState {
   project: Project
@@ -22,6 +23,8 @@ interface ProjectState {
   reorderSlides: (slides: Slide[]) => void
   applyTemplateToSlide: (slideId: string, templateId: string) => void
   applyTemplateToAllSlides: (templateId: string) => void
+  applyLayoutToSlide: (slideId: string, templateId: string, layoutId: string) => void
+  autoMatchLayoutForSlide: (slideId: string, templateId: string) => void
 
   // Block-level
   addBlock: (slideId: string, kind: SlideBlock['kind']) => void
@@ -133,6 +136,39 @@ export const useProject = create<ProjectState>((set) => ({
         slides: s.project.slides.map((sl) => ({ ...sl, templateId })),
       },
     })),
+  applyLayoutToSlide: (slideId, templateId, layoutId) =>
+    set((s) => ({
+      project: {
+        ...s.project,
+        slides: s.project.slides.map((sl) =>
+          sl.id === slideId
+            ? {
+                ...sl,
+                templateId,
+                layoutId, // Store the specific layout ID
+              }
+            : sl
+        ),
+      },
+    })),
+  autoMatchLayoutForSlide: (slideId, templateId) =>
+    set((s) => {
+      const slide = s.project.slides.find(sl => sl.id === slideId)
+      if (!slide) return s
+
+      // Find the best matching layout for this slide's content
+      const matchedLayout = matchSlideToLayout(slide, templateId)
+
+      // Apply the template (the layout matching happens during render)
+      return {
+        project: {
+          ...s.project,
+          slides: s.project.slides.map((sl) =>
+            sl.id === slideId ? { ...sl, templateId } : sl
+          ),
+        },
+      }
+    }),
 
   // Block-level
   addBlock: (slideId, kind) =>
