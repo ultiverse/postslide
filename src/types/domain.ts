@@ -12,7 +12,8 @@ export type ImageBlock = {
   src: string // URL or data URI
   alt?: string
   fit?: 'cover' | 'contain' | 'fill' // How image fills its frame
-  position?: { x: number; y: number; width: number; height: number } // Optional positioning
+  width?: number // Width in pixels (defaults to content width)
+  height?: number // Height in pixels (defaults to auto or 300px)
 }
 
 export type BackgroundBlock = {

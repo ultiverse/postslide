@@ -39,63 +39,79 @@ export function CanvasRenderer({ slide, spec, theme, fontsReady, showGrid }: Pro
 
   // Separate blocks by type
   const backgroundBlocks = slide?.blocks.filter(b => b.kind === 'background') || [];
-  const textBlocks = (slide?.blocks.filter(b => isTextBlock(b)) || []) as TextBlock[];
-  const imageBlocks = slide?.blocks.filter(b => b.kind === 'image') || [];
+  const contentBlocks = slide?.blocks.filter(b => isTextBlock(b) || b.kind === 'image') || [];
   const decorativeBlocks = slide?.blocks.filter(b => b.kind === 'decorative') || [];
 
-  // Calculate block positions with vertical stacking for text blocks only
+  // Calculate block positions with vertical stacking for content blocks (text + images)
   const renderedBlocks = useMemo(() => {
-    if (!textBlocks.length) return [];
+    if (!contentBlocks.length) return [];
 
     let currentY = cr.y;
     const blockGap = 24; // Gap between blocks
 
-    return textBlocks.map((block) => {
-      const style: TextStyle = getStyleForBlock(block, theme);
+    return contentBlocks.map((block) => {
       const frameX = cr.x;
       const frameW = cr.w;
       const maxH = cr.h - (currentY - cr.y);
 
-      let layout;
-      let frameH;
+      if (block.kind === 'image') {
+        // Image block
+        const imgHeight = block.height || 300;
+        const imgWidth = block.width || frameW;
+        const frameH = Math.min(imgHeight, maxH);
 
-      if (block.kind === 'bullets') {
-        layout = layoutBullets({
-          items: block.bullets,
-          style,
-          frameWidth: frameW,
-          bullet: {
-            marker: '•',
-            gap: 12,
-            indent: 32,
-            markerSizeRatio: 1,
-          },
-        });
-        frameH = Math.min(layout.totalHeight, maxH);
+        const result = {
+          block,
+          frame: { x: frameX, y: currentY, w: imgWidth, h: frameH },
+          type: 'image' as const,
+        };
+
+        currentY += frameH + blockGap;
+        return result;
       } else {
-        layout = measure({
-          text: block.text,
+        // Text block
+        const textBlock = block as TextBlock;
+        const style: TextStyle = getStyleForBlock(textBlock, theme);
+
+        let layout;
+        let frameH;
+
+        if (textBlock.kind === 'bullets') {
+          layout = layoutBullets({
+            items: textBlock.bullets,
+            style,
+            frameWidth: frameW,
+            bullet: {
+              marker: '•',
+              gap: 12,
+              indent: 32,
+              markerSizeRatio: 1,
+            },
+          });
+          frameH = Math.min(layout.totalHeight, maxH);
+        } else {
+          layout = measure({
+            text: textBlock.text,
+            style,
+            maxWidth: frameW,
+          });
+          frameH = Math.min(layout.totalHeight, maxH);
+        }
+
+        const result = {
+          block: textBlock,
           style,
-          maxWidth: frameW,
-        });
-        frameH = Math.min(layout.totalHeight, maxH);
+          layout,
+          frame: { x: frameX, y: currentY, w: frameW, h: frameH },
+          overflow: isOverflow(layout.totalHeight, frameH),
+          type: 'text' as const,
+        };
+
+        currentY += frameH + blockGap;
+        return result;
       }
-
-      const result = {
-        block,
-        style,
-        layout,
-        frame: { x: frameX, y: currentY, w: frameW, h: frameH },
-        overflow: isOverflow(
-          block.kind === 'bullets' ? layout.totalHeight : layout.totalHeight,
-          frameH
-        ),
-      };
-
-      currentY += frameH + blockGap;
-      return result;
     });
-  }, [textBlocks, measure, cr, theme]);
+  }, [contentBlocks, measure, cr, theme]);
 
   return (
     <div className="relative shadow-xl rounded-2xl overflow-hidden" style={artboardStyle}>
@@ -129,24 +145,20 @@ export function CanvasRenderer({ slide, spec, theme, fontsReady, showGrid }: Pro
             />
           ))}
 
-          {/* Render image blocks */}
-          {imageBlocks.map((block) => {
-            const position = block.position || { x: cr.x, y: cr.y, width: cr.w, height: 400 };
-            return (
-              <ImageBlockRenderer
-                key={block.id}
-                block={block}
-                x={position.x}
-                y={position.y}
-                width={position.width}
-                height={position.height}
-              />
-            );
-          })}
-
-          {/* Render text blocks */}
+          {/* Render content blocks (text and images in order) */}
           {renderedBlocks.map((rb) => {
-            if (rb.block.kind === 'bullets') {
+            if (rb.type === 'image') {
+              return (
+                <ImageBlockRenderer
+                  key={rb.block.id}
+                  block={rb.block}
+                  x={rb.frame.x}
+                  y={rb.frame.y}
+                  width={rb.frame.w}
+                  height={rb.frame.h}
+                />
+              );
+            } else if (rb.block.kind === 'bullets') {
               return <BulletBlock key={rb.block.id} renderBlock={rb} />;
             }
             return <TextBlock key={rb.block.id} renderBlock={rb} />;

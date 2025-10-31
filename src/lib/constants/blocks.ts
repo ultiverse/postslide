@@ -36,7 +36,7 @@ export const DEFAULT_IMAGE_BLOCK = (): ImageBlock => ({
   src: '',
   alt: '',
   fit: 'cover',
-  // position: undefined - can be set by template or user
+  height: 300, // Default height in pixels
 });
 
 export const DEFAULT_BACKGROUND_BLOCKS = {

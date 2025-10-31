@@ -305,6 +305,46 @@ export function RightPane() {
                                                             className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                                                             placeholder="https://example.com/image.jpg"
                                                         />
+
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <div>
+                                                                <label className="block text-xs font-medium text-neutral-700 mb-1">
+                                                                    Width (px)
+                                                                </label>
+                                                                <input
+                                                                    type="number"
+                                                                    value={block.width || ''}
+                                                                    onChange={(e) =>
+                                                                        updateImageBlock(selectedSlide.id, block.id, {
+                                                                            width: e.target.value ? parseInt(e.target.value) : undefined
+                                                                        })
+                                                                    }
+                                                                    className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none"
+                                                                    placeholder="Auto"
+                                                                    min="50"
+                                                                    max="952"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-xs font-medium text-neutral-700 mb-1">
+                                                                    Height (px)
+                                                                </label>
+                                                                <input
+                                                                    type="number"
+                                                                    value={block.height || ''}
+                                                                    onChange={(e) =>
+                                                                        updateImageBlock(selectedSlide.id, block.id, {
+                                                                            height: e.target.value ? parseInt(e.target.value) : undefined
+                                                                        })
+                                                                    }
+                                                                    className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none"
+                                                                    placeholder="300"
+                                                                    min="50"
+                                                                    max="952"
+                                                                />
+                                                            </div>
+                                                        </div>
+
                                                         <label className="block text-xs font-medium text-neutral-700">
                                                             Object Fit
                                                         </label>
@@ -319,6 +359,9 @@ export function RightPane() {
                                                             <option value="contain">Contain</option>
                                                             <option value="fill">Fill</option>
                                                         </select>
+                                                        <p className="text-xs text-neutral-500">
+                                                            Images flow with text blocks. Leave width empty for full width.
+                                                        </p>
                                                     </div>
                                                 ) : block.kind === 'background' ? (
                                                     <div className="space-y-2">
