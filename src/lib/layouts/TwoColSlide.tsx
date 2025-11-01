@@ -20,6 +20,8 @@ const DEFAULT_BACKGROUND = '#ffffff'
 const BLOCK_GAP = 24
 const COLUMN_GAP = 48
 const DEFAULT_IMAGE_HEIGHT = 300
+const BULLET_INDENT = 48 // Left padding for bullet text
+const BULLET_GAP = 8 // Gap between marker and text (smaller for two-col)
 
 /**
  * TwoColSlide Layout Primitive
@@ -174,8 +176,8 @@ export function TwoColSlide({
             frameWidth: frameW,
             bullet: {
               marker: '•',
-              gap: 8,
-              indent: 24,
+              gap: BULLET_GAP,
+              indent: BULLET_INDENT,
               markerSizeRatio: 1,
             },
           })
@@ -242,8 +244,8 @@ export function TwoColSlide({
             frameWidth: frameW,
             bullet: {
               marker: '•',
-              gap: 8,
-              indent: 24,
+              gap: BULLET_GAP,
+              indent: BULLET_INDENT,
               markerSizeRatio: 1,
             },
           })

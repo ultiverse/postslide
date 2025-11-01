@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { Project, Slide, SlideBlock, ImageBlock, BackgroundBlock, DecorativeBlock } from '@/types/domain'
 import { createBlock } from '@/lib/constants/blocks'
-import { getLayout, matchSlideToLayout } from '@/lib/layouts/utils'
+import { getLayout, matchSlideToLayout, getSuggestedBlocksForLayout } from '@/lib/layouts/utils'
 
 interface ProjectState {
   project: Project
@@ -24,6 +24,7 @@ interface ProjectState {
   applyTemplateToSlide: (slideId: string, templateId: string) => void
   applyTemplateToAllSlides: (templateId: string) => void
   applyLayoutToSlide: (slideId: string, templateId: string, layoutId: string) => void
+  applyLayoutWithBlocks: (slideId: string, templateId: string, layoutId: string) => void
   autoMatchLayoutForSlide: (slideId: string, templateId: string) => void
 
   // Block-level
@@ -151,6 +152,50 @@ export const useProject = create<ProjectState>((set) => ({
         ),
       },
     })),
+  applyLayoutWithBlocks: (slideId, templateId, layoutId) =>
+    set((s) => {
+      const slide = s.project.slides.find(sl => sl.id === slideId)
+      if (!slide) return s
+
+      const layout = getLayout(templateId, layoutId)
+      if (!layout) {
+        // Fallback to just applying layout without adding blocks
+        return {
+          project: {
+            ...s.project,
+            slides: s.project.slides.map((sl) =>
+              sl.id === slideId ? { ...sl, templateId, layoutId } : sl
+            ),
+          },
+        }
+      }
+
+      // Get suggested blocks for this layout
+      const suggestions = getSuggestedBlocksForLayout(layout)
+
+      // Create blocks based on suggestions
+      const newBlocks: SlideBlock[] = suggestions.map(({ kind }) => createBlock(kind))
+
+      // Merge with existing blocks (keep existing, add missing)
+      const existingBlockKinds = new Set(slide.blocks.map(b => b.kind))
+      const blocksToAdd = newBlocks.filter(b => !existingBlockKinds.has(b.kind))
+
+      return {
+        project: {
+          ...s.project,
+          slides: s.project.slides.map((sl) =>
+            sl.id === slideId
+              ? {
+                  ...sl,
+                  templateId,
+                  layoutId,
+                  blocks: [...sl.blocks, ...blocksToAdd],
+                }
+              : sl
+          ),
+        },
+      }
+    }),
   autoMatchLayoutForSlide: (slideId, templateId) =>
     set((s) => {
       const slide = s.project.slides.find(sl => sl.id === slideId)

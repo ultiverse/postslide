@@ -322,12 +322,29 @@ const minimalProSchema: TemplateSchema = {
   description: 'Clean, professional layout with vertical block stacking and generous spacing',
   layouts: [
     {
-      id: 'default',
+      id: 'list',
       kind: 'list',
       slots: [
         { id: 'title', type: 'text', style: 'h1' },
         { id: 'body', type: 'text', style: 'body' },
         { id: 'bullets', type: 'bullets', style: 'body' },
+      ],
+    },
+    {
+      id: 'title',
+      kind: 'title',
+      slots: [
+        { id: 'title', type: 'text', style: 'h1' },
+        { id: 'subtitle', type: 'text', style: 'h2' },
+      ],
+    },
+    {
+      id: 'two-col',
+      kind: 'two-col',
+      slots: [
+        { id: 'title', type: 'text', style: 'h1' },
+        { id: 'left-content', type: 'text', style: 'body' },
+        { id: 'right-content', type: 'text', style: 'body' },
       ],
     },
   ],

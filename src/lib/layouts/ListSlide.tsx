@@ -1,24 +1,26 @@
-import type { LayoutProps } from './types'
-import type { TextBlock } from '@/types/domain'
-import type { TextStyle } from '@/lib/types/design'
-import { useMemo } from 'react'
-import { contentRect, isOverflow } from '@/lib/layout/grid'
-import { createMeasurer } from '@/lib/layout/measure'
-import { layoutBullets } from '@/lib/layout/bullets'
-import { BackgroundBlockRenderer, DecorativeBlockRenderer, ImageBlockRenderer } from '@/components/canvas/BlockRenderer'
-import { isTextBlock } from '@/lib/constants/blocks'
+import type { LayoutProps } from './types';
+import type { TextBlock } from '@/types/domain';
+import type { TextStyle } from '@/lib/types/design';
+import { useMemo } from 'react';
+import { contentRect, isOverflow } from '@/lib/layout/grid';
+import { createMeasurer } from '@/lib/layout/measure';
+import { layoutBullets } from '@/lib/layout/bullets';
+import { BackgroundBlockRenderer, DecorativeBlockRenderer, ImageBlockRenderer } from '@/components/canvas/BlockRenderer';
+import { isTextBlock } from '@/lib/constants/blocks';
 
 // Layout constants
-const DEFAULT_FONT = 'Inter, system-ui, sans-serif'
-const DEFAULT_WIDTH = 1080
-const DEFAULT_HEIGHT = 1080
-const DEFAULT_SAFE_INSET = 64
-const DEFAULT_BASELINE = 8
-const DEFAULT_TEXT_COLOR = '#1a1a1a'
-const DEFAULT_TEXT_MUTED = '#666666'
-const DEFAULT_BACKGROUND = '#ffffff'
-const BLOCK_GAP = 24
-const DEFAULT_IMAGE_HEIGHT = 300
+const DEFAULT_FONT = 'Inter, system-ui, sans-serif';
+const DEFAULT_WIDTH = 1080;
+const DEFAULT_HEIGHT = 1080;
+const DEFAULT_SAFE_INSET = 64;
+const DEFAULT_BASELINE = 8;
+const DEFAULT_TEXT_COLOR = '#1a1a1a';
+const DEFAULT_TEXT_MUTED = '#666666';
+const DEFAULT_BACKGROUND = '#ffffff';
+const BLOCK_GAP = 24;
+const DEFAULT_IMAGE_HEIGHT = 300;
+const BULLET_INDENT = 48; // Left padding for bullet text
+const BULLET_GAP = 12; // Gap between marker and text
 
 /**
  * ListSlide Layout Primitive
@@ -39,27 +41,27 @@ export function ListSlide({
   height = DEFAULT_HEIGHT,
   safeInset = DEFAULT_SAFE_INSET,
 }: LayoutProps) {
-  const measure = useMemo(() => createMeasurer(), [])
+  const measure = useMemo(() => createMeasurer(), []);
 
   const theme = useMemo(() => ({
     primary: brand.primary,
     text: DEFAULT_TEXT_COLOR,
     textMuted: DEFAULT_TEXT_MUTED,
     background: DEFAULT_BACKGROUND,
-  }), [brand.primary])
+  }), [brand.primary]);
 
-  const spec = { width, height, safeInset, baseline: DEFAULT_BASELINE }
-  const cr = contentRect(spec)
+  const spec = { width, height, safeInset, baseline: DEFAULT_BASELINE };
+  const cr = contentRect(spec);
 
   // Separate blocks into layers
-  const backgroundBlocks = slide.blocks.filter(b => b.kind === 'background')
-  const contentBlocks = slide.blocks.filter(b => isTextBlock(b) || b.kind === 'image')
-  const decorativeBlocks = slide.blocks.filter(b => b.kind === 'decorative')
+  const backgroundBlocks = slide.blocks.filter(b => b.kind === 'background');
+  const contentBlocks = slide.blocks.filter(b => isTextBlock(b) || b.kind === 'image');
+  const decorativeBlocks = slide.blocks.filter(b => b.kind === 'decorative');
 
   // Define text styles based on block kind
   const getStyleForBlock = (block: TextBlock): TextStyle => {
-    const baseFont = brand.fontBody || DEFAULT_FONT
-    const headFont = brand.fontHead || baseFont
+    const baseFont = brand.fontBody || DEFAULT_FONT;
+    const headFont = brand.fontHead || baseFont;
 
     switch (block.kind) {
       case 'title':
@@ -69,7 +71,7 @@ export function ListSlide({
           fontSize: 72,
           lineHeight: 80,
           color: theme.text,
-        }
+        };
       case 'subtitle':
         return {
           fontFamily: headFont,
@@ -77,7 +79,7 @@ export function ListSlide({
           fontSize: 48,
           lineHeight: 56,
           color: theme.textMuted,
-        }
+        };
       case 'body':
         return {
           fontFamily: baseFont,
@@ -85,50 +87,51 @@ export function ListSlide({
           fontSize: 32,
           lineHeight: 40,
           color: theme.text,
-        }
+        };
       case 'bullets':
         return {
           fontFamily: baseFont,
           fontWeight: 400,
-          fontSize: 28,
-          lineHeight: 40,
+          fontSize: 48,
+          lineHeight: 100,
+          paddingLeft: 32,
           color: theme.text,
-        }
+        };
     }
-  }
+  };
 
   // Calculate block positions with vertical stacking
   const renderedBlocks = useMemo(() => {
-    if (!contentBlocks.length) return []
+    if (!contentBlocks.length) return [];
 
-    let currentY = cr.y
+    let currentY = cr.y;
 
     return contentBlocks.map((block) => {
-      const frameX = cr.x
-      const frameW = cr.w
-      const maxH = cr.h - (currentY - cr.y)
+      const frameX = cr.x;
+      const frameW = cr.w;
+      const maxH = cr.h - (currentY - cr.y);
 
       if (block.kind === 'image') {
         // Image block
-        const imgHeight = block.height || DEFAULT_IMAGE_HEIGHT
-        const imgWidth = block.width || frameW
-        const frameH = Math.min(imgHeight, maxH)
+        const imgHeight = block.height || DEFAULT_IMAGE_HEIGHT;
+        const imgWidth = block.width || frameW;
+        const frameH = Math.min(imgHeight, maxH);
 
         const result = {
           block,
           frame: { x: frameX, y: currentY, w: imgWidth, h: frameH },
           type: 'image' as const,
-        }
+        };
 
-        currentY += frameH + BLOCK_GAP
-        return result
+        currentY += frameH + BLOCK_GAP;
+        return result;
       } else {
         // Text block
-        const textBlock = block as TextBlock
-        const style = getStyleForBlock(textBlock)
+        const textBlock = block as TextBlock;
+        const style = getStyleForBlock(textBlock);
 
-        let layout
-        let frameH
+        let layout;
+        let frameH;
 
         if (textBlock.kind === 'bullets') {
           layout = layoutBullets({
@@ -137,19 +140,19 @@ export function ListSlide({
             frameWidth: frameW,
             bullet: {
               marker: '•',
-              gap: 12,
-              indent: 32,
+              gap: BULLET_GAP,
+              indent: BULLET_INDENT,
               markerSizeRatio: 1,
             },
-          })
-          frameH = Math.min(layout.totalHeight, maxH)
+          });
+          frameH = Math.min(layout.totalHeight, maxH);
         } else {
           layout = measure({
             text: textBlock.text,
             style,
             maxWidth: frameW,
-          })
-          frameH = Math.min(layout.totalHeight, maxH)
+          });
+          frameH = Math.min(layout.totalHeight, maxH);
         }
 
         const result = {
@@ -159,20 +162,20 @@ export function ListSlide({
           frame: { x: frameX, y: currentY, w: frameW, h: frameH },
           overflow: isOverflow(layout.totalHeight, frameH),
           type: 'text' as const,
-        }
+        };
 
-        currentY += frameH + BLOCK_GAP
-        return result
+        currentY += frameH + BLOCK_GAP;
+        return result;
       }
-    })
-  }, [contentBlocks, measure, cr, theme, brand])
+    });
+  }, [contentBlocks, measure, cr, theme, brand]);
 
   const artboardStyle: React.CSSProperties = {
     width: spec.width,
     height: spec.height,
     position: 'relative',
     background: theme.background,
-  }
+  };
 
   return (
     <div style={artboardStyle}>
@@ -198,17 +201,17 @@ export function ListSlide({
               width={rb.frame.w}
               height={rb.frame.h}
             />
-          )
+          );
         } else if (rb.block.kind === 'bullets') {
-          return <BulletBlock key={rb.block.id} renderBlock={rb} />
+          return <BulletBlock key={rb.block.id} renderBlock={rb} />;
         }
-        return <TextBlock key={rb.block.id} renderBlock={rb} />
+        return <TextBlock key={rb.block.id} renderBlock={rb} />;
       })}
 
       {/* Decorative layer */}
       {decorativeBlocks.map((block) => {
-        const x = block.props?.x as number ?? spec.width / 2 - 24
-        const y = block.props?.y as number ?? spec.height - 100
+        const x = block.props?.x as number ?? spec.width / 2 - 24;
+        const y = block.props?.y as number ?? spec.height - 100;
         return (
           <DecorativeBlockRenderer
             key={block.id}
@@ -216,15 +219,15 @@ export function ListSlide({
             x={x}
             y={y}
           />
-        )
+        );
       })}
     </div>
-  )
+  );
 }
 
 // Text block component
-function TextBlock({ renderBlock }: { renderBlock: any }) {
-  const { style, layout, frame, overflow } = renderBlock
+function TextBlock({ renderBlock }: { renderBlock: any; }) {
+  const { style, layout, frame, overflow } = renderBlock;
 
   return (
     <div
@@ -261,12 +264,12 @@ function TextBlock({ renderBlock }: { renderBlock: any }) {
       </div>
       {overflow && <OverflowBadge />}
     </div>
-  )
+  );
 }
 
 // Bullet block component
-function BulletBlock({ renderBlock }: { renderBlock: any }) {
-  const { style, layout, frame, overflow } = renderBlock
+function BulletBlock({ renderBlock }: { renderBlock: any; }) {
+  const { style, layout, frame, overflow } = renderBlock;
 
   return (
     <div
@@ -316,7 +319,7 @@ function BulletBlock({ renderBlock }: { renderBlock: any }) {
       </div>
       {overflow && <OverflowBadge />}
     </div>
-  )
+  );
 }
 
 function OverflowBadge() {
@@ -327,5 +330,5 @@ function OverflowBadge() {
       </svg>
       <span>Overflow</span>
     </div>
-  )
+  );
 }

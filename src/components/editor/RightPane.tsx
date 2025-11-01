@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useProject } from '@/state/project.store';
 import { SortableBlockCard } from '@/components/blocks/SortableBlockCard';
 import { IconButton } from '@/components/ui';
+import { LayoutPicker } from '@/components/editor/LayoutPicker';
 import type { SlideBlock } from '@/types/domain';
 import {
     DndContext,
@@ -175,6 +176,9 @@ export function RightPane() {
                     )}
                 </div>
             </div>
+
+            {/* Layout Picker Section */}
+            {selectedSlide && <LayoutPicker slide={selectedSlide} />}
 
             <div className="space-y-6 p-4">
                 {/* Blocks Section */}
