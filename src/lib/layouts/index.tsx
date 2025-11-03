@@ -4,6 +4,9 @@ import type { LayoutProps } from './types'
 import { TitleSlide } from './TitleSlide'
 import { ListSlide } from './ListSlide'
 import { TwoColSlide } from './TwoColSlide'
+import { StatSlide } from './StatSlide'
+import { QuoteSlide } from './QuoteSlide'
+import { CoverSlide } from './CoverSlide'
 
 /**
  * Schema-driven layout renderer
@@ -53,14 +56,11 @@ function renderLayout(kind: LayoutKind, props: LayoutProps): ReactElement {
     case 'two-col':
       return <TwoColSlide {...props} />
     case 'stat':
-      // TODO: Implement StatSlide
-      return <ListSlide {...props} />
+      return <StatSlide {...props} />
     case 'quote':
-      // TODO: Implement QuoteSlide
-      return <ListSlide {...props} />
+      return <QuoteSlide {...props} />
     case 'cover':
-      // TODO: Implement CoverSlide (or use TitleSlide)
-      return <TitleSlide {...props} />
+      return <CoverSlide {...props} />
     default:
       // Fallback to list layout
       return <ListSlide {...props} />
@@ -71,4 +71,7 @@ function renderLayout(kind: LayoutKind, props: LayoutProps): ReactElement {
 export { TitleSlide } from './TitleSlide'
 export { ListSlide } from './ListSlide'
 export { TwoColSlide } from './TwoColSlide'
+export { StatSlide } from './StatSlide'
+export { QuoteSlide } from './QuoteSlide'
+export { CoverSlide } from './CoverSlide'
 export type { LayoutProps } from './types'

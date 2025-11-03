@@ -347,6 +347,32 @@ const minimalProSchema: TemplateSchema = {
         { id: 'right-content', type: 'text', style: 'body' },
       ],
     },
+    {
+      id: 'stat',
+      kind: 'stat',
+      slots: [
+        { id: 'number', type: 'text', style: 'h1' },
+        { id: 'label', type: 'text', style: 'caption' },
+        { id: 'context', type: 'text', style: 'body' },
+      ],
+    },
+    {
+      id: 'quote',
+      kind: 'quote',
+      slots: [
+        { id: 'quote', type: 'text', style: 'h2' },
+        { id: 'attribution', type: 'text', style: 'caption' },
+      ],
+    },
+    {
+      id: 'cover',
+      kind: 'cover',
+      slots: [
+        { id: 'title', type: 'text', style: 'h1' },
+        { id: 'subtitle', type: 'text', style: 'h2' },
+        { id: 'background', type: 'image' },
+      ],
+    },
   ],
 };
 

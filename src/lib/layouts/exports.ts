@@ -9,7 +9,7 @@
 export { renderSlideFromSchema } from './index'
 
 // Layout primitives
-export { TitleSlide, ListSlide, TwoColSlide } from './index'
+export { TitleSlide, ListSlide, TwoColSlide, StatSlide, QuoteSlide, CoverSlide } from './index'
 
 // Types
 export type { LayoutProps, Theme } from './types'

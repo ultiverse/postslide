@@ -88,23 +88,42 @@ export function matchSlideToLayout(slide: Slide, templateId: string): LayoutDefi
  */
 export function getSuggestedBlocksForLayout(layout: LayoutDefinition): Array<{ kind: Slide['blocks'][0]['kind'], placeholder: string }> {
   const suggestions: Array<{ kind: Slide['blocks'][0]['kind'], placeholder: string }> = []
+  const seenKinds = new Set<string>() // Track which block kinds we've already suggested
 
   for (const slot of layout.slots) {
     switch (slot.type) {
       case 'text':
-        if (slot.style === 'h1' || slot.id.includes('title')) {
-          suggestions.push({ kind: 'title', placeholder: 'Your Title Here' })
-        } else if (slot.style === 'h2' || slot.id.includes('subtitle')) {
-          suggestions.push({ kind: 'subtitle', placeholder: 'Your Subtitle' })
+        let blockKind: Slide['blocks'][0]['kind']
+        let placeholder: string
+
+        if (slot.style === 'h1' || slot.id.includes('title') || slot.id.includes('number')) {
+          blockKind = 'title'
+          placeholder = 'Your Title Here'
+        } else if (slot.style === 'h2' || slot.id.includes('subtitle') || slot.id.includes('attribution') || slot.id.includes('label')) {
+          blockKind = 'subtitle'
+          placeholder = 'Your Subtitle'
         } else {
-          suggestions.push({ kind: 'body', placeholder: 'Start writing your content...' })
+          blockKind = 'body'
+          placeholder = 'Start writing your content...'
+        }
+
+        // Only add if we haven't seen this kind before
+        if (!seenKinds.has(blockKind)) {
+          suggestions.push({ kind: blockKind, placeholder })
+          seenKinds.add(blockKind)
         }
         break
       case 'bullets':
-        suggestions.push({ kind: 'bullets', placeholder: 'Add bullet points' })
+        if (!seenKinds.has('bullets')) {
+          suggestions.push({ kind: 'bullets', placeholder: 'Add bullet points' })
+          seenKinds.add('bullets')
+        }
         break
       case 'image':
-        suggestions.push({ kind: 'image', placeholder: 'Add an image' })
+        if (!seenKinds.has('image')) {
+          suggestions.push({ kind: 'image', placeholder: 'Add an image' })
+          seenKinds.add('image')
+        }
         break
       // 'number' slot type doesn't directly map to a block kind yet
     }
