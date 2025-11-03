@@ -90,6 +90,11 @@ export function getSuggestedBlocksForLayout(layout: LayoutDefinition): Array<{ k
   const suggestions: Array<{ kind: Slide['blocks'][0]['kind'], placeholder: string }> = []
   const seenKinds = new Set<string>() // Track which block kinds we've already suggested
 
+  // Special handling for layouts that need multiple blocks of the same kind
+  const needsMultipleBodyBlocks = layout.kind === 'timeline' || layout.kind === 'comparison'
+  const needsMultipleSubtitles = layout.kind === 'comparison'
+  const needsMultipleBullets = layout.kind === 'comparison'
+
   for (const slot of layout.slots) {
     switch (slot.type) {
       case 'text':
@@ -98,25 +103,42 @@ export function getSuggestedBlocksForLayout(layout: LayoutDefinition): Array<{ k
 
         if (slot.style === 'h1' || slot.id.includes('title') || slot.id.includes('number')) {
           blockKind = 'title'
-          placeholder = 'Your Title Here'
+          placeholder = getPlaceholderForSlot(slot, layout.kind)
         } else if (slot.style === 'h2' || slot.id.includes('subtitle') || slot.id.includes('attribution') || slot.id.includes('label')) {
           blockKind = 'subtitle'
-          placeholder = 'Your Subtitle'
+          placeholder = getPlaceholderForSlot(slot, layout.kind)
         } else {
           blockKind = 'body'
-          placeholder = 'Start writing your content...'
+          placeholder = getPlaceholderForSlot(slot, layout.kind)
         }
 
-        // Only add if we haven't seen this kind before
-        if (!seenKinds.has(blockKind)) {
+        // Determine if we should add this block
+        let shouldAdd = false
+        if (needsMultipleBodyBlocks && blockKind === 'body') {
+          shouldAdd = true // Always add body blocks for timeline/comparison
+        } else if (needsMultipleSubtitles && blockKind === 'subtitle') {
+          shouldAdd = true // Always add subtitle blocks for comparison
+        } else {
+          shouldAdd = !seenKinds.has(blockKind) // Otherwise deduplicate
+        }
+
+        if (shouldAdd) {
           suggestions.push({ kind: blockKind, placeholder })
-          seenKinds.add(blockKind)
+          // Only mark as seen if we're deduplicating this kind
+          if (!needsMultipleBodyBlocks || blockKind !== 'body') {
+            if (!needsMultipleSubtitles || blockKind !== 'subtitle') {
+              seenKinds.add(blockKind)
+            }
+          }
         }
         break
       case 'bullets':
-        if (!seenKinds.has('bullets')) {
+        const shouldAddBullets = needsMultipleBullets || !seenKinds.has('bullets')
+        if (shouldAddBullets) {
           suggestions.push({ kind: 'bullets', placeholder: 'Add bullet points' })
-          seenKinds.add('bullets')
+          if (!needsMultipleBullets) {
+            seenKinds.add('bullets')
+          }
         }
         break
       case 'image':
@@ -130,6 +152,67 @@ export function getSuggestedBlocksForLayout(layout: LayoutDefinition): Array<{ k
   }
 
   return suggestions
+}
+
+/**
+ * Get a context-aware placeholder for a slot
+ */
+function getPlaceholderForSlot(slot: LayoutSlot, layoutKind: string): string {
+  // Timeline-specific placeholders
+  if (layoutKind === 'timeline') {
+    if (slot.id.includes('item')) {
+      const itemNum = slot.id.match(/\d+/)?.[0]
+      return `Step ${itemNum} | Description`
+    }
+    if (slot.id.includes('title')) return 'Timeline Title'
+  }
+
+  // Comparison-specific placeholders
+  if (layoutKind === 'comparison') {
+    if (slot.id.includes('title')) return 'Comparison Title'
+    if (slot.id.includes('left-label')) return 'Option A'
+    if (slot.id.includes('right-label')) return 'Option B'
+    if (slot.id.includes('left-content')) return 'Details for Option A'
+    if (slot.id.includes('right-content')) return 'Details for Option B'
+  }
+
+  // Stat-specific placeholders
+  if (layoutKind === 'stat') {
+    if (slot.id.includes('number')) return '99%'
+    if (slot.id.includes('label')) return 'SUCCESS RATE'
+    if (slot.id.includes('context')) return 'Additional context here'
+  }
+
+  // Quote-specific placeholders
+  if (layoutKind === 'quote') {
+    if (slot.id.includes('quote')) return 'Your inspiring quote goes here'
+    if (slot.id.includes('attribution')) return '— Author Name'
+  }
+
+  // Image-focus-specific placeholders
+  if (layoutKind === 'image-focus') {
+    if (slot.id.includes('title')) return 'Image Caption'
+    if (slot.id.includes('caption')) return 'Additional description'
+  }
+
+  // Section-break-specific placeholders
+  if (layoutKind === 'section-break') {
+    if (slot.id.includes('subtitle')) return 'SECTION 01'
+    if (slot.id.includes('title')) return 'Section Title'
+  }
+
+  // Cover-specific placeholders
+  if (layoutKind === 'cover') {
+    if (slot.id.includes('title')) return 'Presentation Title'
+    if (slot.id.includes('subtitle')) return 'Subtitle or tagline'
+  }
+
+  // Generic placeholders based on style
+  if (slot.style === 'h1' || slot.id.includes('title')) return 'Your Title Here'
+  if (slot.style === 'h2' || slot.id.includes('subtitle')) return 'Your Subtitle'
+  if (slot.style === 'caption') return 'Caption text'
+
+  return 'Start writing your content...'
 }
 
 /**
@@ -160,6 +243,10 @@ export function getLayoutDescription(layout: LayoutDefinition): string {
     'stat': 'Large stat with caption',
     'quote': 'Centered quote',
     'cover': 'Cover slide',
+    'image-focus': 'Image with caption',
+    'comparison': 'Side-by-side comparison',
+    'timeline': 'Horizontal timeline',
+    'section-break': 'Section divider',
   }
 
   return `${kindDescriptions[layout.kind]} — ${slotDescriptions}`

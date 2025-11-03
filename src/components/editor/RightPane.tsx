@@ -41,6 +41,7 @@ export function RightPane() {
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const justAddedBulletRef = useRef<string | null>(null); // Track which block just had a bullet added
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -246,6 +247,20 @@ export function RightPane() {
                                                         {block.bullets.map((bullet, bulletIdx) => (
                                                             <div key={bulletIdx} className="flex gap-1">
                                                                 <input
+                                                                    ref={(el) => {
+                                                                        // Auto-focus on the last bullet item if it was just added via button click
+                                                                        if (
+                                                                            el &&
+                                                                            bulletIdx === block.bullets.length - 1 &&
+                                                                            bullet === '' &&
+                                                                            justAddedBulletRef.current === block.id
+                                                                        ) {
+                                                                            setTimeout(() => {
+                                                                                el.focus();
+                                                                                justAddedBulletRef.current = null; // Clear the flag
+                                                                            }, 0);
+                                                                        }
+                                                                    }}
                                                                     type="text"
                                                                     value={bullet}
                                                                     onChange={(e) => {
@@ -273,12 +288,13 @@ export function RightPane() {
                                                         ))}
 
                                                         <button
-                                                            onClick={() =>
+                                                            onClick={() => {
+                                                                justAddedBulletRef.current = block.id; // Set flag before adding bullet
                                                                 updateBullets(selectedSlide.id, block.id, [
                                                                     ...block.bullets,
                                                                     '',
-                                                                ])
-                                                            }
+                                                                ]);
+                                                            }}
                                                             className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
                                                         >
                                                             <Plus className="h-3 w-3" />

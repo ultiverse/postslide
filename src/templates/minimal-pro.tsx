@@ -373,6 +373,45 @@ const minimalProSchema: TemplateSchema = {
         { id: 'background', type: 'image' },
       ],
     },
+    {
+      id: 'image-focus',
+      kind: 'image-focus',
+      slots: [
+        { id: 'image', type: 'image' },
+        { id: 'title', type: 'text', style: 'h2' },
+        { id: 'caption', type: 'text', style: 'body' },
+      ],
+    },
+    {
+      id: 'comparison',
+      kind: 'comparison',
+      slots: [
+        { id: 'title', type: 'text', style: 'h1' },
+        { id: 'left-label', type: 'text', style: 'h2' },
+        { id: 'left-content', type: 'bullets', style: 'body' },
+        { id: 'right-label', type: 'text', style: 'h2' },
+        { id: 'right-content', type: 'bullets', style: 'body' },
+      ],
+    },
+    {
+      id: 'timeline',
+      kind: 'timeline',
+      slots: [
+        { id: 'title', type: 'text', style: 'h1' },
+        { id: 'item-1', type: 'text', style: 'body' },
+        { id: 'item-2', type: 'text', style: 'body' },
+        { id: 'item-3', type: 'text', style: 'body' },
+        { id: 'item-4', type: 'text', style: 'body' },
+      ],
+    },
+    {
+      id: 'section-break',
+      kind: 'section-break',
+      slots: [
+        { id: 'title', type: 'text', style: 'h1' },
+        { id: 'subtitle', type: 'text', style: 'h2' },
+      ],
+    },
   ],
 };
 

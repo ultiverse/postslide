@@ -56,7 +56,7 @@ export type CoverStyle = 'title-heavy' | 'image-forward' | 'stat'
 
 // --- Schema-based Template System (New) ---
 
-export type LayoutKind = 'title' | 'two-col' | 'list' | 'stat' | 'quote' | 'cover'
+export type LayoutKind = 'title' | 'two-col' | 'list' | 'stat' | 'quote' | 'cover' | 'image-focus' | 'comparison' | 'timeline' | 'section-break'
 
 export type SlotType = 'text' | 'image' | 'bullets' | 'number'
 

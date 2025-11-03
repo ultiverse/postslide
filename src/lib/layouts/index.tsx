@@ -7,6 +7,10 @@ import { TwoColSlide } from './TwoColSlide'
 import { StatSlide } from './StatSlide'
 import { QuoteSlide } from './QuoteSlide'
 import { CoverSlide } from './CoverSlide'
+import { ImageFocusSlide } from './ImageFocusSlide'
+import { ComparisonSlide } from './ComparisonSlide'
+import { TimelineSlide } from './TimelineSlide'
+import { SectionBreakSlide } from './SectionBreakSlide'
 
 /**
  * Schema-driven layout renderer
@@ -61,6 +65,14 @@ function renderLayout(kind: LayoutKind, props: LayoutProps): ReactElement {
       return <QuoteSlide {...props} />
     case 'cover':
       return <CoverSlide {...props} />
+    case 'image-focus':
+      return <ImageFocusSlide {...props} />
+    case 'comparison':
+      return <ComparisonSlide {...props} />
+    case 'timeline':
+      return <TimelineSlide {...props} />
+    case 'section-break':
+      return <SectionBreakSlide {...props} />
     default:
       // Fallback to list layout
       return <ListSlide {...props} />
@@ -74,4 +86,8 @@ export { TwoColSlide } from './TwoColSlide'
 export { StatSlide } from './StatSlide'
 export { QuoteSlide } from './QuoteSlide'
 export { CoverSlide } from './CoverSlide'
+export { ImageFocusSlide } from './ImageFocusSlide'
+export { ComparisonSlide } from './ComparisonSlide'
+export { TimelineSlide } from './TimelineSlide'
+export { SectionBreakSlide } from './SectionBreakSlide'
 export type { LayoutProps } from './types'

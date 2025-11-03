@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Sparkles, LayoutGrid, AlertTriangle } from 'lucide-react';
 import { useProject } from '@/state/project.store';
 import { getTemplateLayouts, getLayoutDescription, matchSlideToLayout } from '@/lib/layouts/utils';
+import { LayoutPickerModal } from './LayoutPickerModal';
 import type { Slide } from '@/types/domain';
 
 interface LayoutPickerProps {
@@ -10,6 +11,7 @@ interface LayoutPickerProps {
 }
 
 export function LayoutPicker({ slide }: LayoutPickerProps) {
+  const [showModal, setShowModal] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const [pendingLayoutId, setPendingLayoutId] = useState<string | null>(null);
   const applyLayoutWithBlocks = useProject(s => s.applyLayoutWithBlocks);
@@ -21,6 +23,7 @@ export function LayoutPicker({ slide }: LayoutPickerProps) {
   // Get suggested layout based on current content
   const suggestedLayout = matchSlideToLayout(slide, templateId);
   const currentLayoutId = slide.layoutId || layouts[0]?.id;
+  const currentLayout = layouts.find(l => l.id === currentLayoutId);
 
   // Check if changing layout might be destructive
   const isLayoutChangeDestructive = (newLayoutId: string): boolean => {
@@ -45,15 +48,20 @@ export function LayoutPicker({ slide }: LayoutPickerProps) {
   };
 
   const handleLayoutChange = (newLayoutId: string) => {
-    if (newLayoutId === currentLayoutId) return;
+    if (newLayoutId === currentLayoutId) {
+      setShowModal(false);
+      return;
+    }
 
     // Check if change might be destructive
     if (isLayoutChangeDestructive(newLayoutId)) {
       setPendingLayoutId(newLayoutId);
       setShowWarning(true);
+      setShowModal(false);
     } else {
       // Apply immediately if not destructive and add necessary blocks
       applyLayoutWithBlocks(slide.id, templateId, newLayoutId);
+      setShowModal(false);
     }
   };
 
@@ -80,33 +88,36 @@ export function LayoutPicker({ slide }: LayoutPickerProps) {
     return null;
   }
 
+  // Format layout name for display
+  const formatLayoutName = (kind: string) => {
+    return kind
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   return (
     <div className="border-b border-brand-200/50 bg-white/50 backdrop-blur-sm">
       <div className="p-4 space-y-3">
-        {/* Layout Selector */}
+        {/* Layout Selector Button */}
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-xs font-medium text-neutral-700">
             <LayoutGrid className="w-3.5 h-3.5" />
             Slide Layout
           </label>
 
-          <select
-            value={currentLayoutId}
-            onChange={(e) => handleLayoutChange(e.target.value)}
-            className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 hover:border-brand-400"
+          <button
+            onClick={() => setShowModal(true)}
+            className="w-full flex items-center justify-between rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-colors hover:border-brand-400 hover:bg-brand-50/50 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
           >
-            {layouts.map((layout) => (
-              <option key={layout.id} value={layout.id}>
-                {layout.kind.charAt(0).toUpperCase() + layout.kind.slice(1)} Layout
-              </option>
-            ))}
-          </select>
+            <span className="font-medium text-neutral-900">
+              {currentLayout ? formatLayoutName(currentLayout.kind) : 'Select Layout'}
+            </span>
+            <LayoutGrid className="w-4 h-4 text-neutral-400" />
+          </button>
 
           <p className="text-xs text-neutral-500">
-            {(() => {
-              const currentLayout = layouts.find(l => l.id === currentLayoutId);
-              return currentLayout ? getLayoutDescription(currentLayout) : '';
-            })()}
+            {currentLayout ? getLayoutDescription(currentLayout) : ''}
           </p>
         </div>
 
@@ -117,10 +128,20 @@ export function LayoutPicker({ slide }: LayoutPickerProps) {
             className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-brand-600 bg-brand-50 hover:bg-brand-100 border border-brand-200 rounded-md transition-colors"
           >
             <Sparkles className="w-4 h-4" />
-            Use Suggested: {suggestedLayout.kind.charAt(0).toUpperCase() + suggestedLayout.kind.slice(1)}
+            Use Suggested: {formatLayoutName(suggestedLayout.kind)}
           </button>
         )}
       </div>
+
+      {/* Layout Picker Modal */}
+      <LayoutPickerModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        layouts={layouts}
+        currentLayoutId={currentLayoutId}
+        suggestedLayoutId={suggestedLayout?.id}
+        onSelectLayout={handleLayoutChange}
+      />
 
       {/* Warning Modal - Rendered via Portal */}
       {showWarning && createPortal(

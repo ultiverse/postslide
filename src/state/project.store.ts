@@ -59,7 +59,7 @@ const seed: Project = {
 export const useProject = create<ProjectState>((set) => ({
   project: seed,
   selectedSlideId: seed.slides[0]?.id || null,
-  showGrid: true,
+  showGrid: false,
 
   // Project-level
   setProject: (p) => set({ project: p }),
@@ -173,12 +173,58 @@ export const useProject = create<ProjectState>((set) => ({
       // Get suggested blocks for this layout
       const suggestions = getSuggestedBlocksForLayout(layout)
 
-      // Create blocks based on suggestions
-      const newBlocks: SlideBlock[] = suggestions.map(({ kind }) => createBlock(kind))
+      // Helper to check if a block has only placeholder/empty content
+      const isBlockEmpty = (block: SlideBlock): boolean => {
+        if (block.kind === 'title' || block.kind === 'subtitle' || block.kind === 'body') {
+          return !block.text || block.text.trim() === ''
+        }
+        if (block.kind === 'bullets') {
+          return block.bullets.length === 0 || block.bullets.every(b => !b || b.trim() === '')
+        }
+        if (block.kind === 'image') {
+          return !block.src || block.src === ''
+        }
+        // Background and decorative blocks are considered "not empty" (user-added)
+        return false
+      }
 
-      // Merge with existing blocks (keep existing, add missing)
-      const existingBlockKinds = new Set(slide.blocks.map(b => b.kind))
-      const blocksToAdd = newBlocks.filter(b => !existingBlockKinds.has(b.kind))
+      // Check if all blocks are empty (placeholders)
+      const allBlocksEmpty = slide.blocks.filter(b =>
+        b.kind !== 'background' && b.kind !== 'decorative'
+      ).every(isBlockEmpty)
+
+      let finalBlocks: SlideBlock[]
+
+      if (allBlocksEmpty) {
+        // If all blocks are empty, replace with new layout's blocks
+        // Keep background and decorative blocks
+        const backgroundAndDecorative = slide.blocks.filter(b =>
+          b.kind === 'background' || b.kind === 'decorative'
+        )
+        const newBlocks: SlideBlock[] = suggestions.map(({ kind, placeholder }) => {
+          const block = createBlock(kind)
+          // Set placeholder text
+          if ('text' in block) {
+            return { ...block, text: placeholder }
+          }
+          return block
+        })
+        finalBlocks = [...backgroundAndDecorative, ...newBlocks]
+      } else {
+        // If blocks have content, keep them and add missing ones
+        const existingBlockKinds = new Set(slide.blocks.map(b => b.kind))
+        const newBlocks: SlideBlock[] = suggestions
+          .filter(({ kind }) => !existingBlockKinds.has(kind))
+          .map(({ kind, placeholder }) => {
+            const block = createBlock(kind)
+            // Set placeholder text
+            if ('text' in block) {
+              return { ...block, text: placeholder }
+            }
+            return block
+          })
+        finalBlocks = [...slide.blocks, ...newBlocks]
+      }
 
       return {
         project: {
@@ -189,7 +235,7 @@ export const useProject = create<ProjectState>((set) => ({
                   ...sl,
                   templateId,
                   layoutId,
-                  blocks: [...sl.blocks, ...blocksToAdd],
+                  blocks: finalBlocks,
                 }
               : sl
           ),
