@@ -35,7 +35,7 @@ const BlockCard = React.forwardRef<HTMLDivElement, BlockCardProps>(
       <div
         ref={ref}
         className={cn(
-          'bg-gradient-to-br from-white to-brand-50/30 border border-brand-200/50 rounded-lg shadow-sm hover:shadow-md hover:border-brand-300/70 transition-all',
+          'bg-gradient-to-br from-white to-brand-50/30 border border-brand-200/50 rounded-lg shadow-sm hover:shadow-md hover:border-brand-300/70 transition-all overflow-hidden',
           className
         )}
         {...props}

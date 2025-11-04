@@ -97,7 +97,7 @@ export function RightPane() {
     };
 
     return (
-        <aside className="flex flex-col overflow-y-auto border-l border-brand-200/50 bg-white/80 shadow-sm backdrop-blur-sm">
+        <aside className="flex flex-col overflow-y-auto border-l border-brand-200/50 shadow-sm  bg-neutral-50/80 backdrop-blur-sm">
             <div className="relative border-b border-brand-200/50 bg-gradient-to-r from-accent-500 to-brand-500 p-4">
                 <div className="flex items-center justify-between">
                     <h2 className="text-lg font-bold text-white">Inspector</h2>
@@ -181,20 +181,11 @@ export function RightPane() {
             {/* Layout Picker Section */}
             {selectedSlide && <LayoutPicker slide={selectedSlide} />}
 
+            {/* Content Blocks Section */}
             <div className="space-y-6 p-4">
                 {/* Blocks Section */}
                 {selectedSlide ? (
                     <>
-                        <div className="relative py-4">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-neutral-300" />
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="bg-white px-2 font-medium text-neutral-600">
-                                    Content Blocks
-                                </span>
-                            </div>
-                        </div>
 
                         <DndContext
                             sensors={sensors}
