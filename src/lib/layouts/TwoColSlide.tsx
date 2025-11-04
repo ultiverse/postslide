@@ -7,21 +7,12 @@ import { createMeasurer } from '@/lib/layout/measure'
 import { layoutBullets } from '@/lib/layout/bullets'
 import { BackgroundBlockRenderer, DecorativeBlockRenderer, ImageBlockRenderer } from '@/components/canvas/BlockRenderer'
 import { isTextBlock } from '@/lib/constants/blocks'
+import { useLayoutTheme } from '@/lib/theme/useLayoutTheme'
 
 // Layout constants
 const DEFAULT_FONT = 'Inter, system-ui, sans-serif'
 const DEFAULT_WIDTH = 1080
 const DEFAULT_HEIGHT = 1080
-const DEFAULT_SAFE_INSET = 64
-const DEFAULT_BASELINE = 8
-const DEFAULT_TEXT_COLOR = '#1a1a1a'
-const DEFAULT_TEXT_MUTED = '#666666'
-const DEFAULT_BACKGROUND = '#ffffff'
-const BLOCK_GAP = 24
-const COLUMN_GAP = 48
-const DEFAULT_IMAGE_HEIGHT = 300
-const BULLET_INDENT = 48 // Left padding for bullet text
-const BULLET_GAP = 8 // Gap between marker and text (smaller for two-col)
 
 /**
  * TwoColSlide Layout Primitive
@@ -39,18 +30,18 @@ export function TwoColSlide({
   brand,
   width = DEFAULT_WIDTH,
   height = DEFAULT_HEIGHT,
-  safeInset = DEFAULT_SAFE_INSET,
+  safeInset,
+  theme: providedTheme,
 }: LayoutProps) {
   const measure = useMemo(() => createMeasurer(), [])
+  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme)
 
-  const theme = useMemo(() => ({
-    primary: brand.primary,
-    text: DEFAULT_TEXT_COLOR,
-    textMuted: DEFAULT_TEXT_MUTED,
-    background: DEFAULT_BACKGROUND,
-  }), [brand.primary])
-
-  const spec = { width, height, safeInset, baseline: DEFAULT_BASELINE }
+  const spec = {
+    width,
+    height,
+    safeInset: safeInset ?? spacing.safeInset,
+    baseline: spacing.baseline
+  }
   const cr = contentRect(spec)
 
   // Separate blocks into layers
@@ -76,34 +67,26 @@ export function TwoColSlide({
       case 'title':
         return {
           fontFamily: headFont,
-          fontWeight: 700,
-          fontSize: 64,
-          lineHeight: 72,
-          color: theme.text,
+          ...typography.h1,
+          color: colors.text,
         }
       case 'subtitle':
         return {
           fontFamily: headFont,
-          fontWeight: 600,
-          fontSize: 40,
-          lineHeight: 48,
-          color: theme.textMuted,
+          ...typography.h2,
+          color: colors.textMuted,
         }
       case 'body':
         return {
           fontFamily: baseFont,
-          fontWeight: 400,
-          fontSize: 28,
-          lineHeight: 36,
-          color: theme.text,
+          ...typography.body,
+          color: colors.text,
         }
       case 'bullets':
         return {
           fontFamily: baseFont,
-          fontWeight: 400,
-          fontSize: 24,
-          lineHeight: 36,
-          color: theme.text,
+          ...typography.body,
+          color: colors.text,
         }
     }
   }
@@ -129,14 +112,14 @@ export function TwoColSlide({
       overflow: isOverflow(layout.totalHeight, frameH),
       type: 'text' as const,
     }
-  }, [titleBlock, measure, cr, theme, brand])
+  }, [titleBlock, measure, cr, colors, typography, brand])
 
-  const titleHeight = titleRendered ? titleRendered.frame.h + BLOCK_GAP : 0
+  const titleHeight = titleRendered ? titleRendered.frame.h + spacing.blockGap : 0
   const columnStartY = cr.y + titleHeight
   const columnHeight = cr.h - titleHeight
 
   // Column dimensions
-  const columnWidth = (cr.w - COLUMN_GAP) / 2
+  const columnWidth = (cr.w - spacing.columnGap) / 2
 
   // Render left column
   const leftRendered = useMemo(() => {
@@ -150,7 +133,7 @@ export function TwoColSlide({
       const maxH = columnHeight - (currentY - columnStartY)
 
       if (block.kind === 'image') {
-        const imgHeight = block.height || DEFAULT_IMAGE_HEIGHT
+        const imgHeight = block.height || spacing.imageHeight
         const imgWidth = block.width || frameW
         const frameH = Math.min(imgHeight, maxH)
 
@@ -160,7 +143,7 @@ export function TwoColSlide({
           type: 'image' as const,
         }
 
-        currentY += frameH + BLOCK_GAP
+        currentY += frameH + spacing.blockGap
         return result
       } else {
         const textBlock = block as TextBlock
@@ -176,8 +159,8 @@ export function TwoColSlide({
             frameWidth: frameW,
             bullet: {
               marker: '•',
-              gap: BULLET_GAP,
-              indent: BULLET_INDENT,
+              gap: spacing.bulletGap,
+              indent: spacing.bulletIndent,
               markerSizeRatio: 1,
             },
           })
@@ -200,11 +183,11 @@ export function TwoColSlide({
           type: 'text' as const,
         }
 
-        currentY += frameH + BLOCK_GAP
+        currentY += frameH + spacing.blockGap
         return result
       }
     })
-  }, [leftBlocks, measure, cr, columnWidth, columnStartY, columnHeight, theme, brand])
+  }, [leftBlocks, measure, cr, columnWidth, columnStartY, columnHeight, spacing, colors, typography, brand])
 
   // Render right column
   const rightRendered = useMemo(() => {
@@ -213,12 +196,12 @@ export function TwoColSlide({
     let currentY = columnStartY
 
     return rightBlocks.map((block) => {
-      const frameX = cr.x + columnWidth + COLUMN_GAP
+      const frameX = cr.x + columnWidth + spacing.columnGap
       const frameW = columnWidth
       const maxH = columnHeight - (currentY - columnStartY)
 
       if (block.kind === 'image') {
-        const imgHeight = block.height || DEFAULT_IMAGE_HEIGHT
+        const imgHeight = block.height || spacing.imageHeight
         const imgWidth = block.width || frameW
         const frameH = Math.min(imgHeight, maxH)
 
@@ -228,7 +211,7 @@ export function TwoColSlide({
           type: 'image' as const,
         }
 
-        currentY += frameH + BLOCK_GAP
+        currentY += frameH + spacing.blockGap
         return result
       } else {
         const textBlock = block as TextBlock
@@ -244,8 +227,8 @@ export function TwoColSlide({
             frameWidth: frameW,
             bullet: {
               marker: '•',
-              gap: BULLET_GAP,
-              indent: BULLET_INDENT,
+              gap: spacing.bulletGap,
+              indent: spacing.bulletIndent,
               markerSizeRatio: 1,
             },
           })
@@ -268,17 +251,17 @@ export function TwoColSlide({
           type: 'text' as const,
         }
 
-        currentY += frameH + BLOCK_GAP
+        currentY += frameH + spacing.blockGap
         return result
       }
     })
-  }, [rightBlocks, measure, cr, columnWidth, columnStartY, columnHeight, theme, brand])
+  }, [rightBlocks, measure, cr, columnWidth, columnStartY, columnHeight, spacing, colors, typography, brand])
 
   const artboardStyle: React.CSSProperties = {
     width: spec.width,
     height: spec.height,
     position: 'relative',
-    background: theme.background,
+    background: colors.background,
   }
 
   return (

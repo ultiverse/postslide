@@ -6,17 +6,12 @@ import { contentRect } from '@/lib/layout/grid'
 import { createMeasurer } from '@/lib/layout/measure'
 import { BackgroundBlockRenderer, DecorativeBlockRenderer } from '@/components/canvas/BlockRenderer'
 import { isTextBlock } from '@/lib/constants/blocks'
+import { useLayoutTheme } from '@/lib/theme/useLayoutTheme'
 
 // Layout constants
 const DEFAULT_FONT = 'Inter, system-ui, sans-serif'
 const DEFAULT_WIDTH = 1080
 const DEFAULT_HEIGHT = 1080
-const DEFAULT_SAFE_INSET = 64
-const DEFAULT_BASELINE = 8
-const DEFAULT_TEXT_COLOR = '#1a1a1a'
-const DEFAULT_TEXT_MUTED = '#666666'
-const DEFAULT_BACKGROUND = '#ffffff'
-const TITLE_SUBTITLE_GAP = 24
 
 /**
  * TitleSlide Layout Primitive
@@ -34,18 +29,18 @@ export function TitleSlide({
   brand,
   width = DEFAULT_WIDTH,
   height = DEFAULT_HEIGHT,
-  safeInset = DEFAULT_SAFE_INSET,
+  safeInset,
+  theme: providedTheme,
 }: LayoutProps) {
   const measure = useMemo(() => createMeasurer(), [])
+  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme)
 
-  const theme = useMemo(() => ({
-    primary: brand.primary,
-    text: DEFAULT_TEXT_COLOR,
-    textMuted: DEFAULT_TEXT_MUTED,
-    background: DEFAULT_BACKGROUND,
-  }), [brand.primary])
-
-  const spec = { width, height, safeInset, baseline: DEFAULT_BASELINE }
+  const spec = {
+    width,
+    height,
+    safeInset: safeInset ?? spacing.safeInset,
+    baseline: spacing.baseline
+  }
   const cr = contentRect(spec)
 
   // Separate blocks
@@ -64,18 +59,14 @@ export function TitleSlide({
   // Define text styles based on slot styles
   const titleStyle: TextStyle = {
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
-    fontWeight: 700,
-    fontSize: titleSlot?.style === 'h1' ? 72 : 64,
-    lineHeight: titleSlot?.style === 'h1' ? 80 : 72,
-    color: theme.text,
+    ...typography.h1,
+    color: colors.text,
   }
 
   const subtitleStyle: TextStyle = {
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
-    fontWeight: 600,
-    fontSize: subtitleSlot?.style === 'h2' ? 48 : 40,
-    lineHeight: subtitleSlot?.style === 'h2' ? 56 : 48,
-    color: theme.textMuted,
+    ...typography.h2,
+    color: colors.textMuted,
   }
 
   // Measure text blocks
@@ -100,7 +91,7 @@ export function TitleSlide({
   // Calculate vertical centering
   const titleHeight = titleLayout?.totalHeight || 0
   const subtitleHeight = subtitleLayout?.totalHeight || 0
-  const totalContentHeight = titleHeight + (subtitleHeight > 0 ? TITLE_SUBTITLE_GAP + subtitleHeight : 0)
+  const totalContentHeight = titleHeight + (subtitleHeight > 0 ? spacing.verticalGap + subtitleHeight : 0)
 
   const startY = cr.y + (cr.h - totalContentHeight) / 2
 
@@ -108,7 +99,7 @@ export function TitleSlide({
     width: spec.width,
     height: spec.height,
     position: 'relative',
-    background: theme.background,
+    background: colors.background,
   }
 
   return (
@@ -166,7 +157,7 @@ export function TitleSlide({
           className="absolute"
           style={{
             left: cr.x,
-            top: startY + titleHeight + TITLE_SUBTITLE_GAP,
+            top: startY + titleHeight + spacing.verticalGap,
             width: cr.w,
             height: subtitleHeight,
             overflow: 'hidden',

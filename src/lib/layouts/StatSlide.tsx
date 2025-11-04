@@ -6,17 +6,12 @@ import { contentRect } from '@/lib/layout/grid'
 import { createMeasurer } from '@/lib/layout/measure'
 import { BackgroundBlockRenderer, DecorativeBlockRenderer } from '@/components/canvas/BlockRenderer'
 import { isTextBlock } from '@/lib/constants/blocks'
+import { useLayoutTheme } from '@/lib/theme/useLayoutTheme'
 
 // Layout constants
 const DEFAULT_FONT = 'Inter, system-ui, sans-serif'
 const DEFAULT_WIDTH = 1080
 const DEFAULT_HEIGHT = 1080
-const DEFAULT_SAFE_INSET = 64
-const DEFAULT_BASELINE = 8
-const DEFAULT_TEXT_COLOR = '#1a1a1a'
-const DEFAULT_TEXT_MUTED = '#666666'
-const DEFAULT_BACKGROUND = '#ffffff'
-const VERTICAL_GAP = 16
 
 /**
  * StatSlide Layout Primitive
@@ -34,18 +29,18 @@ export function StatSlide({
   brand,
   width = DEFAULT_WIDTH,
   height = DEFAULT_HEIGHT,
-  safeInset = DEFAULT_SAFE_INSET,
+  safeInset,
+  theme: providedTheme,
 }: LayoutProps) {
   const measure = useMemo(() => createMeasurer(), [])
+  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme)
 
-  const theme = useMemo(() => ({
-    primary: brand.primary,
-    text: DEFAULT_TEXT_COLOR,
-    textMuted: DEFAULT_TEXT_MUTED,
-    background: DEFAULT_BACKGROUND,
-  }), [brand.primary])
-
-  const spec = { width, height, safeInset, baseline: DEFAULT_BASELINE }
+  const spec = {
+    width,
+    height,
+    safeInset: safeInset ?? spacing.safeInset,
+    baseline: spacing.baseline
+  }
   const cr = contentRect(spec)
 
   // Separate blocks
@@ -64,26 +59,20 @@ export function StatSlide({
   // Text styles for stat components
   const numberStyle: TextStyle = {
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
-    fontWeight: 700,
-    fontSize: 144, // Extra large for the stat
-    lineHeight: 160,
-    color: theme.primary, // Use brand color for emphasis
+    ...typography.stat,
+    color: colors.primary, // Use brand color for emphasis
   }
 
   const labelStyle: TextStyle = {
     fontFamily: brand.fontBody || DEFAULT_FONT,
-    fontWeight: 600,
-    fontSize: 32,
-    lineHeight: 40,
-    color: theme.textMuted,
+    ...typography.h2,
+    color: colors.textMuted,
   }
 
   const contextStyle: TextStyle = {
     fontFamily: brand.fontBody || DEFAULT_FONT,
-    fontWeight: 400,
-    fontSize: 24,
-    lineHeight: 32,
-    color: theme.text,
+    ...typography.caption,
+    color: colors.text,
   }
 
   // Measure text blocks
@@ -121,8 +110,8 @@ export function StatSlide({
 
   const totalContentHeight =
     numberHeight +
-    (labelHeight > 0 ? VERTICAL_GAP + labelHeight : 0) +
-    (contextHeight > 0 ? VERTICAL_GAP * 2 + contextHeight : 0)
+    (labelHeight > 0 ? spacing.verticalGap + labelHeight : 0) +
+    (contextHeight > 0 ? spacing.verticalGap * 2 + contextHeight : 0)
 
   const startY = cr.y + (cr.h - totalContentHeight) / 2
 
@@ -130,7 +119,7 @@ export function StatSlide({
     width: spec.width,
     height: spec.height,
     position: 'relative',
-    background: theme.background,
+    background: colors.background,
   }
 
   return (
@@ -188,7 +177,7 @@ export function StatSlide({
           className="absolute"
           style={{
             left: cr.x,
-            top: startY + numberHeight + VERTICAL_GAP,
+            top: startY + numberHeight + spacing.verticalGap,
             width: cr.w,
             height: labelHeight,
             overflow: 'hidden',
@@ -227,7 +216,7 @@ export function StatSlide({
           className="absolute"
           style={{
             left: cr.x + cr.w * 0.1, // Center narrower text
-            top: startY + numberHeight + labelHeight + VERTICAL_GAP * 2,
+            top: startY + numberHeight + labelHeight + spacing.verticalGap * 2,
             width: cr.w * 0.8,
             height: contextHeight,
             overflow: 'hidden',

@@ -6,17 +6,12 @@ import { contentRect } from '@/lib/layout/grid'
 import { createMeasurer } from '@/lib/layout/measure'
 import { BackgroundBlockRenderer, DecorativeBlockRenderer } from '@/components/canvas/BlockRenderer'
 import { isTextBlock } from '@/lib/constants/blocks'
+import { useLayoutTheme } from '@/lib/theme/useLayoutTheme'
 
 // Layout constants
 const DEFAULT_FONT = 'Inter, system-ui, sans-serif'
 const DEFAULT_WIDTH = 1080
 const DEFAULT_HEIGHT = 1080
-const DEFAULT_SAFE_INSET = 64
-const DEFAULT_BASELINE = 8
-const DEFAULT_TEXT_COLOR = '#1a1a1a'
-const DEFAULT_TEXT_MUTED = '#666666'
-const DEFAULT_BACKGROUND = '#ffffff'
-const QUOTE_ATTRIBUTION_GAP = 24
 
 /**
  * QuoteSlide Layout Primitive
@@ -33,18 +28,18 @@ export function QuoteSlide({
   brand,
   width = DEFAULT_WIDTH,
   height = DEFAULT_HEIGHT,
-  safeInset = DEFAULT_SAFE_INSET,
+  safeInset,
+  theme: providedTheme,
 }: LayoutProps) {
   const measure = useMemo(() => createMeasurer(), [])
+  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme)
 
-  const theme = useMemo(() => ({
-    primary: brand.primary,
-    text: DEFAULT_TEXT_COLOR,
-    textMuted: DEFAULT_TEXT_MUTED,
-    background: DEFAULT_BACKGROUND,
-  }), [brand.primary])
-
-  const spec = { width, height, safeInset, baseline: DEFAULT_BASELINE }
+  const spec = {
+    width,
+    height,
+    safeInset: safeInset ?? spacing.safeInset,
+    baseline: spacing.baseline
+  }
   const cr = contentRect(spec)
 
   // Separate blocks
@@ -61,19 +56,14 @@ export function QuoteSlide({
   // Text styles for quote components
   const quoteStyle: TextStyle = {
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
-    fontWeight: 600,
-    fontSize: 48,
-    lineHeight: 64,
-    color: theme.text,
-    letterSpacing: -0.02, // Tighter letter spacing for quotes
+    ...typography.quote,
+    color: colors.text,
   }
 
   const attributionStyle: TextStyle = {
     fontFamily: brand.fontBody || DEFAULT_FONT,
-    fontWeight: 500,
-    fontSize: 24,
-    lineHeight: 32,
-    color: theme.textMuted,
+    ...typography.caption,
+    color: colors.textMuted,
   }
 
   // Measure text blocks
@@ -101,7 +91,7 @@ export function QuoteSlide({
 
   const totalContentHeight =
     quoteHeight +
-    (attributionHeight > 0 ? QUOTE_ATTRIBUTION_GAP + attributionHeight : 0)
+    (attributionHeight > 0 ? spacing.verticalGap + attributionHeight : 0)
 
   const startY = cr.y + (cr.h - totalContentHeight) / 2
   const centerX = cr.x + (cr.w - cr.w * 0.85) / 2 // Center the narrower text
@@ -110,7 +100,7 @@ export function QuoteSlide({
     width: spec.width,
     height: spec.height,
     position: 'relative',
-    background: theme.background,
+    background: colors.background,
   }
 
   return (
@@ -134,7 +124,7 @@ export function QuoteSlide({
           fontSize: 120,
           lineHeight: 1,
           fontFamily: 'Georgia, serif',
-          color: theme.primary,
+          color: colors.primary,
           opacity: 0.3,
         }}
       >
@@ -189,7 +179,7 @@ export function QuoteSlide({
           fontSize: 120,
           lineHeight: 1,
           fontFamily: 'Georgia, serif',
-          color: theme.primary,
+          color: colors.primary,
           opacity: 0.3,
         }}
       >
@@ -202,7 +192,7 @@ export function QuoteSlide({
           className="absolute"
           style={{
             left: centerX,
-            top: startY + quoteHeight + QUOTE_ATTRIBUTION_GAP,
+            top: startY + quoteHeight + spacing.verticalGap,
             width: cr.w * 0.85,
             height: attributionHeight,
             overflow: 'hidden',
