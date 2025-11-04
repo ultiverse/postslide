@@ -1,4 +1,5 @@
 import type { SlideBlock, ImageBlock, BackgroundBlock, DecorativeBlock } from '@/types/domain';
+import type React from 'react';
 
 /**
  * Block Renderers
@@ -337,7 +338,7 @@ function IconDecorative({ x, y, name, size, color }: {
   size: number;
   color: string;
 }) {
-  const iconMap: Record<string, JSX.Element> = {
+  const iconMap: Record<string, React.ReactNode> = {
     star: (
       <path
         strokeLinecap="round"

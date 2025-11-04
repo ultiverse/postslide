@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { Project, Slide, SlideBlock, ImageBlock, BackgroundBlock, DecorativeBlock } from '@/types/domain'
 import { createBlock } from '@/lib/constants/blocks'
-import { getLayout, matchSlideToLayout, getSuggestedBlocksForLayout } from '@/lib/layouts/utils'
+import { getLayout, getSuggestedBlocksForLayout } from '@/lib/layouts/utils'
 
 interface ProjectState {
   project: Project
@@ -83,6 +83,21 @@ export const useProject = create<ProjectState>((set) => ({
         selectedSlideId: newSlide.id,
       }
     }),
+  autoMatchLayoutForSlide: (slideId, templateId) =>
+    set((s) => {
+      const slide = s.project.slides.find((sl) => sl.id === slideId)
+      if (!slide) return s
+
+      // Apply the template (the layout matching happens during render)
+      return {
+        project: {
+          ...s.project,
+          slides: s.project.slides.map((sl) =>
+            sl.id === slideId ? { ...sl, templateId } : sl
+          ),
+        },
+      }
+    }),
   duplicateSlide: (id) =>
     set((s) => {
       const idx = s.project.slides.findIndex((sl) => sl.id === id)
@@ -142,19 +157,13 @@ export const useProject = create<ProjectState>((set) => ({
       project: {
         ...s.project,
         slides: s.project.slides.map((sl) =>
-          sl.id === slideId
-            ? {
-                ...sl,
-                templateId,
-                layoutId, // Store the specific layout ID
-              }
-            : sl
+          sl.id === slideId ? { ...sl, templateId, layoutId } : sl
         ),
       },
     })),
   applyLayoutWithBlocks: (slideId, templateId, layoutId) =>
     set((s) => {
-      const slide = s.project.slides.find(sl => sl.id === slideId)
+      const slide = s.project.slides.find((sl) => sl.id === slideId)
       if (!slide) return s
 
       const layout = getLayout(templateId, layoutId)
@@ -179,7 +188,7 @@ export const useProject = create<ProjectState>((set) => ({
           return !block.text || block.text.trim() === ''
         }
         if (block.kind === 'bullets') {
-          return block.bullets.length === 0 || block.bullets.every(b => !b || b.trim() === '')
+          return block.bullets.length === 0 || block.bullets.every((b) => !b || b.trim() === '')
         }
         if (block.kind === 'image') {
           return !block.src || block.src === ''
@@ -189,17 +198,17 @@ export const useProject = create<ProjectState>((set) => ({
       }
 
       // Check if all blocks are empty (placeholders)
-      const allBlocksEmpty = slide.blocks.filter(b =>
-        b.kind !== 'background' && b.kind !== 'decorative'
-      ).every(isBlockEmpty)
+      const allBlocksEmpty = slide.blocks
+        .filter((b) => b.kind !== 'background' && b.kind !== 'decorative')
+        .every(isBlockEmpty)
 
       let finalBlocks: SlideBlock[]
 
       if (allBlocksEmpty) {
         // If all blocks are empty, replace with new layout's blocks
         // Keep background and decorative blocks
-        const backgroundAndDecorative = slide.blocks.filter(b =>
-          b.kind === 'background' || b.kind === 'decorative'
+        const backgroundAndDecorative = slide.blocks.filter(
+          (b) => b.kind === 'background' || b.kind === 'decorative'
         )
         const newBlocks: SlideBlock[] = suggestions.map(({ kind, placeholder }) => {
           const block = createBlock(kind)
@@ -212,7 +221,7 @@ export const useProject = create<ProjectState>((set) => ({
         finalBlocks = [...backgroundAndDecorative, ...newBlocks]
       } else {
         // If blocks have content, keep them and add missing ones
-        const existingBlockKinds = new Set(slide.blocks.map(b => b.kind))
+        const existingBlockKinds = new Set(slide.blocks.map((b) => b.kind))
         const newBlocks: SlideBlock[] = suggestions
           .filter(({ kind }) => !existingBlockKinds.has(kind))
           .map(({ kind, placeholder }) => {
@@ -238,24 +247,6 @@ export const useProject = create<ProjectState>((set) => ({
                   blocks: finalBlocks,
                 }
               : sl
-          ),
-        },
-      }
-    }),
-  autoMatchLayoutForSlide: (slideId, templateId) =>
-    set((s) => {
-      const slide = s.project.slides.find(sl => sl.id === slideId)
-      if (!slide) return s
-
-      // Find the best matching layout for this slide's content
-      const matchedLayout = matchSlideToLayout(slide, templateId)
-
-      // Apply the template (the layout matching happens during render)
-      return {
-        project: {
-          ...s.project,
-          slides: s.project.slides.map((sl) =>
-            sl.id === slideId ? { ...sl, templateId } : sl
           ),
         },
       }
@@ -366,7 +357,7 @@ export const useProject = create<ProjectState>((set) => ({
             : sl,
         ),
       },
-    })),
+  })),
   moveBlockUp: (slideId, blockId) =>
     set((s) => ({
       project: {
@@ -403,20 +394,35 @@ export const useProject = create<ProjectState>((set) => ({
           if (sl.id !== slideId) return sl
           return {
             ...sl,
-            blocks: sl.blocks.map((b) => {
+            blocks: sl.blocks.map((b): SlideBlock => {
               if (b.id !== blockId) return b
-              // Convert bullets to text
-              if (b.kind === 'bullets' && newKind !== 'bullets') {
-                return { id: b.id, kind: newKind, text: b.bullets.join('\n') }
+
+              // Convert bullets to a text block when newKind is a text kind
+              if (b.kind === 'bullets' && (newKind === 'title' || newKind === 'subtitle' || newKind === 'body')) {
+                return { id: b.id, kind: newKind, text: b.bullets.join('\n') } as SlideBlock
               }
-              // Convert text to bullets
+
+              // Convert bullets to another non-text kind (unlikely) - fallback to creating a new block
+              if (b.kind === 'bullets' && newKind !== 'bullets' && !(newKind === 'title' || newKind === 'subtitle' || newKind === 'body')) {
+                return createBlock(newKind) as SlideBlock
+              }
+
+              // Convert text-like blocks to bullets
               if ('text' in b && newKind === 'bullets') {
-                return { id: b.id, kind: newKind, bullets: b.text.split('\n').filter(Boolean) }
+                return { id: b.id, kind: 'bullets', bullets: b.text.split('\n').filter(Boolean) } as SlideBlock
               }
-              // Convert between text types
-              if ('text' in b && newKind !== 'bullets') {
-                return { ...b, kind: newKind }
+
+              // Convert between text types (title/subtitle/body)
+              if ('text' in b && (newKind === 'title' || newKind === 'subtitle' || newKind === 'body')) {
+                return { ...b, kind: newKind } as SlideBlock
               }
+
+              // For other conversions (e.g., to image/background/decorative), create a sane default block
+              if (newKind === 'image' || newKind === 'background' || newKind === 'decorative') {
+                return createBlock(newKind) as SlideBlock
+              }
+
+              // If none of the above matched, return the original block
               return b
             }),
           }

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useProject } from './project.store'
+import type { SlideBlock } from '@/types/domain'
 
 // Reset the store to its initial seed before each test
 beforeEach(() => {
@@ -60,7 +61,11 @@ describe('project.store', () => {
     if (bodyBlock && 'text' in bodyBlock) {
       useProject.getState().updateBlock(slideId, bodyBlock.id, 'Updated body')
       const updated = useProject.getState().project.slides.find(s => s.id === slideId)!
-      const updatedBlock = updated.blocks.find(b => b.id === bodyBlock.id) as any
+      const updatedBlock = updated.blocks.find((b) => b.id === bodyBlock.id)
+      // Narrow to ensure the block has text before asserting
+      if (!updatedBlock || !('text' in updatedBlock)) {
+        throw new Error('Updated block not found or not a text block')
+      }
       expect(updatedBlock.text).toBe('Updated body')
     }
   })
@@ -73,7 +78,6 @@ describe('project.store', () => {
     useProject.getState().addBlock(slideId, 'body')
 
     const slide = useProject.getState().project.slides.find(s => s.id === slideId)!
-    const originalIds = slide.blocks.map(b => b.id)
     // reverse order
     const reversed = [...slide.blocks].reverse()
     // attempt reorder with correct ids should succeed
@@ -82,8 +86,8 @@ describe('project.store', () => {
     expect(after.blocks.map(b => b.id)).toEqual(reversed.map(b => b.id))
 
     // attempt reorder with invalid blocks (missing id) should be ignored
-    const badOrder = reversed.slice(0, reversed.length - 1) // wrong length
-    useProject.getState().reorderBlocks(slideId, badOrder as any)
+  const badOrder = reversed.slice(0, reversed.length - 1) as SlideBlock[] // wrong length
+  useProject.getState().reorderBlocks(slideId, badOrder)
     const afterBad = useProject.getState().project.slides.find(s => s.id === slideId)!
     // state should remain unchanged
     expect(afterBad.blocks.map(b => b.id)).toEqual(reversed.map(b => b.id))

@@ -77,7 +77,7 @@ describe('Canvas', () => {
   it('renders all wrapper components', async () => {
     vi.resetModules();
     const { default: Canvas } = await import('./Canvas');
-    const { container } = render(<Canvas />);
+    render(<Canvas />);
 
     expect(screen.getByTestId('error-boundary')).toBeInTheDocument();
     expect(screen.getByTestId('font-loader')).toBeInTheDocument();

@@ -5,7 +5,8 @@ import Editor from './Editor';
 // Mock project store used by Editor
 const mockUseProject = vi.fn();
 vi.mock('@/state/project.store', () => ({
-    useProject: (selector: any) => mockUseProject(selector),
+    // selector receives the store state; type as unknown here to avoid `any` in tests
+    useProject: (selector: (s: unknown) => unknown) => mockUseProject(selector),
 }));
 
 // Mock Canvas to avoid rendering heavy internals
@@ -15,13 +16,14 @@ vi.mock('@/components/canvas', () => ({
 
 // Mock SortableSlideCard and SortableBlockCard
 vi.mock('@/components/slides/SortableSlideCard', () => ({
-    SortableSlideCard: (props: any) => (
+    // Minimal props shape used by our mock
+    SortableSlideCard: (props: { slide?: { id?: string; title?: string; }; onSelect?: () => void; }) => (
         <div data-testid={`slide-${props.slide?.id || 'unknown'}`} onClick={props.onSelect}>{props.slide?.title || props.slide?.id}</div>
     ),
 }));
 
 vi.mock('@/components/blocks/SortableBlockCard', () => ({
-    SortableBlockCard: (props: any) => (
+    SortableBlockCard: (props: { id?: string; children?: React.ReactNode; }) => (
         <div data-testid={`block-${props.id || 'unknown'}`}>{props.children}</div>
     ),
 }));
