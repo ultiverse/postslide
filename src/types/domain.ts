@@ -40,6 +40,7 @@ export type Slide = {
   id: string
   templateId?: string
   layoutId?: string // Optional: specific layout from template schema
+  themeVariant?: string // Optional: theme variant override (e.g., 'light', 'dark')
   blocks: SlideBlock[]
 }
 
@@ -80,6 +81,10 @@ export type TemplateSchema = {
   name: string
   description?: string
   layouts: LayoutDefinition[]
+  theme?: {
+    id: string          // Theme identifier
+    variants?: string[] // Optional theme variant IDs (e.g., ['light', 'dark'])
+  }
 }
 
 // --- Template Type (Updated) ---
@@ -89,6 +94,8 @@ export type Template = {
   name: string
   description?: string
   schema?: TemplateSchema // Optional: new schema-based definition
+  theme?: import('../lib/types/design').ThemeDefinition // Optional: theme definition
+  themeVariants?: Record<string, import('../lib/types/design').ThemeDefinition> // Optional: theme variants
   layout: (slide: Slide, brand: Brand) => ReactElement // Still React for now
   defaults: Partial<Slide>
   coverStyle?: CoverStyle

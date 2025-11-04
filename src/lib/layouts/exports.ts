@@ -12,7 +12,8 @@ export { renderSlideFromSchema } from './index'
 export { TitleSlide, ListSlide, TwoColSlide, StatSlide, QuoteSlide, CoverSlide } from './index'
 
 // Types
-export type { LayoutProps, Theme } from './types'
+export type { LayoutProps } from './types'
+export type { Theme } from '../types/design'
 
 // Utilities
 export {

@@ -7,20 +7,12 @@ import { createMeasurer } from '@/lib/layout/measure';
 import { layoutBullets } from '@/lib/layout/bullets';
 import { BackgroundBlockRenderer, DecorativeBlockRenderer, ImageBlockRenderer } from '@/components/canvas/BlockRenderer';
 import { isTextBlock } from '@/lib/constants/blocks';
+import { useLayoutTheme } from '@/lib/theme/useLayoutTheme';
 
-// Layout constants
+// Layout constants (kept for backward compatibility)
 const DEFAULT_FONT = 'Inter, system-ui, sans-serif';
 const DEFAULT_WIDTH = 1080;
 const DEFAULT_HEIGHT = 1080;
-const DEFAULT_SAFE_INSET = 64;
-const DEFAULT_BASELINE = 8;
-const DEFAULT_TEXT_COLOR = '#1a1a1a';
-const DEFAULT_TEXT_MUTED = '#666666';
-const DEFAULT_BACKGROUND = '#ffffff';
-const BLOCK_GAP = 24;
-const DEFAULT_IMAGE_HEIGHT = 300;
-const BULLET_INDENT = 48; // Left padding for bullet text
-const BULLET_GAP = 12; // Gap between marker and text
 
 /**
  * ListSlide Layout Primitive
@@ -39,18 +31,18 @@ export function ListSlide({
   brand,
   width = DEFAULT_WIDTH,
   height = DEFAULT_HEIGHT,
-  safeInset = DEFAULT_SAFE_INSET,
+  safeInset,
+  theme: providedTheme,
 }: LayoutProps) {
   const measure = useMemo(() => createMeasurer(), []);
+  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme);
 
-  const theme = useMemo(() => ({
-    primary: brand.primary,
-    text: DEFAULT_TEXT_COLOR,
-    textMuted: DEFAULT_TEXT_MUTED,
-    background: DEFAULT_BACKGROUND,
-  }), [brand.primary]);
-
-  const spec = { width, height, safeInset, baseline: DEFAULT_BASELINE };
+  const spec = {
+    width,
+    height,
+    safeInset: safeInset ?? spacing.safeInset,
+    baseline: spacing.baseline
+  };
   const cr = contentRect(spec);
 
   // Separate blocks into layers
@@ -67,35 +59,26 @@ export function ListSlide({
       case 'title':
         return {
           fontFamily: headFont,
-          fontWeight: 700,
-          fontSize: 72,
-          lineHeight: 80,
-          color: theme.text,
+          ...typography.h1,
+          color: colors.text,
         };
       case 'subtitle':
         return {
           fontFamily: headFont,
-          fontWeight: 600,
-          fontSize: 48,
-          lineHeight: 56,
-          color: theme.textMuted,
+          ...typography.h2,
+          color: colors.textMuted,
         };
       case 'body':
         return {
           fontFamily: baseFont,
-          fontWeight: 400,
-          fontSize: 32,
-          lineHeight: 40,
-          color: theme.text,
+          ...typography.body,
+          color: colors.text,
         };
       case 'bullets':
         return {
           fontFamily: baseFont,
-          fontWeight: 400,
-          fontSize: 48,
-          lineHeight: 100,
-          paddingLeft: 32,
-          color: theme.text,
+          ...typography.body,
+          color: colors.text,
         };
     }
   };
@@ -113,7 +96,7 @@ export function ListSlide({
 
       if (block.kind === 'image') {
         // Image block
-        const imgHeight = block.height || DEFAULT_IMAGE_HEIGHT;
+        const imgHeight = block.height || spacing.imageHeight;
         const imgWidth = block.width || frameW;
         const frameH = Math.min(imgHeight, maxH);
 
@@ -123,7 +106,7 @@ export function ListSlide({
           type: 'image' as const,
         };
 
-        currentY += frameH + BLOCK_GAP;
+        currentY += frameH + spacing.blockGap;
         return result;
       } else {
         // Text block
@@ -140,8 +123,8 @@ export function ListSlide({
             frameWidth: frameW,
             bullet: {
               marker: '•',
-              gap: BULLET_GAP,
-              indent: BULLET_INDENT,
+              gap: spacing.bulletGap,
+              indent: spacing.bulletIndent,
               markerSizeRatio: 1,
             },
           });
@@ -164,17 +147,17 @@ export function ListSlide({
           type: 'text' as const,
         };
 
-        currentY += frameH + BLOCK_GAP;
+        currentY += frameH + spacing.blockGap;
         return result;
       }
     });
-  }, [contentBlocks, measure, cr, theme, brand]);
+  }, [contentBlocks, measure, cr, spacing, colors, typography, brand]);
 
   const artboardStyle: React.CSSProperties = {
     width: spec.width,
     height: spec.height,
     position: 'relative',
-    background: theme.background,
+    background: colors.background,
   };
 
   return (

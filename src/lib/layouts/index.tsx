@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react'
-import type { Slide, Brand, TemplateSchema, LayoutKind } from '@/types/domain'
+import type { Slide, Brand, TemplateSchema, LayoutKind, Template } from '@/types/domain'
+import type { Theme } from '@/lib/types/design'
 import type { LayoutProps } from './types'
 import { TitleSlide } from './TitleSlide'
 import { ListSlide } from './ListSlide'
@@ -11,17 +12,24 @@ import { ImageFocusSlide } from './ImageFocusSlide'
 import { ComparisonSlide } from './ComparisonSlide'
 import { TimelineSlide } from './TimelineSlide'
 import { SectionBreakSlide } from './SectionBreakSlide'
+import { getLayoutTheme, themeDefinitionToTheme } from '@/lib/theme'
 
 /**
  * Schema-driven layout renderer
  *
  * Renders a slide using a template schema definition.
  * This allows templates to be defined declaratively rather than imperatively.
+ *
+ * @param schema Template schema definition
+ * @param slide Slide to render
+ * @param brand Brand configuration
+ * @param template Optional template for theme support
  */
 export function renderSlideFromSchema(
   schema: TemplateSchema,
   slide: Slide,
-  brand: Brand
+  brand: Brand,
+  template?: Template
 ): ReactElement {
   // Try to use the layoutId stored on the slide, otherwise use first layout
   let layout = slide.layoutId
@@ -37,11 +45,29 @@ export function renderSlideFromSchema(
     throw new Error(`Template schema "${schema.id}" has no layouts defined`)
   }
 
+  // Resolve theme based on slide's themeVariant and template theme
+  let theme: Theme | undefined
+  if (template) {
+    // Check if slide has a theme variant override
+    if (slide.themeVariant && template.themeVariants?.[slide.themeVariant]) {
+      const baseTheme = template.themeVariants[slide.themeVariant]
+      // Adjust theme for specific layout kinds
+      const layoutTheme = getLayoutTheme(baseTheme, layout.kind)
+      theme = themeDefinitionToTheme(layoutTheme)
+    } else if (template.theme) {
+      // Use default template theme
+      const baseTheme = template.theme
+      const layoutTheme = getLayoutTheme(baseTheme, layout.kind)
+      theme = themeDefinitionToTheme(layoutTheme)
+    }
+  }
+
   // Common props for all layouts
   const layoutProps: LayoutProps = {
     slots: layout.slots,
     slide,
     brand,
+    theme,
   }
 
   // Render based on layout kind

@@ -1,4 +1,5 @@
 import type { Slide, LayoutSlot, Brand } from '@/types/domain'
+import type { Theme } from '@/lib/types/design'
 
 export interface LayoutProps {
   slots: LayoutSlot[]
@@ -7,11 +8,5 @@ export interface LayoutProps {
   width?: number // Artboard width (default 1080)
   height?: number // Artboard height (default 1080)
   safeInset?: number // Safe area inset (default 64)
-}
-
-export interface Theme {
-  primary: string // Brand color
-  text: string // Main text color
-  textMuted: string // Secondary text color
-  background: string // Background color
+  theme?: Theme // Optional theme override
 }

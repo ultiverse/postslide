@@ -7,6 +7,7 @@ import { useMemo } from 'react';
 import { ImageBlockRenderer, BackgroundBlockRenderer, DecorativeBlockRenderer } from '@/components/canvas/BlockRenderer';
 import { isTextBlock } from '@/lib/constants/blocks';
 import { renderSlideFromSchema } from '@/lib/layouts';
+import { DEFAULT_LIGHT_THEME, DEFAULT_DARK_THEME } from '@/lib/theme';
 
 /**
  * Minimal Pro Template
@@ -320,6 +321,10 @@ const minimalProSchema: TemplateSchema = {
   id: 'minimal-pro',
   name: 'Minimal Pro',
   description: 'Clean, professional layout with vertical block stacking and generous spacing',
+  theme: {
+    id: 'light',
+    variants: ['light', 'dark'],
+  },
   layouts: [
     {
       id: 'list',
@@ -420,10 +425,15 @@ export const minimalPro: Template = {
   name: 'Minimal Pro',
   description: 'Clean, professional layout with vertical block stacking and generous spacing',
   schema: minimalProSchema,
+  theme: DEFAULT_LIGHT_THEME,
+  themeVariants: {
+    light: DEFAULT_LIGHT_THEME,
+    dark: DEFAULT_DARK_THEME,
+  },
   layout: (slide: Slide, brand: Brand) => {
     // Use schema-driven renderer if schema is available
     if (minimalProSchema) {
-      return renderSlideFromSchema(minimalProSchema, slide, brand);
+      return renderSlideFromSchema(minimalProSchema, slide, brand, minimalPro);
     }
     // Fallback to original implementation
     return <MinimalProLayout slide={slide} brand={brand} />;
