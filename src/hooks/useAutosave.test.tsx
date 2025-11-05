@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
+import { act } from 'react';
 
 import { useAutosave } from './useAutosave';
 import { useProject } from '@/state/project.store';
@@ -33,9 +34,11 @@ describe('useAutosave', () => {
 
         // update the real store project (new object reference to trigger effect)
         const updated = { ...seedProject, title: 'Updated' };
-        useProject.setState({ project: updated });
-        // rerender to let hook pick up new project
-        rerender(<TestComp />);
+        act(() => {
+            useProject.setState({ project: updated });
+            // rerender to let hook pick up new project
+            rerender(<TestComp />);
+        });
 
         await waitFor(() => expect(window.localStorage.getItem('slidepost.project')).toContain('Updated'));
     });

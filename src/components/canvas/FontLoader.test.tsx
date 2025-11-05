@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import FontLoader from './FontLoader';
@@ -49,22 +48,22 @@ describe('FontLoader', () => {
 
     // Constructor-style spy for FontFace so `new FontFace(...)` works as expected.
     class SpyFontFace {
-      static calls: any[] = [];
+      static calls: Array<{ family: string; source: string; descriptors?: Record<string, unknown>; }> = [];
       family: string;
       source: string;
-      descriptors: any;
-      load: any;
+      descriptors?: Record<string, unknown>;
+      load: () => Promise<SpyFontFace>;
 
-      constructor(family: string, source: string, descriptors?: any) {
+      constructor(family: string, source: string, descriptors?: Record<string, unknown>) {
         SpyFontFace.calls.push({ family, source, descriptors });
         this.family = family;
         this.source = source;
         this.descriptors = descriptors;
-        this.load = vi.fn().mockResolvedValue(this);
+        this.load = vi.fn().mockResolvedValue(this) as unknown as () => Promise<SpyFontFace>;
       }
     }
 
-    global.FontFace = SpyFontFace as any;
+    global.FontFace = SpyFontFace as unknown as typeof FontFace;
 
     render(
       <FontLoader head={mockHeadFont} body={mockBodyFont}>
@@ -113,13 +112,13 @@ describe('FontLoader', () => {
 
     // Constructor-style mock that simulates load rejection
     class ErrorFontFace {
-      load: any;
+      load: () => Promise<never>;
       constructor() {
-        this.load = vi.fn().mockRejectedValue(new Error('Font load failed'));
+        this.load = vi.fn().mockRejectedValue(new Error('Font load failed')) as unknown as () => Promise<never>;
       }
     }
 
-    global.FontFace = ErrorFontFace as any;
+    global.FontFace = ErrorFontFace as unknown as typeof FontFace;
 
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
@@ -160,18 +159,18 @@ describe('FontLoader', () => {
     class SpyFontFace {
       family: string;
       source: string;
-      load: any;
-      static calls: any[] = [];
+      load: () => Promise<SpyFontFace>;
+      static calls: Array<{ family: string; source: string; descriptors?: Record<string, unknown>; }> = [];
 
-      constructor(family: string, source: string, descriptors?: any) {
+      constructor(family: string, source: string, descriptors?: Record<string, unknown>) {
         this.family = family;
         this.source = source;
-        this.load = vi.fn().mockResolvedValue(this);
+        this.load = vi.fn().mockResolvedValue(this) as unknown as () => Promise<SpyFontFace>;
         SpyFontFace.calls.push({ family, source, descriptors });
       }
     }
 
-    global.FontFace = SpyFontFace as any;
+    global.FontFace = SpyFontFace as unknown as typeof FontFace;
 
     const headFontNoWeight = { family: 'Test', url: 'https://example.com/test.woff2' };
     const bodyFontNoWeight = { family: 'Test2', url: 'https://example.com/test2.woff2' };

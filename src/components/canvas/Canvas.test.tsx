@@ -1,12 +1,18 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import type { Project } from '@/types/domain';
 
-// Mock the project store
+// Mock state shape used by Canvas
+type CanvasTestState = {
+  project: Project;
+  selectedSlideId: string | null;
+  showGrid: boolean;
+};
+
 const mockUseProject = vi.fn();
 vi.mock('@/state/project.store', () => ({
-  useProject: (selector: any) => mockUseProject(selector),
+  // Provide a typed generic useProject mock so tests don't rely on `any`.
+  useProject: <T,>(selector: (s: CanvasTestState) => T) => mockUseProject(selector) as T,
 }));
 
 // Mock child components
@@ -22,12 +28,20 @@ vi.mock('/Users/greg/Projects/slidepost/src/components/canvas/FontLoader.tsx', (
   ),
 }));
 
+type CanvasRendererProps = {
+  slide?: { id?: string; } | null;
+  spec?: { width?: number; };
+  theme?: { primary?: string; };
+  fontsReady?: boolean;
+  showGrid?: boolean;
+};
+
 vi.mock('/Users/greg/Projects/slidepost/src/components/canvas/CanvasRenderer.tsx', () => ({
-  CanvasRenderer: ({ slide, spec, theme, fontsReady, showGrid }: any) => (
+  CanvasRenderer: ({ slide, spec, theme, fontsReady, showGrid }: CanvasRendererProps) => (
     <div data-testid="canvas-renderer">
       <div data-testid="slide-id">{slide?.id || 'no-slide'}</div>
-      <div data-testid="spec-width">{spec.width}</div>
-      <div data-testid="theme-primary">{theme.primary}</div>
+      <div data-testid="spec-width">{spec?.width}</div>
+      <div data-testid="theme-primary">{theme?.primary}</div>
       <div data-testid="fonts-ready">{String(fontsReady)}</div>
       <div data-testid="show-grid">{String(showGrid)}</div>
     </div>
