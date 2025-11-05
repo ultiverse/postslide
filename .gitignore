@@ -30,3 +30,6 @@ src/**/*.jsx
 # TypeScript incremental build cache
 *.tsbuildinfo
 tsconfig.tsbuildinfo
+
+# Developer notes and internal documentation
+docs/dev/
