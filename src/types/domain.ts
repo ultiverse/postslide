@@ -76,6 +76,54 @@ export type LayoutDefinition = {
   slots: LayoutSlot[]
 }
 
+// --- Position-Aware Decorators ---
+
+export type DecoratorAnchor =
+  | 'top-left'
+  | 'top-center'
+  | 'top-right'
+  | 'center'
+  | 'bottom-left'
+  | 'bottom-center'
+  | 'bottom-right'
+
+export type DecoratorPosition = {
+  // Anchor-based positioning (recommended)
+  anchor?: DecoratorAnchor
+  offsetX?: number  // Offset from anchor in pixels
+  offsetY?: number  // Offset from anchor in pixels
+
+  // Or absolute positioning
+  x?: number
+  y?: number
+}
+
+export type DecoratorType = 'arrow' | 'divider' | 'shape' | 'pageNumber' | 'progressBar' | 'custom'
+
+export type DecoratorDefinition = {
+  type: DecoratorType
+  position: DecoratorPosition
+  props?: Record<string, unknown>
+  component?: React.ReactNode  // For custom decorators
+}
+
+export type TemplateDecorators = {
+  first?: DecoratorDefinition[]   // Only on first slide
+  middle?: DecoratorDefinition[]  // Only on middle slides
+  last?: DecoratorDefinition[]    // Only on last slide
+  all?: DecoratorDefinition[]     // On every slide
+}
+
+export type ProgressBarConfig = {
+  enabled: boolean
+  position: 'top' | 'bottom' | 'left' | 'right'
+  height: number  // or width if vertical
+  startColor: string  // Color for beginning
+  endColor: string    // Color for end
+  style: 'gradient' | 'segmented' | 'blocks'
+  segmentGap?: number  // For segmented/blocks style
+}
+
 export type TemplateSchema = {
   id: string
   name: string
@@ -85,6 +133,8 @@ export type TemplateSchema = {
     id: string          // Theme identifier
     variants?: string[] // Optional theme variant IDs (e.g., ['light', 'dark'])
   }
+  decorators?: TemplateDecorators  // Position-aware decorators
+  progressBar?: ProgressBarConfig  // Optional progress bar
 }
 
 // --- Template Type (Updated) ---
@@ -96,7 +146,7 @@ export type Template = {
   schema?: TemplateSchema // Optional: new schema-based definition
   theme?: import('../lib/types/design').ThemeDefinition // Optional: theme definition
   themeVariants?: Record<string, import('../lib/types/design').ThemeDefinition> // Optional: theme variants
-  layout: (slide: Slide, brand: Brand) => ReactElement // Still React for now
+  layout: (slide: Slide, brand: Brand, slideIndex?: number, totalSlides?: number) => ReactElement // Position-aware for decorators
   defaults: Partial<Slide>
   coverStyle?: CoverStyle
 }

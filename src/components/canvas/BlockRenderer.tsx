@@ -1,5 +1,7 @@
 import type { SlideBlock, ImageBlock, BackgroundBlock, DecorativeBlock } from '@/types/domain';
 import type React from 'react';
+import { PageNumberDecorator } from '@/lib/decorators/PageNumberDecorator';
+import { ProgressBarDecorator } from '@/lib/decorators/ProgressBarDecorator';
 
 /**
  * Block Renderers
@@ -163,7 +165,28 @@ export function DecorativeBlockRenderer({ block, x, y, width, height }: Decorati
           stroke={props.stroke as string || 'none'}
         />
       );
-    case 'icon':
+    case 'icon': {
+      // Check if this is a special decorator type (pageNumber, progressBar, custom)
+      const decoratorType = props.decoratorType as string;
+
+      if (decoratorType === 'pageNumber') {
+        return <PageNumberDecorator block={block} x={props.x as number || x} y={props.y as number || y} />;
+      }
+
+      if (decoratorType === 'progressBar') {
+        return <ProgressBarDecorator block={block} x={props.x as number || x} y={props.y as number || y} />;
+      }
+
+      if (decoratorType === 'custom' && props.component) {
+        // Render custom React component
+        return (
+          <div className="absolute" style={{ left: props.x as number || x, top: props.y as number || y }}>
+            {props.component as React.ReactNode}
+          </div>
+        );
+      }
+
+      // Default icon rendering
       return (
         <IconDecorative
           x={x}
@@ -173,6 +196,7 @@ export function DecorativeBlockRenderer({ block, x, y, width, height }: Decorati
           color={props.color as string || '#4a67ff'}
         />
       );
+    }
     default:
       return null;
   }
@@ -202,7 +226,8 @@ function ArrowDecorative({ x, y, direction, size, color }: {
         top: y,
         width: size,
         height: size,
-        transform: `rotate(${rotation}deg)`,
+        transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
+        transformOrigin: 'center',
       }}
     >
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none">

@@ -325,6 +325,70 @@ const minimalProSchema: TemplateSchema = {
     id: 'light',
     variants: ['light', 'dark'],
   },
+  decorators: {
+    // Navigation arrow on first slide (bottom-right, follows outer gutter)
+    first: [
+      {
+        type: 'arrow',
+        position: { anchor: 'bottom-right', offsetX: -64, offsetY: -64 },
+        props: {
+          direction: 'right',
+          size: 120,
+          color: '#3b82f6',
+        },
+      },
+    ],
+    // Navigation arrows on middle slides (both sides, follow outer gutter)
+    middle: [
+      {
+        type: 'arrow',
+        position: { anchor: 'bottom-left', offsetX: 64, offsetY: -64 },
+        props: {
+          direction: 'left',
+          size: 120,
+          color: '#3b82f6',
+        },
+      },
+      {
+        type: 'arrow',
+        position: { anchor: 'bottom-right', offsetX: -64, offsetY: -64 },
+        props: {
+          direction: 'right',
+          size: 120,
+          color: '#3b82f6',
+        },
+      },
+      {
+        type: 'pageNumber',
+        position: { anchor: 'bottom-center', offsetY: -80 },
+        props: {
+          format: 'current/total',
+          fontSize: 18,
+          color: '#666666',
+        },
+      },
+    ],
+    // Back arrow on last slide (bottom-left, follows outer gutter)
+    last: [
+      {
+        type: 'arrow',
+        position: { anchor: 'bottom-left', offsetX: 64, offsetY: -64 },
+        props: {
+          direction: 'left',
+          size: 120,
+          color: '#3b82f6',
+        },
+      },
+    ],
+  },
+  progressBar: {
+    enabled: true,
+    position: 'bottom',
+    height: 4,
+    startColor: '#3b82f6',
+    endColor: '#8b5cf6',
+    style: 'gradient',
+  },
   layouts: [
     {
       id: 'list',
@@ -430,10 +494,10 @@ export const minimalPro: Template = {
     light: DEFAULT_LIGHT_THEME,
     dark: DEFAULT_DARK_THEME,
   },
-  layout: (slide: Slide, brand: Brand) => {
+  layout: (slide: Slide, brand: Brand, slideIndex?: number, totalSlides?: number) => {
     // Use schema-driven renderer if schema is available
     if (minimalProSchema) {
-      return renderSlideFromSchema(minimalProSchema, slide, brand, minimalPro);
+      return renderSlideFromSchema(minimalProSchema, slide, brand, minimalPro, slideIndex, totalSlides);
     }
     // Fallback to original implementation
     return <MinimalProLayout slide={slide} brand={brand} />;

@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import type { Slide, Brand, TemplateSchema, LayoutKind, Template } from '@/types/domain'
+import type { Slide, Brand, TemplateSchema, LayoutKind, Template, DecorativeBlock } from '@/types/domain'
 import type { Theme } from '@/lib/types/design'
 import type { LayoutProps } from './types'
 import { TitleSlide } from './TitleSlide'
@@ -13,6 +13,7 @@ import { ComparisonSlide } from './ComparisonSlide'
 import { TimelineSlide } from './TimelineSlide'
 import { SectionBreakSlide } from './SectionBreakSlide'
 import { getLayoutTheme, themeDefinitionToTheme } from '@/lib/theme'
+import { resolveDecorators, decoratorToBlock, createProgressBarDecorator } from '@/lib/decorators'
 
 /**
  * Schema-driven layout renderer
@@ -24,12 +25,16 @@ import { getLayoutTheme, themeDefinitionToTheme } from '@/lib/theme'
  * @param slide Slide to render
  * @param brand Brand configuration
  * @param template Optional template for theme support
+ * @param slideIndex Optional index of current slide (0-based)
+ * @param totalSlides Optional total number of slides
  */
 export function renderSlideFromSchema(
   schema: TemplateSchema,
   slide: Slide,
   brand: Brand,
-  template?: Template
+  template?: Template,
+  slideIndex?: number,
+  totalSlides?: number
 ): ReactElement {
   // Try to use the layoutId stored on the slide, otherwise use first layout
   let layout = slide.layoutId
@@ -62,10 +67,38 @@ export function renderSlideFromSchema(
     }
   }
 
+  // Inject position-aware decorators if position info is available
+  let enhancedSlide = slide
+  if (slideIndex !== undefined && totalSlides !== undefined && template) {
+    // Resolve decorators based on slide position
+    const decoratorDefs = resolveDecorators(slideIndex, totalSlides, template)
+    const decoratorBlocks: DecorativeBlock[] = decoratorDefs.map(def =>
+      decoratorToBlock(def, slideIndex, totalSlides, 1080, 1080)
+    )
+
+    // Add progress bar if configured
+    if (template.schema?.progressBar?.enabled) {
+      const progressBarDef = createProgressBarDecorator(
+        template.schema.progressBar,
+        slideIndex,
+        totalSlides,
+        1080,
+        1080
+      )
+      decoratorBlocks.push(decoratorToBlock(progressBarDef, slideIndex, totalSlides, 1080, 1080))
+    }
+
+    // Merge with existing blocks
+    enhancedSlide = {
+      ...slide,
+      blocks: [...slide.blocks, ...decoratorBlocks]
+    }
+  }
+
   // Common props for all layouts
   const layoutProps: LayoutProps = {
     slots: layout.slots,
-    slide,
+    slide: enhancedSlide,
     brand,
     theme,
   }

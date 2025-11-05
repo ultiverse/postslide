@@ -51,6 +51,10 @@ export default function Canvas() {
 
   const selectedSlide = project.slides.find(s => s.id === selectedSlideId) ?? null;
 
+  // Calculate slide index and total for position-aware decorators
+  const slideIndex = selectedSlide ? project.slides.findIndex(s => s.id === selectedSlide.id) : 0;
+  const totalSlides = project.slides.length;
+
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.4);
 
@@ -120,7 +124,7 @@ export default function Canvas() {
             {template && selectedSlide ? (
               // Use template layout if available
               <div className="relative shadow-xl rounded-2xl overflow-hidden">
-                {template.layout(selectedSlide, defaultBrand)}
+                {template.layout(selectedSlide, defaultBrand, slideIndex, totalSlides)}
                 {showGrid && (
                   <div className="absolute inset-0 pointer-events-none">
                     <GridOverlay
