@@ -16,7 +16,7 @@ vi.mock('@/state/project.store', () => ({
 }));
 
 // Mock child components
-vi.mock('/Users/greg/Projects/slidepost/src/components/canvas/ErrorBoundary.tsx', () => ({
+vi.mock('@/components/canvas/ErrorBoundary', () => ({
   ErrorBoundary: ({ children }: { children: React.ReactNode; }) => (
     <div data-testid="error-boundary">{children}</div>
   ),
@@ -36,7 +36,7 @@ vi.mock('@/templates', () => ({
   }),
 }));
 
-vi.mock('/Users/greg/Projects/slidepost/src/components/canvas/FontLoader.tsx', () => ({
+vi.mock('@/components/canvas/FontLoader', () => ({
   default: ({ children }: { children: (ready: boolean) => React.ReactNode; }) => (
     <div data-testid="font-loader">{children(true)}</div>
   ),
@@ -50,7 +50,7 @@ type CanvasRendererProps = {
   showGrid?: boolean;
 };
 
-vi.mock('/Users/greg/Projects/slidepost/src/components/canvas/CanvasRenderer.tsx', () => ({
+vi.mock('@/components/canvas/CanvasRenderer', () => ({
   CanvasRenderer: ({ slide, spec, theme, fontsReady, showGrid }: CanvasRendererProps) => (
     <div data-testid="canvas-renderer">
       <div data-testid="slide-id">{slide?.id || 'no-slide'}</div>
