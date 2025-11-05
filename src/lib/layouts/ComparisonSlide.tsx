@@ -1,18 +1,18 @@
-import type { LayoutProps } from './types'
-import type { TextBlock } from '@/types/domain'
-import type { TextStyle } from '@/lib/types/design'
-import { useMemo } from 'react'
-import { contentRect } from '@/lib/layout/grid'
-import { createMeasurer } from '@/lib/layout/measure'
-import { layoutBullets } from '@/lib/layout/bullets'
-import { BackgroundBlockRenderer, DecorativeBlockRenderer } from '@/components/canvas/BlockRenderer'
-import { useLayoutTheme } from '@/lib/theme/useLayoutTheme'
-import { isTextBlock } from '@/lib/constants/blocks'
+import type { LayoutProps } from './types';
+import type { TextBlock } from '@/types/domain';
+import type { TextStyle } from '@/lib/types/design';
+import { useMemo } from 'react';
+import { contentRect } from '@/lib/layout/grid';
+import { createMeasurer } from '@/lib/layout/measure';
+import { layoutBullets } from '@/lib/layout/bullets';
+import { BackgroundBlockRenderer, DecorativeBlockRenderer } from '@/components/canvas/BlockRenderer';
+import { useLayoutTheme } from '@/lib/theme/useLayoutTheme';
+import { isTextBlock } from '@/lib/constants/blocks';
 
 // Layout constants
-const DEFAULT_FONT = 'Inter, system-ui, sans-serif'
-const DEFAULT_WIDTH = 1080
-const DEFAULT_HEIGHT = 1080
+const DEFAULT_FONT = 'Inter, system-ui, sans-serif';
+const DEFAULT_WIDTH = 1080;
+const DEFAULT_HEIGHT = 1080;
 
 /**
  * ComparisonSlide Layout Primitive
@@ -36,102 +36,101 @@ export function ComparisonSlide({
   safeInset,
   theme: providedTheme,
 }: LayoutProps) {
-  const measure = useMemo(() => createMeasurer(), [])
+  const measure = useMemo(() => createMeasurer(), []);
 
-  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme)
+  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme);
 
   const spec = {
     width,
     height,
     safeInset: safeInset ?? spacing.safeInset,
     baseline: spacing.baseline
-  }
-  theme: providedTheme,
-  const cr = contentRect(spec)
+  };
+  const cr = contentRect(spec);
 
   // Separate blocks
-  const backgroundBlocks = slide.blocks.filter(b => b.kind === 'background')
-  const decorativeBlocks = slide.blocks.filter(b => b.kind === 'decorative')
-  const textBlocks = slide.blocks.filter(isTextBlock) as TextBlock[]
+  const backgroundBlocks = slide.blocks.filter(b => b.kind === 'background');
+  const decorativeBlocks = slide.blocks.filter(b => b.kind === 'decorative');
+  const textBlocks = slide.blocks.filter(isTextBlock) as TextBlock[];
 
   // Find blocks - title, then split subtitles and bodies into left/right
-  const titleBlock = textBlocks.find(b => b.kind === 'title')
-  const subtitleBlocks = textBlocks.filter(b => b.kind === 'subtitle')
-  const bodyBlocks = textBlocks.filter(b => b.kind === 'body' || b.kind === 'bullets')
+  const titleBlock = textBlocks.find(b => b.kind === 'title');
+  const subtitleBlocks = textBlocks.filter(b => b.kind === 'subtitle');
+  const bodyBlocks = textBlocks.filter(b => b.kind === 'body' || b.kind === 'bullets');
 
   // Simple split: first subtitle and body go to left, second set goes to right
-  const leftLabel = subtitleBlocks[0]
-  const rightLabel = subtitleBlocks[1]
-  const leftContent = bodyBlocks[0]
-  const rightContent = bodyBlocks[1]
+  const leftLabel = subtitleBlocks[0];
+  const rightLabel = subtitleBlocks[1];
+  const leftContent = bodyBlocks[0];
+  const rightContent = bodyBlocks[1];
 
   // Define text styles
   const titleStyle: TextStyle = {
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.h1,
     color: colors.text,
-  }
+  };
 
   const labelStyle: TextStyle = {
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.h2,
     color: colors.primary,
-  }
+  };
 
   const contentStyle: TextStyle = {
     fontFamily: brand.fontBody || DEFAULT_FONT,
     ...typography.body,
     color: colors.text,
-  }
+  };
 
   // Measure title
   const titleLayout = useMemo(() => {
-    if (!titleBlock || titleBlock.kind === 'bullets') return null
+    if (!titleBlock || titleBlock.kind === 'bullets') return null;
     return measure({
       text: titleBlock.text,
       style: titleStyle,
       maxWidth: cr.w,
-    })
-  }, [titleBlock, titleStyle, cr.w, measure])
+    });
+  }, [titleBlock, titleStyle, cr.w, measure]);
 
-  const titleHeight = titleLayout?.totalHeight || 0
-  const contentStartY = cr.y + (titleHeight > 0 ? titleHeight + spacing.verticalGap : 0)
-  const contentHeight = cr.h - (titleHeight > 0 ? titleHeight + spacing.verticalGap : 0)
+  const titleHeight = titleLayout?.totalHeight || 0;
+  const contentStartY = cr.y + (titleHeight > 0 ? titleHeight + spacing.verticalGap : 0);
+  const contentHeight = cr.h - (titleHeight > 0 ? titleHeight + spacing.verticalGap : 0);
 
   // Column dimensions
-  const columnWidth = (cr.w - spacing.columnGap) / 2
+  const columnWidth = (cr.w - spacing.columnGap) / 2;
 
   // Measure left label
   const leftLabelLayout = useMemo(() => {
-    if (!leftLabel || leftLabel.kind === 'bullets') return null
+    if (!leftLabel || leftLabel.kind === 'bullets') return null;
     return measure({
       text: leftLabel.text,
       style: labelStyle,
       maxWidth: columnWidth,
-    })
-  }, [leftLabel, labelStyle, columnWidth, measure])
+    });
+  }, [leftLabel, labelStyle, columnWidth, measure]);
 
   // Measure right label
   const rightLabelLayout = useMemo(() => {
-    if (!rightLabel || rightLabel.kind === 'bullets') return null
+    if (!rightLabel || rightLabel.kind === 'bullets') return null;
     return measure({
       text: rightLabel.text,
       style: labelStyle,
       maxWidth: columnWidth,
-    })
-  }, [rightLabel, labelStyle, columnWidth, measure])
+    });
+  }, [rightLabel, labelStyle, columnWidth, measure]);
 
   const labelHeight = Math.max(
     leftLabelLayout?.totalHeight || 0,
     rightLabelLayout?.totalHeight || 0
-  )
+  );
 
-  const contentBodyStartY = contentStartY + (labelHeight > 0 ? labelHeight + 24 : 0)
-  const contentBodyHeight = contentHeight - (labelHeight > 0 ? labelHeight + 24 : 0)
+  const contentBodyStartY = contentStartY + (labelHeight > 0 ? labelHeight + 24 : 0);
+  const contentBodyHeight = contentHeight - (labelHeight > 0 ? labelHeight + 24 : 0);
 
   // Measure left content
   const leftContentLayout = useMemo(() => {
-    if (!leftContent) return null
+    if (!leftContent) return null;
     if (leftContent.kind === 'bullets') {
       return layoutBullets({
         items: leftContent.bullets,
@@ -143,18 +142,18 @@ export function ComparisonSlide({
           indent: spacing.bulletIndent,
           markerSizeRatio: 1,
         },
-      })
+      });
     }
     return measure({
       text: leftContent.text,
       style: contentStyle,
       maxWidth: columnWidth,
-    })
-  }, [leftContent, contentStyle, columnWidth, measure])
+    });
+  }, [leftContent, contentStyle, columnWidth, measure]);
 
   // Measure right content
   const rightContentLayout = useMemo(() => {
-    if (!rightContent) return null
+    if (!rightContent) return null;
     if (rightContent.kind === 'bullets') {
       return layoutBullets({
         items: rightContent.bullets,
@@ -166,21 +165,21 @@ export function ComparisonSlide({
           indent: spacing.bulletIndent,
           markerSizeRatio: 1,
         },
-      })
+      });
     }
     return measure({
       text: rightContent.text,
       style: contentStyle,
       maxWidth: columnWidth,
-    })
-  }, [rightContent, contentStyle, columnWidth, measure])
+    });
+  }, [rightContent, contentStyle, columnWidth, measure]);
 
   const artboardStyle: React.CSSProperties = {
     width: spec.width,
     height: spec.height,
     position: 'relative',
     background: colors.background,
-  }
+  };
 
   return (
     <div style={artboardStyle}>
@@ -216,7 +215,7 @@ export function ComparisonSlide({
               textAlign: 'center',
             }}
           >
-            {titleLayout.lines.map((ln: { text: string }, idx: number) => (
+            {titleLayout.lines.map((ln: { text: string; }, idx: number) => (
               <div key={idx} style={{ height: titleStyle.lineHeight, overflow: 'hidden' }}>
                 {ln.text}
               </div>
@@ -246,7 +245,7 @@ export function ComparisonSlide({
               color: labelStyle.color,
             }}
           >
-            {leftLabelLayout.lines.map((ln: { text: string }, idx: number) => (
+            {leftLabelLayout.lines.map((ln: { text: string; }, idx: number) => (
               <div key={idx} style={{ height: labelStyle.lineHeight, overflow: 'hidden' }}>
                 {ln.text}
               </div>
@@ -276,7 +275,7 @@ export function ComparisonSlide({
               color: labelStyle.color,
             }}
           >
-            {rightLabelLayout.lines.map((ln: { text: string }, idx: number) => (
+            {rightLabelLayout.lines.map((ln: { text: string; }, idx: number) => (
               <div key={idx} style={{ height: labelStyle.lineHeight, overflow: 'hidden' }}>
                 {ln.text}
               </div>
@@ -400,8 +399,8 @@ export function ComparisonSlide({
 
       {/* Other decorative blocks */}
       {decorativeBlocks.map((block) => {
-        const x = block.props?.x as number ?? spec.width / 2 - 24
-        const y = block.props?.y as number ?? spec.height - 100
+        const x = block.props?.x as number ?? spec.width / 2 - 24;
+        const y = block.props?.y as number ?? spec.height - 100;
         return (
           <DecorativeBlockRenderer
             key={block.id}
@@ -409,8 +408,8 @@ export function ComparisonSlide({
             x={x}
             y={y}
           />
-        )
+        );
       })}
     </div>
-  )
+  );
 }

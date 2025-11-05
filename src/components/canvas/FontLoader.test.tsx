@@ -28,6 +28,9 @@ describe('FontLoader', () => {
     );
 
     expect(screen.getByTestId('child')).toBeInTheDocument();
+    // Ensure any async font loading updates settle so React doesn't warn about
+    // state updates outside of act in this test environment.
+    return screen.findByText('Fonts ready: true').then(() => { });
   });
 
   it('renders children with fontsReady true after loading', async () => {
@@ -37,15 +40,31 @@ describe('FontLoader', () => {
       </FontLoader>
     );
 
-    await waitFor(() => {
-      expect(screen.getByTestId('child')).toHaveTextContent('Fonts ready: true');
-    });
+    await screen.findByText('Fonts ready: true');
+    expect(screen.getByTestId('child')).toHaveTextContent('Fonts ready: true');
   });
 
   it('creates FontFace instances with correct parameters', async () => {
     const originalFontFace = global.FontFace;
-    const fontFaceSpy = vi.fn(originalFontFace);
-    global.FontFace = fontFaceSpy as any;
+
+    // Constructor-style spy for FontFace so `new FontFace(...)` works as expected.
+    class SpyFontFace {
+      static calls: any[] = [];
+      family: string;
+      source: string;
+      descriptors: any;
+      load: any;
+
+      constructor(family: string, source: string, descriptors?: any) {
+        SpyFontFace.calls.push({ family, source, descriptors });
+        this.family = family;
+        this.source = source;
+        this.descriptors = descriptors;
+        this.load = vi.fn().mockResolvedValue(this);
+      }
+    }
+
+    global.FontFace = SpyFontFace as any;
 
     render(
       <FontLoader head={mockHeadFont} body={mockBodyFont}>
@@ -53,20 +72,22 @@ describe('FontLoader', () => {
       </FontLoader>
     );
 
-    await waitFor(() => {
-      expect(screen.getByTestId('test')).toBeInTheDocument();
-    });
+    await screen.findByTestId('test');
+    expect(screen.getByTestId('test')).toBeInTheDocument();
 
-    expect(fontFaceSpy).toHaveBeenCalledWith(
-      mockHeadFont.family,
-      `url(${mockHeadFont.url})`,
-      expect.objectContaining({ weight: '700', display: 'swap' })
-    );
-
-    expect(fontFaceSpy).toHaveBeenCalledWith(
-      mockBodyFont.family,
-      `url(${mockBodyFont.url})`,
-      expect.objectContaining({ weight: '400', display: 'swap' })
+    expect(SpyFontFace.calls).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          family: mockHeadFont.family,
+          source: `url(${mockHeadFont.url})`,
+          descriptors: expect.objectContaining({ weight: '700', display: 'swap' })
+        }),
+        expect.objectContaining({
+          family: mockBodyFont.family,
+          source: `url(${mockBodyFont.url})`,
+          descriptors: expect.objectContaining({ weight: '400', display: 'swap' })
+        })
+      ])
     );
 
     global.FontFace = originalFontFace;
@@ -81,21 +102,26 @@ describe('FontLoader', () => {
       </FontLoader>
     );
 
-    await waitFor(() => {
-      expect(screen.getByTestId('ready')).toHaveTextContent('true');
-    });
+    await screen.findByTestId('ready');
+    expect(screen.getByTestId('ready')).toHaveTextContent('true');
 
     expect(addSpy).toHaveBeenCalledTimes(2);
   });
 
   it('handles font loading errors gracefully', async () => {
-    const mockFontFace = vi.fn().mockImplementation(() => ({
-      load: vi.fn().mockRejectedValue(new Error('Font load failed')),
-    }));
+    const originalFontFace = global.FontFace;
 
-    global.FontFace = mockFontFace as any;
+    // Constructor-style mock that simulates load rejection
+    class ErrorFontFace {
+      load: any;
+      constructor() {
+        this.load = vi.fn().mockRejectedValue(new Error('Font load failed'));
+      }
+    }
 
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    global.FontFace = ErrorFontFace as any;
+
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
     render(
       <FontLoader head={mockHeadFont} body={mockBodyFont}>
@@ -104,16 +130,14 @@ describe('FontLoader', () => {
     );
 
     // Should still render with fontsReady true (fail open)
-    await waitFor(() => {
-      expect(screen.getByTestId('child')).toHaveTextContent('Fonts ready: true');
-    });
+    await screen.findByText('Fonts ready: true');
+    expect(screen.getByTestId('child')).toHaveTextContent('Fonts ready: true');
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      'Font loading error:',
-      expect.any(Error)
-    );
+    expect(consoleSpy).toHaveBeenCalledWith('Font loading error:', expect.any(Error));
 
     consoleSpy.mockRestore();
+
+    global.FontFace = originalFontFace;
   });
 
   it('cleans up fonts on unmount', async () => {
@@ -123,9 +147,8 @@ describe('FontLoader', () => {
       </FontLoader>
     );
 
-    await waitFor(() => {
-      expect(screen.getByTestId('ready')).toHaveTextContent('true');
-    });
+    await screen.findByTestId('ready');
+    expect(screen.getByTestId('ready')).toHaveTextContent('true');
 
     // Verify component cleans up properly (test passes if unmount doesn't throw)
     expect(() => unmount()).not.toThrow();
