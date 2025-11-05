@@ -6,16 +6,12 @@ import { contentRect } from '@/lib/layout/grid'
 import { createMeasurer } from '@/lib/layout/measure'
 import { BackgroundBlockRenderer, DecorativeBlockRenderer } from '@/components/canvas/BlockRenderer'
 import { isTextBlock } from '@/lib/constants/blocks'
+import { useLayoutTheme } from '@/lib/theme/useLayoutTheme'
 
 // Layout constants
 const DEFAULT_FONT = 'Inter, system-ui, sans-serif'
 const DEFAULT_WIDTH = 1080
 const DEFAULT_HEIGHT = 1080
-const DEFAULT_SAFE_INSET = 64
-const DEFAULT_BASELINE = 8
-const DEFAULT_TEXT_COLOR = '#1a1a1a'
-const DEFAULT_TEXT_MUTED = '#666666'
-const DEFAULT_BACKGROUND = '#ffffff'
 const DIVIDER_WIDTH = 120
 const DIVIDER_HEIGHT = 4
 const TEXT_DIVIDER_GAP = 32
@@ -36,18 +32,19 @@ export function SectionBreakSlide({
   brand,
   width = DEFAULT_WIDTH,
   height = DEFAULT_HEIGHT,
-  safeInset = DEFAULT_SAFE_INSET,
+  safeInset,
+  theme: providedTheme,
 }: LayoutProps) {
   const measure = useMemo(() => createMeasurer(), [])
 
-  const theme = useMemo(() => ({
-    primary: brand.primary,
-    text: DEFAULT_TEXT_COLOR,
-    textMuted: DEFAULT_TEXT_MUTED,
-    background: DEFAULT_BACKGROUND,
-  }), [brand.primary])
+  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme)
 
-  const spec = { width, height, safeInset, baseline: DEFAULT_BASELINE }
+  const spec = {
+    width,
+    height,
+    safeInset: safeInset ?? spacing.safeInset,
+    baseline: spacing.baseline
+  }
   const cr = contentRect(spec)
 
   // Separate blocks
@@ -62,19 +59,14 @@ export function SectionBreakSlide({
   // Define text styles - extra large and minimal
   const titleStyle: TextStyle = {
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
-    fontWeight: 700,
-    fontSize: 80,
-    lineHeight: 88,
-    color: theme.text,
+    ...typography.display,
+    color: colors.text,
   }
 
   const subtitleStyle: TextStyle = {
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
-    fontWeight: 500,
-    fontSize: 32,
-    lineHeight: 40,
-    color: theme.textMuted,
-    letterSpacing: 2,
+    ...typography.h2,
+    color: colors.textMuted,
   }
 
   // Measure text blocks
@@ -127,7 +119,7 @@ export function SectionBreakSlide({
     width: spec.width,
     height: spec.height,
     position: 'relative',
-    background: theme.background,
+    background: colors.background,
   }
 
   return (
@@ -189,7 +181,7 @@ export function SectionBreakSlide({
           top: dividerY,
           width: DIVIDER_WIDTH,
           height: DIVIDER_HEIGHT,
-          background: theme.primary,
+          background: colors.primary,
         }}
       />
 

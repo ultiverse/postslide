@@ -6,16 +6,12 @@ import { contentRect } from '@/lib/layout/grid'
 import { createMeasurer } from '@/lib/layout/measure'
 import { BackgroundBlockRenderer, DecorativeBlockRenderer } from '@/components/canvas/BlockRenderer'
 import { isTextBlock } from '@/lib/constants/blocks'
+import { useLayoutTheme } from '@/lib/theme/useLayoutTheme'
 
 // Layout constants
 const DEFAULT_FONT = 'Inter, system-ui, sans-serif'
 const DEFAULT_WIDTH = 1080
 const DEFAULT_HEIGHT = 1080
-const DEFAULT_SAFE_INSET = 64
-const DEFAULT_BASELINE = 8
-const DEFAULT_TEXT_COLOR = '#1a1a1a'
-const DEFAULT_TEXT_MUTED = '#666666'
-const DEFAULT_BACKGROUND = '#ffffff'
 const TITLE_GAP = 48
 const TIMELINE_HEIGHT = 4
 const DOT_SIZE = 20
@@ -39,18 +35,19 @@ export function TimelineSlide({
   brand,
   width = DEFAULT_WIDTH,
   height = DEFAULT_HEIGHT,
-  safeInset = DEFAULT_SAFE_INSET,
+  safeInset,
+  theme: providedTheme,
 }: LayoutProps) {
   const measure = useMemo(() => createMeasurer(), [])
 
-  const theme = useMemo(() => ({
-    primary: brand.primary,
-    text: DEFAULT_TEXT_COLOR,
-    textMuted: DEFAULT_TEXT_MUTED,
-    background: DEFAULT_BACKGROUND,
-  }), [brand.primary])
+  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme)
 
-  const spec = { width, height, safeInset, baseline: DEFAULT_BASELINE }
+  const spec = {
+    width,
+    height,
+    safeInset: safeInset ?? spacing.safeInset,
+    baseline: spacing.baseline
+  }
   const cr = contentRect(spec)
 
   // Separate blocks
@@ -67,26 +64,20 @@ export function TimelineSlide({
   // Define text styles
   const titleStyle: TextStyle = {
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
-    fontWeight: 700,
-    fontSize: 56,
-    lineHeight: 64,
-    color: theme.text,
+    ...typography.h1,
+    color: colors.text,
   }
 
   const labelStyle: TextStyle = {
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
-    fontWeight: 600,
-    fontSize: 28,
-    lineHeight: 36,
-    color: theme.text,
+    ...typography.h2,
+    color: colors.text,
   }
 
   const descriptionStyle: TextStyle = {
     fontFamily: brand.fontBody || DEFAULT_FONT,
-    fontWeight: 400,
-    fontSize: 20,
-    lineHeight: 28,
-    color: theme.textMuted,
+    ...typography.caption,
+    color: colors.textMuted,
   }
 
   // Measure title
@@ -139,7 +130,7 @@ export function TimelineSlide({
     width: spec.width,
     height: spec.height,
     position: 'relative',
-    background: theme.background,
+    background: colors.background,
   }
 
   return (
@@ -194,7 +185,7 @@ export function TimelineSlide({
             top: timelineLineY - TIMELINE_HEIGHT / 2,
             width: cr.w,
             height: TIMELINE_HEIGHT,
-            background: theme.textMuted,
+            background: colors.textMuted,
             opacity: 0.3,
           }}
         />
@@ -218,8 +209,8 @@ export function TimelineSlide({
                 width: DOT_SIZE,
                 height: DOT_SIZE,
                 borderRadius: '50%',
-                background: theme.primary,
-                border: `3px solid ${theme.background}`,
+                background: colors.primary,
+                border: `3px solid ${colors.background}`,
                 boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
               }}
             />

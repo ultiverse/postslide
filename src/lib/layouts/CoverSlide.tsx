@@ -6,17 +6,12 @@ import { contentRect } from '@/lib/layout/grid'
 import { createMeasurer } from '@/lib/layout/measure'
 import { BackgroundBlockRenderer, DecorativeBlockRenderer, ImageBlockRenderer } from '@/components/canvas/BlockRenderer'
 import { isTextBlock } from '@/lib/constants/blocks'
+import { useLayoutTheme } from '@/lib/theme/useLayoutTheme'
 
 // Layout constants
 const DEFAULT_FONT = 'Inter, system-ui, sans-serif'
 const DEFAULT_WIDTH = 1080
 const DEFAULT_HEIGHT = 1080
-const DEFAULT_SAFE_INSET = 80 // Larger inset for cover slides
-const DEFAULT_BASELINE = 8
-const DEFAULT_TEXT_COLOR = '#ffffff' // White text for cover slides
-const DEFAULT_TEXT_MUTED = '#e0e0e0'
-const DEFAULT_BACKGROUND = '#1a1a1a' // Dark background default
-const TITLE_SUBTITLE_GAP = 20
 
 /**
  * CoverSlide Layout Primitive
@@ -35,18 +30,18 @@ export function CoverSlide({
   brand,
   width = DEFAULT_WIDTH,
   height = DEFAULT_HEIGHT,
-  safeInset = DEFAULT_SAFE_INSET,
+  safeInset,
+  theme: providedTheme,
 }: LayoutProps) {
   const measure = useMemo(() => createMeasurer(), [])
+  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme)
 
-  const theme = useMemo(() => ({
-    primary: brand.primary,
-    text: DEFAULT_TEXT_COLOR,
-    textMuted: DEFAULT_TEXT_MUTED,
-    background: DEFAULT_BACKGROUND,
-  }), [brand.primary])
-
-  const spec = { width, height, safeInset, baseline: DEFAULT_BASELINE }
+  const spec = {
+    width,
+    height,
+    safeInset: safeInset ?? spacing.safeInset,
+    baseline: spacing.baseline
+  }
   const cr = contentRect(spec)
 
   // Separate blocks
@@ -62,19 +57,14 @@ export function CoverSlide({
   // Text styles for cover slide - bold and impactful
   const titleStyle: TextStyle = {
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
-    fontWeight: 800, // Extra bold for cover
-    fontSize: 96, // Very large
-    lineHeight: 104,
-    color: theme.text,
-    letterSpacing: -0.03, // Tighter for impact
+    ...typography.display,
+    color: colors.text,
   }
 
   const subtitleStyle: TextStyle = {
     fontFamily: brand.fontBody || DEFAULT_FONT,
-    fontWeight: 500,
-    fontSize: 36,
-    lineHeight: 48,
-    color: theme.textMuted,
+    ...typography.h2,
+    color: colors.textMuted,
   }
 
   // Measure text blocks
@@ -99,7 +89,7 @@ export function CoverSlide({
   // Calculate vertical centering
   const titleHeight = titleLayout?.totalHeight || 0
   const subtitleHeight = subtitleLayout?.totalHeight || 0
-  const totalContentHeight = titleHeight + (subtitleHeight > 0 ? TITLE_SUBTITLE_GAP + subtitleHeight : 0)
+  const totalContentHeight = titleHeight + (subtitleHeight > 0 ? spacing.verticalGap + subtitleHeight : 0)
 
   const startY = cr.y + (cr.h - totalContentHeight) / 2
 
@@ -107,7 +97,7 @@ export function CoverSlide({
     width: spec.width,
     height: spec.height,
     position: 'relative',
-    background: theme.background,
+    background: colors.background,
   }
 
   // Check if there's a background image
@@ -193,7 +183,7 @@ export function CoverSlide({
           className="absolute"
           style={{
             left: cr.x + cr.w * 0.05, // Slightly narrower
-            top: startY + titleHeight + TITLE_SUBTITLE_GAP,
+            top: startY + titleHeight + spacing.verticalGap,
             width: cr.w * 0.9,
             height: subtitleHeight,
             overflow: 'hidden',

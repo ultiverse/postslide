@@ -6,21 +6,13 @@ import { contentRect } from '@/lib/layout/grid'
 import { createMeasurer } from '@/lib/layout/measure'
 import { layoutBullets } from '@/lib/layout/bullets'
 import { BackgroundBlockRenderer, DecorativeBlockRenderer } from '@/components/canvas/BlockRenderer'
+import { useLayoutTheme } from '@/lib/theme/useLayoutTheme'
 import { isTextBlock } from '@/lib/constants/blocks'
 
 // Layout constants
 const DEFAULT_FONT = 'Inter, system-ui, sans-serif'
 const DEFAULT_WIDTH = 1080
 const DEFAULT_HEIGHT = 1080
-const DEFAULT_SAFE_INSET = 64
-const DEFAULT_BASELINE = 8
-const DEFAULT_TEXT_COLOR = '#1a1a1a'
-const DEFAULT_TEXT_MUTED = '#666666'
-const DEFAULT_BACKGROUND = '#ffffff'
-const COLUMN_GAP = 64
-const HEADER_GAP = 40
-const BULLET_INDENT = 36
-const BULLET_GAP = 8
 
 /**
  * ComparisonSlide Layout Primitive
@@ -41,18 +33,20 @@ export function ComparisonSlide({
   brand,
   width = DEFAULT_WIDTH,
   height = DEFAULT_HEIGHT,
-  safeInset = DEFAULT_SAFE_INSET,
+  safeInset,
+  theme: providedTheme,
 }: LayoutProps) {
   const measure = useMemo(() => createMeasurer(), [])
 
-  const theme = useMemo(() => ({
-    primary: brand.primary,
-    text: DEFAULT_TEXT_COLOR,
-    textMuted: DEFAULT_TEXT_MUTED,
-    background: DEFAULT_BACKGROUND,
-  }), [brand.primary])
+  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme)
 
-  const spec = { width, height, safeInset, baseline: DEFAULT_BASELINE }
+  const spec = {
+    width,
+    height,
+    safeInset: safeInset ?? spacing.safeInset,
+    baseline: spacing.baseline
+  }
+  theme: providedTheme,
   const cr = contentRect(spec)
 
   // Separate blocks
@@ -74,26 +68,20 @@ export function ComparisonSlide({
   // Define text styles
   const titleStyle: TextStyle = {
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
-    fontWeight: 700,
-    fontSize: 56,
-    lineHeight: 64,
-    color: theme.text,
+    ...typography.h1,
+    color: colors.text,
   }
 
   const labelStyle: TextStyle = {
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
-    fontWeight: 600,
-    fontSize: 32,
-    lineHeight: 40,
-    color: theme.primary,
+    ...typography.h2,
+    color: colors.primary,
   }
 
   const contentStyle: TextStyle = {
     fontFamily: brand.fontBody || DEFAULT_FONT,
-    fontWeight: 400,
-    fontSize: 24,
-    lineHeight: 36,
-    color: theme.text,
+    ...typography.body,
+    color: colors.text,
   }
 
   // Measure title
@@ -107,11 +95,11 @@ export function ComparisonSlide({
   }, [titleBlock, titleStyle, cr.w, measure])
 
   const titleHeight = titleLayout?.totalHeight || 0
-  const contentStartY = cr.y + (titleHeight > 0 ? titleHeight + HEADER_GAP : 0)
-  const contentHeight = cr.h - (titleHeight > 0 ? titleHeight + HEADER_GAP : 0)
+  const contentStartY = cr.y + (titleHeight > 0 ? titleHeight + spacing.verticalGap : 0)
+  const contentHeight = cr.h - (titleHeight > 0 ? titleHeight + spacing.verticalGap : 0)
 
   // Column dimensions
-  const columnWidth = (cr.w - COLUMN_GAP) / 2
+  const columnWidth = (cr.w - spacing.columnGap) / 2
 
   // Measure left label
   const leftLabelLayout = useMemo(() => {
@@ -151,8 +139,8 @@ export function ComparisonSlide({
         frameWidth: columnWidth,
         bullet: {
           marker: '•',
-          gap: BULLET_GAP,
-          indent: BULLET_INDENT,
+          gap: spacing.bulletGap,
+          indent: spacing.bulletIndent,
           markerSizeRatio: 1,
         },
       })
@@ -174,8 +162,8 @@ export function ComparisonSlide({
         frameWidth: columnWidth,
         bullet: {
           marker: '•',
-          gap: BULLET_GAP,
-          indent: BULLET_INDENT,
+          gap: spacing.bulletGap,
+          indent: spacing.bulletIndent,
           markerSizeRatio: 1,
         },
       })
@@ -191,7 +179,7 @@ export function ComparisonSlide({
     width: spec.width,
     height: spec.height,
     position: 'relative',
-    background: theme.background,
+    background: colors.background,
   }
 
   return (
@@ -272,7 +260,7 @@ export function ComparisonSlide({
         <div
           className="absolute"
           style={{
-            left: cr.x + columnWidth + COLUMN_GAP,
+            left: cr.x + columnWidth + spacing.columnGap,
             top: contentStartY,
             width: columnWidth,
             height: labelHeight,
@@ -352,7 +340,7 @@ export function ComparisonSlide({
         <div
           className="absolute"
           style={{
-            left: cr.x + columnWidth + COLUMN_GAP,
+            left: cr.x + columnWidth + spacing.columnGap,
             top: contentBodyStartY,
             width: columnWidth,
             height: contentBodyHeight,
@@ -401,11 +389,11 @@ export function ComparisonSlide({
       <div
         className="absolute"
         style={{
-          left: cr.x + columnWidth + COLUMN_GAP / 2 - 1,
+          left: cr.x + columnWidth + spacing.columnGap / 2 - 1,
           top: contentStartY,
           width: 2,
           height: contentHeight,
-          background: theme.textMuted,
+          background: colors.textMuted,
           opacity: 0.2,
         }}
       />

@@ -6,17 +6,12 @@ import { contentRect } from '@/lib/layout/grid'
 import { createMeasurer } from '@/lib/layout/measure'
 import { BackgroundBlockRenderer, DecorativeBlockRenderer } from '@/components/canvas/BlockRenderer'
 import { isTextBlock } from '@/lib/constants/blocks'
+import { useLayoutTheme } from '@/lib/theme/useLayoutTheme'
 
 // Layout constants
 const DEFAULT_FONT = 'Inter, system-ui, sans-serif'
 const DEFAULT_WIDTH = 1080
 const DEFAULT_HEIGHT = 1080
-const DEFAULT_SAFE_INSET = 64
-const DEFAULT_BASELINE = 8
-const DEFAULT_TEXT_COLOR = '#1a1a1a'
-const DEFAULT_TEXT_MUTED = '#666666'
-const DEFAULT_BACKGROUND = '#ffffff'
-const IMAGE_CAPTION_GAP = 32
 const IMAGE_MAX_HEIGHT_RATIO = 0.65 // Image takes up to 65% of content height
 
 /**
@@ -31,23 +26,22 @@ const IMAGE_MAX_HEIGHT_RATIO = 0.65 // Image takes up to 65% of content height
  * - caption (text, body): Optional descriptive caption
  */
 export function ImageFocusSlide({
-  slots,
   slide,
   brand,
   width = DEFAULT_WIDTH,
   height = DEFAULT_HEIGHT,
-  safeInset = DEFAULT_SAFE_INSET,
+  safeInset,
+  theme: providedTheme,
 }: LayoutProps) {
   const measure = useMemo(() => createMeasurer(), [])
+  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme)
 
-  const theme = useMemo(() => ({
-    primary: brand.primary,
-    text: DEFAULT_TEXT_COLOR,
-    textMuted: DEFAULT_TEXT_MUTED,
-    background: DEFAULT_BACKGROUND,
-  }), [brand.primary])
-
-  const spec = { width, height, safeInset, baseline: DEFAULT_BASELINE }
+  const spec = {
+    width,
+    height,
+    safeInset: safeInset ?? spacing.safeInset,
+    baseline: spacing.baseline
+  }
   const cr = contentRect(spec)
 
   // Separate blocks
@@ -64,18 +58,14 @@ export function ImageFocusSlide({
   // Define text styles
   const titleStyle: TextStyle = {
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
-    fontWeight: 600,
-    fontSize: 36,
-    lineHeight: 44,
-    color: theme.text,
+    ...typography.h2,
+    color: colors.text,
   }
 
   const captionStyle: TextStyle = {
     fontFamily: brand.fontBody || DEFAULT_FONT,
-    fontWeight: 400,
-    fontSize: 20,
-    lineHeight: 28,
-    color: theme.textMuted,
+    ...typography.caption,
+    color: colors.textMuted,
   }
 
   // Calculate image dimensions
@@ -115,17 +105,17 @@ export function ImageFocusSlide({
   const textHeight = titleHeight + (captionHeight > 0 ? 16 + captionHeight : 0)
 
   // Center everything vertically
-  const totalHeight = imageHeight + (textHeight > 0 ? IMAGE_CAPTION_GAP + textHeight : 0)
+  const totalHeight = imageHeight + (textHeight > 0 ? spacing.blockGap + textHeight : 0)
   const startY = cr.y + (cr.h - totalHeight) / 2
 
   const imageY = startY
-  const textStartY = startY + imageHeight + IMAGE_CAPTION_GAP
+  const textStartY = startY + imageHeight + spacing.blockGap
 
   const artboardStyle: React.CSSProperties = {
     width: spec.width,
     height: spec.height,
     position: 'relative',
-    background: theme.background,
+    background: colors.background,
   }
 
   return (
