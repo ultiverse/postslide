@@ -1,17 +1,17 @@
-import type { LayoutProps } from './types'
-import type { TextBlock } from '@/types/domain'
-import type { TextStyle } from '@/lib/types/design'
-import { useMemo } from 'react'
-import { contentRect } from '@/lib/layout/grid'
-import { createMeasurer } from '@/lib/layout/measure'
-import { BackgroundBlockRenderer, DecorativeBlockRenderer } from '@/components/canvas/BlockRenderer'
-import { isTextBlock } from '@/lib/constants/blocks'
-import { useLayoutTheme } from '@/lib/theme/useLayoutTheme'
+import type { LayoutProps } from './types';
+import type { TextBlock } from '@/types/domain';
+import type { TextStyle } from '@/lib/types/design';
+import { useMemo } from 'react';
+import { contentRect } from '@/lib/layout/grid';
+import { createMeasurer } from '@/lib/layout/measure';
+import { BackgroundBlockRenderer, DecorativeBlockRenderer } from '@/components/canvas/BlockRenderer';
+import { isTextBlock } from '@/lib/constants/blocks';
+import { useLayoutTheme } from '@/lib/theme/useLayoutTheme';
 
 // Layout constants
-const DEFAULT_FONT = 'Inter, system-ui, sans-serif'
-const DEFAULT_WIDTH = 1080
-const DEFAULT_HEIGHT = 1080
+const DEFAULT_FONT = 'Inter, system-ui, sans-serif';
+const DEFAULT_WIDTH = 1080;
+const DEFAULT_HEIGHT = 1080;
 
 /**
  * TitleSlide Layout Primitive
@@ -24,7 +24,6 @@ const DEFAULT_HEIGHT = 1080
  * - subtitle (text, h2): Optional subtitle
  */
 export function TitleSlide({
-  slots,
   slide,
   brand,
   width = DEFAULT_WIDTH,
@@ -32,75 +31,71 @@ export function TitleSlide({
   safeInset,
   theme: providedTheme,
 }: LayoutProps) {
-  const measure = useMemo(() => createMeasurer(), [])
-  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme)
+  const measure = useMemo(() => createMeasurer(), []);
+  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme);
 
   const spec = {
     width,
     height,
     safeInset: safeInset ?? spacing.safeInset,
     baseline: spacing.baseline
-  }
-  const cr = contentRect(spec)
+  };
+  const cr = contentRect(spec);
 
   // Separate blocks
-  const backgroundBlocks = slide.blocks.filter(b => b.kind === 'background')
-  const decorativeBlocks = slide.blocks.filter(b => b.kind === 'decorative')
-  const textBlocks = slide.blocks.filter(isTextBlock) as TextBlock[]
-
-  // Find title and subtitle from slots
-  const titleSlot = slots.find(s => s.id === 'title')
-  const subtitleSlot = slots.find(s => s.id === 'subtitle')
+  const backgroundBlocks = slide.blocks.filter(b => b.kind === 'background');
+  const decorativeBlocks = slide.blocks.filter(b => b.kind === 'decorative');
+  const textBlocks = slide.blocks.filter(isTextBlock) as TextBlock[];
 
   // Map blocks to slots (simple approach: find by block kind)
-  const titleBlock = textBlocks.find(b => b.kind === 'title')
-  const subtitleBlock = textBlocks.find(b => b.kind === 'subtitle')
+  const titleBlock = textBlocks.find(b => b.kind === 'title');
+  const subtitleBlock = textBlocks.find(b => b.kind === 'subtitle');
 
-  // Define text styles based on slot styles
-  const titleStyle: TextStyle = {
+  // Define text styles based on slot styles (memoized)
+  const titleStyle: TextStyle = useMemo(() => ({
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.h1,
     color: colors.text,
-  }
+  }), [brand.fontHead, brand.fontBody, typography.h1, colors.text]);
 
-  const subtitleStyle: TextStyle = {
+  const subtitleStyle: TextStyle = useMemo(() => ({
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.h2,
     color: colors.textMuted,
-  }
+  }), [brand.fontHead, brand.fontBody, typography.h2, colors.textMuted]);
 
   // Measure text blocks
   const titleLayout = useMemo(() => {
-    if (!titleBlock || titleBlock.kind === 'bullets') return null
+    if (!titleBlock || titleBlock.kind === 'bullets') return null;
     return measure({
       text: titleBlock.text,
       style: titleStyle,
       maxWidth: cr.w,
-    })
-  }, [titleBlock, titleStyle, cr.w, measure])
+    });
+  }, [titleBlock, titleStyle, cr.w, measure]);
 
   const subtitleLayout = useMemo(() => {
-    if (!subtitleBlock || subtitleBlock.kind === 'bullets') return null
+    if (!subtitleBlock || subtitleBlock.kind === 'bullets') return null;
     return measure({
       text: subtitleBlock.text,
       style: subtitleStyle,
       maxWidth: cr.w,
-    })
-  }, [subtitleBlock, subtitleStyle, cr.w, measure])
+    });
+  }, [subtitleBlock, subtitleStyle, cr.w, measure]);
 
   // Calculate vertical centering
-  const titleHeight = titleLayout?.totalHeight || 0
-  const subtitleHeight = subtitleLayout?.totalHeight || 0
-  const totalContentHeight = titleHeight + (subtitleHeight > 0 ? spacing.verticalGap + subtitleHeight : 0)
+  const titleHeight = titleLayout?.totalHeight || 0;
+  const subtitleHeight = subtitleLayout?.totalHeight || 0;
+  const totalContentHeight = titleHeight + (subtitleHeight > 0 ? spacing.verticalGap + subtitleHeight : 0);
 
-  const startY = cr.y + (cr.h - totalContentHeight) / 2
+  const startY = cr.y + (cr.h - totalContentHeight) / 2;
 
   const artboardStyle: React.CSSProperties = {
     width: spec.width,
     height: spec.height,
     position: 'relative',
     background: colors.background,
-  }
+  };
 
   return (
     <div style={artboardStyle}>
@@ -136,7 +131,7 @@ export function TitleSlide({
               textAlign: 'center',
             }}
           >
-            {titleLayout.lines.map((ln: { text: string }, idx: number) => (
+            {titleLayout.lines.map((ln: { text: string; }, idx: number) => (
               <div
                 key={idx}
                 style={{
@@ -173,7 +168,7 @@ export function TitleSlide({
               textAlign: 'center',
             }}
           >
-            {subtitleLayout.lines.map((ln: { text: string }, idx: number) => (
+            {subtitleLayout.lines.map((ln: { text: string; }, idx: number) => (
               <div
                 key={idx}
                 style={{
@@ -190,8 +185,8 @@ export function TitleSlide({
 
       {/* Decorative layer */}
       {decorativeBlocks.map((block) => {
-        const x = block.props?.x as number ?? spec.width / 2 - 24
-        const y = block.props?.y as number ?? spec.height - 100
+        const x = block.props?.x as number ?? spec.width / 2 - 24;
+        const y = block.props?.y as number ?? spec.height - 100;
         return (
           <DecorativeBlockRenderer
             key={block.id}
@@ -199,8 +194,8 @@ export function TitleSlide({
             x={x}
             y={y}
           />
-        )
+        );
       })}
     </div>
-  )
+  );
 }

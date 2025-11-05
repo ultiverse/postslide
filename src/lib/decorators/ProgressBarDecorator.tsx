@@ -26,7 +26,7 @@ export function ProgressBarDecorator({ block, x, y }: ProgressBarDecoratorProps)
   const style = props.style as string ?? 'gradient'
   const segmentGap = props.segmentGap as number ?? 2
 
-  const { progress, startPercent, endPercent } = calculateProgress(slideIndex, totalSlides)
+  const { progress } = calculateProgress(slideIndex, totalSlides)
 
   if (style === 'gradient') {
     return <GradientProgressBar

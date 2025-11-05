@@ -1,22 +1,22 @@
-import type { LayoutProps } from './types'
-import type { TextBlock } from '@/types/domain'
-import type { TextStyle } from '@/lib/types/design'
-import { useMemo } from 'react'
-import { contentRect } from '@/lib/layout/grid'
-import { createMeasurer } from '@/lib/layout/measure'
-import { BackgroundBlockRenderer, DecorativeBlockRenderer } from '@/components/canvas/BlockRenderer'
-import { isTextBlock } from '@/lib/constants/blocks'
-import { useLayoutTheme } from '@/lib/theme/useLayoutTheme'
+import type { LayoutProps } from './types';
+import type { TextBlock } from '@/types/domain';
+import type { TextStyle } from '@/lib/types/design';
+import { useMemo } from 'react';
+import { contentRect } from '@/lib/layout/grid';
+import { createMeasurer } from '@/lib/layout/measure';
+import { BackgroundBlockRenderer, DecorativeBlockRenderer } from '@/components/canvas/BlockRenderer';
+import { isTextBlock } from '@/lib/constants/blocks';
+import { useLayoutTheme } from '@/lib/theme/useLayoutTheme';
 
 // Layout constants
-const DEFAULT_FONT = 'Inter, system-ui, sans-serif'
-const DEFAULT_WIDTH = 1080
-const DEFAULT_HEIGHT = 1080
-const TITLE_GAP = 48
-const TIMELINE_HEIGHT = 4
-const DOT_SIZE = 20
-const LABEL_GAP = 24
-const DESCRIPTION_GAP = 12
+const DEFAULT_FONT = 'Inter, system-ui, sans-serif';
+const DEFAULT_WIDTH = 1080;
+const DEFAULT_HEIGHT = 1080;
+const TITLE_GAP = 48;
+const TIMELINE_HEIGHT = 4;
+const DOT_SIZE = 20;
+const LABEL_GAP = 24;
+const DESCRIPTION_GAP = 12;
 
 /**
  * TimelineSlide Layout Primitive
@@ -30,7 +30,6 @@ const DESCRIPTION_GAP = 12
  *   Format: "Label | Description" or just "Label"
  */
 export function TimelineSlide({
-  slots,
   slide,
   brand,
   width = DEFAULT_WIDTH,
@@ -38,76 +37,76 @@ export function TimelineSlide({
   safeInset,
   theme: providedTheme,
 }: LayoutProps) {
-  const measure = useMemo(() => createMeasurer(), [])
+  const measure = useMemo(() => createMeasurer(), []);
 
-  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme)
+  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme);
 
   const spec = {
     width,
     height,
     safeInset: safeInset ?? spacing.safeInset,
     baseline: spacing.baseline
-  }
-  const cr = contentRect(spec)
+  };
+  const cr = contentRect(spec);
 
   // Separate blocks
-  const backgroundBlocks = slide.blocks.filter(b => b.kind === 'background')
-  const decorativeBlocks = slide.blocks.filter(b => b.kind === 'decorative')
-  const textBlocks = slide.blocks.filter(isTextBlock) as TextBlock[]
+  const backgroundBlocks = slide.blocks.filter(b => b.kind === 'background');
+  const decorativeBlocks = slide.blocks.filter(b => b.kind === 'decorative');
+  const textBlocks = slide.blocks.filter(isTextBlock) as TextBlock[];
 
   // Find title and timeline items
-  const titleBlock = textBlocks.find(b => b.kind === 'title')
+  const titleBlock = textBlocks.find(b => b.kind === 'title');
   const timelineItems = textBlocks
     .filter(b => b.kind === 'body' || b.kind === 'subtitle')
-    .slice(0, 4) // Max 4 timeline items
+    .slice(0, 4); // Max 4 timeline items
 
-  // Define text styles
-  const titleStyle: TextStyle = {
+  // Define text styles (memoized)
+  const titleStyle: TextStyle = useMemo(() => ({
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.h1,
     color: colors.text,
-  }
+  }), [brand.fontHead, brand.fontBody, typography.h1, colors.text]);
 
-  const labelStyle: TextStyle = {
+  const labelStyle: TextStyle = useMemo(() => ({
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.h2,
     color: colors.text,
-  }
+  }), [brand.fontHead, brand.fontBody, typography.h2, colors.text]);
 
-  const descriptionStyle: TextStyle = {
+  const descriptionStyle: TextStyle = useMemo(() => ({
     fontFamily: brand.fontBody || DEFAULT_FONT,
     ...typography.caption,
     color: colors.textMuted,
-  }
+  }), [brand.fontBody, typography.caption, colors.textMuted]);
 
   // Measure title
   const titleLayout = useMemo(() => {
-    if (!titleBlock || titleBlock.kind === 'bullets') return null
+    if (!titleBlock || titleBlock.kind === 'bullets') return null;
     return measure({
       text: titleBlock.text,
       style: titleStyle,
       maxWidth: cr.w,
-    })
-  }, [titleBlock, titleStyle, cr.w, measure])
+    });
+  }, [titleBlock, titleStyle, cr.w, measure]);
 
-  const titleHeight = titleLayout?.totalHeight || 0
-  const timelineStartY = cr.y + (titleHeight > 0 ? titleHeight + TITLE_GAP : 0)
-  const timelineContentHeight = cr.h - (titleHeight > 0 ? titleHeight + TITLE_GAP : 0)
+  const titleHeight = titleLayout?.totalHeight || 0;
+  const timelineStartY = cr.y + (titleHeight > 0 ? titleHeight + TITLE_GAP : 0);
+  const timelineContentHeight = cr.h - (titleHeight > 0 ? titleHeight + TITLE_GAP : 0);
 
   // Calculate timeline layout
-  const itemCount = timelineItems.length
-  const itemWidth = itemCount > 1 ? cr.w / (itemCount - 1) : cr.w
-  const timelineLineY = timelineStartY + timelineContentHeight * 0.3
+  const itemCount = timelineItems.length;
+  const itemWidth = itemCount > 1 ? cr.w / (itemCount - 1) : cr.w;
+  const timelineLineY = timelineStartY + timelineContentHeight * 0.3;
 
   // Parse timeline items (support "Label | Description" format)
   const parsedItems = timelineItems.map(item => {
-    const text = item.kind === 'bullets' ? '' : item.text
-    const parts = text.split('|').map(s => s.trim())
+    const text = item.kind === 'bullets' ? '' : item.text;
+    const parts = text.split('|').map(s => s.trim());
     return {
       label: parts[0] || text,
       description: parts[1] || '',
-    }
-  })
+    };
+  });
 
   // Measure each item
   const itemLayouts = useMemo(() => {
@@ -116,22 +115,22 @@ export function TimelineSlide({
         text: label,
         style: labelStyle,
         maxWidth: itemWidth - 40,
-      })
+      });
       const descLayout = description ? measure({
         text: description,
         style: descriptionStyle,
         maxWidth: itemWidth - 40,
-      }) : null
-      return { labelLayout, descLayout }
-    })
-  }, [parsedItems, labelStyle, descriptionStyle, itemWidth, measure])
+      }) : null;
+      return { labelLayout, descLayout };
+    });
+  }, [parsedItems, labelStyle, descriptionStyle, itemWidth, measure]);
 
   const artboardStyle: React.CSSProperties = {
     width: spec.width,
     height: spec.height,
     position: 'relative',
     background: colors.background,
-  }
+  };
 
   return (
     <div style={artboardStyle}>
@@ -167,7 +166,7 @@ export function TimelineSlide({
               textAlign: 'center',
             }}
           >
-            {titleLayout.lines.map((ln: { text: string }, idx: number) => (
+            {titleLayout.lines.map((ln: { text: string; }, idx: number) => (
               <div key={idx} style={{ height: titleStyle.lineHeight, overflow: 'hidden' }}>
                 {ln.text}
               </div>
@@ -195,8 +194,8 @@ export function TimelineSlide({
       {parsedItems.map((item, idx) => {
         const itemX = itemCount > 1
           ? cr.x + (idx * itemWidth)
-          : cr.x + cr.w / 2
-        const layout = itemLayouts[idx]
+          : cr.x + cr.w / 2;
+        const layout = itemLayouts[idx];
 
         return (
           <div key={idx}>
@@ -236,7 +235,7 @@ export function TimelineSlide({
                     textAlign: 'center',
                   }}
                 >
-                  {layout.labelLayout.lines.map((ln: { text: string }, lnIdx: number) => (
+                  {layout.labelLayout.lines.map((ln: { text: string; }, lnIdx: number) => (
                     <div key={lnIdx} style={{ height: labelStyle.lineHeight, overflow: 'hidden' }}>
                       {ln.text}
                     </div>
@@ -266,7 +265,7 @@ export function TimelineSlide({
                     textAlign: 'center',
                   }}
                 >
-                  {layout.descLayout.lines.map((ln: { text: string }, lnIdx: number) => (
+                  {layout.descLayout.lines.map((ln: { text: string; }, lnIdx: number) => (
                     <div key={lnIdx} style={{ height: descriptionStyle.lineHeight, overflow: 'hidden' }}>
                       {ln.text}
                     </div>
@@ -275,13 +274,13 @@ export function TimelineSlide({
               </div>
             )}
           </div>
-        )
+        );
       })}
 
       {/* Decorative layer */}
       {decorativeBlocks.map((block) => {
-        const x = block.props?.x as number ?? spec.width / 2 - 24
-        const y = block.props?.y as number ?? spec.height - 100
+        const x = block.props?.x as number ?? spec.width / 2 - 24;
+        const y = block.props?.y as number ?? spec.height - 100;
         return (
           <DecorativeBlockRenderer
             key={block.id}
@@ -289,8 +288,8 @@ export function TimelineSlide({
             x={x}
             y={y}
           />
-        )
+        );
       })}
     </div>
-  )
+  );
 }

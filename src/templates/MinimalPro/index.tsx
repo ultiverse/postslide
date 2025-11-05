@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import type { Template, Slide, Brand } from '@/types/domain';
 import { renderSlideFromSchema } from '@/lib/layouts';
 import { DEFAULT_LIGHT_THEME, DEFAULT_DARK_THEME } from '@/lib/theme';

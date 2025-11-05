@@ -1,10 +1,11 @@
 import type { LayoutProps } from './types';
 import type { TextBlock } from '@/types/domain';
 import type { TextStyle } from '@/lib/types/design';
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { contentRect, isOverflow } from '@/lib/layout/grid';
-import { createMeasurer } from '@/lib/layout/measure';
+import { createMeasurer, type MeasureOutput, type Line as MeasuredLine } from '@/lib/layout/measure';
 import { layoutBullets } from '@/lib/layout/bullets';
+import type { BulletLayoutOutput, BulletLine } from '@/lib/layout/bullets';
 import { BackgroundBlockRenderer, DecorativeBlockRenderer, ImageBlockRenderer } from '@/components/canvas/BlockRenderer';
 import { isTextBlock } from '@/lib/constants/blocks';
 import { useLayoutTheme } from '@/lib/theme/useLayoutTheme';
@@ -50,8 +51,8 @@ export function ListSlide({
   const contentBlocks = slide.blocks.filter(b => isTextBlock(b) || b.kind === 'image');
   const decorativeBlocks = slide.blocks.filter(b => b.kind === 'decorative');
 
-  // Define text styles based on block kind
-  const getStyleForBlock = (block: TextBlock): TextStyle => {
+  // Define text styles based on block kind (stable callback to satisfy hook deps)
+  const getStyleForBlock = useCallback((block: TextBlock): TextStyle => {
     const baseFont = brand.fontBody || DEFAULT_FONT;
     const headFont = brand.fontHead || baseFont;
 
@@ -80,8 +81,14 @@ export function ListSlide({
           ...typography.body,
           color: colors.text,
         };
+      default:
+        return {
+          fontFamily: baseFont,
+          ...typography.body,
+          color: colors.text,
+        };
     }
-  };
+  }, [brand, typography, colors]);
 
   // Calculate block positions with vertical stacking
   const renderedBlocks = useMemo(() => {
@@ -113,7 +120,7 @@ export function ListSlide({
         const textBlock = block as TextBlock;
         const style = getStyleForBlock(textBlock);
 
-        let layout;
+        let layout: MeasureOutput | BulletLayoutOutput;
         let frameH;
 
         if (textBlock.kind === 'bullets') {
@@ -151,7 +158,7 @@ export function ListSlide({
         return result;
       }
     });
-  }, [contentBlocks, measure, cr, spacing, colors, typography, brand]);
+  }, [contentBlocks, measure, cr, spacing, getStyleForBlock]);
 
   const artboardStyle: React.CSSProperties = {
     width: spec.width,
@@ -186,9 +193,11 @@ export function ListSlide({
             />
           );
         } else if (rb.block.kind === 'bullets') {
-          return <BulletBlock key={rb.block.id} renderBlock={rb} />;
+          const rendered = rb as RenderedBullet;
+          return <BulletBlock key={rb.block.id} renderBlock={rendered} />;
         }
-        return <TextBlock key={rb.block.id} renderBlock={rb} />;
+        const rendered = rb as RenderedText;
+        return <TextBlock key={rb.block.id} renderBlock={rendered} />;
       })}
 
       {/* Decorative layer */}
@@ -209,7 +218,15 @@ export function ListSlide({
 }
 
 // Text block component
-function TextBlock({ renderBlock }: { renderBlock: any; }) {
+type RenderedText = {
+  style: import('@/lib/types/design').TextStyle;
+  layout: MeasureOutput;
+  frame: { x: number; y: number; w: number; h: number; };
+  overflow: boolean;
+  block: TextBlock;
+};
+
+function TextBlock({ renderBlock }: { renderBlock: RenderedText; }) {
   const { style, layout, frame, overflow } = renderBlock;
 
   return (
@@ -233,7 +250,7 @@ function TextBlock({ renderBlock }: { renderBlock: any; }) {
           color: style.color,
         }}
       >
-        {layout.lines.map((ln: any, idx: number) => (
+        {layout.lines.map((ln: MeasuredLine, idx: number) => (
           <div
             key={idx}
             style={{
@@ -251,7 +268,15 @@ function TextBlock({ renderBlock }: { renderBlock: any; }) {
 }
 
 // Bullet block component
-function BulletBlock({ renderBlock }: { renderBlock: any; }) {
+type RenderedBullet = {
+  style: import('@/lib/types/design').TextStyle;
+  layout: BulletLayoutOutput;
+  frame: { x: number; y: number; w: number; h: number; };
+  overflow: boolean;
+  block: TextBlock;
+};
+
+function BulletBlock({ renderBlock }: { renderBlock: RenderedBullet; }) {
   const { style, layout, frame, overflow } = renderBlock;
 
   return (
@@ -275,7 +300,7 @@ function BulletBlock({ renderBlock }: { renderBlock: any; }) {
           color: style.color,
         }}
       >
-        {layout.lines.map((ln: any, idx: number) => (
+        {layout.lines.map((ln: BulletLine, idx: number) => (
           <div
             key={idx}
             style={{

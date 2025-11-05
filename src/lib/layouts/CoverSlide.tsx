@@ -54,18 +54,18 @@ export function CoverSlide({
   const titleBlock = textBlocks.find(b => b.kind === 'title')
   const subtitleBlock = textBlocks.find(b => b.kind === 'subtitle')
 
-  // Text styles for cover slide - bold and impactful
-  const titleStyle: TextStyle = {
+  // Text styles for cover slide - memoized to avoid changing object identities
+  const titleStyle: TextStyle = useMemo(() => ({
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.display,
     color: colors.text,
-  }
+  }), [brand.fontHead, brand.fontBody, typography.display, colors.text]);
 
-  const subtitleStyle: TextStyle = {
+  const subtitleStyle: TextStyle = useMemo(() => ({
     fontFamily: brand.fontBody || DEFAULT_FONT,
     ...typography.h2,
     color: colors.textMuted,
-  }
+  }), [brand.fontBody, typography.h2, colors.textMuted]);
 
   // Measure text blocks
   const titleLayout = useMemo(() => {

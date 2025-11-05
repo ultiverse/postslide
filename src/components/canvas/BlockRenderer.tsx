@@ -1,4 +1,4 @@
-import type { SlideBlock, ImageBlock, BackgroundBlock, DecorativeBlock } from '@/types/domain';
+import type { ImageBlock, BackgroundBlock, DecorativeBlock } from '@/types/domain';
 import type React from 'react';
 import { PageNumberDecorator } from '@/lib/decorators/PageNumberDecorator';
 import { ProgressBarDecorator } from '@/lib/decorators/ProgressBarDecorator';

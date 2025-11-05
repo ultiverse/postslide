@@ -37,10 +37,10 @@ export function CanvasRenderer({ slide, spec, theme, fontsReady, showGrid }: Pro
 
   const cr = contentRect(spec);
 
-  // Separate blocks by type
-  const backgroundBlocks = slide?.blocks.filter(b => b.kind === 'background') || [];
-  const contentBlocks = slide?.blocks.filter(b => isTextBlock(b) || b.kind === 'image') || [];
-  const decorativeBlocks = slide?.blocks.filter(b => b.kind === 'decorative') || [];
+  // Separate blocks by type (memoized to avoid creating new arrays each render)
+  const backgroundBlocks = useMemo(() => slide?.blocks.filter(b => b.kind === 'background') || [], [slide]);
+  const contentBlocks = useMemo(() => slide?.blocks.filter(b => isTextBlock(b) || b.kind === 'image') || [], [slide]);
+  const decorativeBlocks = useMemo(() => slide?.blocks.filter(b => b.kind === 'decorative') || [], [slide]);
 
   // Calculate block positions with vertical stacking for content blocks (text + images)
   const renderedBlocks = useMemo(() => {

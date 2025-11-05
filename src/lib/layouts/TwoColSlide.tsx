@@ -1,18 +1,18 @@
-import type { LayoutProps } from './types'
-import type { TextBlock } from '@/types/domain'
-import type { TextStyle } from '@/lib/types/design'
-import { useMemo } from 'react'
-import { contentRect, isOverflow } from '@/lib/layout/grid'
-import { createMeasurer } from '@/lib/layout/measure'
-import { layoutBullets } from '@/lib/layout/bullets'
-import { BackgroundBlockRenderer, DecorativeBlockRenderer, ImageBlockRenderer } from '@/components/canvas/BlockRenderer'
-import { isTextBlock } from '@/lib/constants/blocks'
-import { useLayoutTheme } from '@/lib/theme/useLayoutTheme'
+import type { LayoutProps } from './types';
+import type { TextBlock } from '@/types/domain';
+import type { TextStyle } from '@/lib/types/design';
+import { useMemo, useCallback } from 'react';
+import { contentRect, isOverflow } from '@/lib/layout/grid';
+import { createMeasurer, type MeasureOutput, type Line as MeasuredLine } from '@/lib/layout/measure';
+import { layoutBullets, type BulletLayoutOutput, type BulletLine } from '@/lib/layout/bullets';
+import { BackgroundBlockRenderer, DecorativeBlockRenderer, ImageBlockRenderer } from '@/components/canvas/BlockRenderer';
+import { isTextBlock } from '@/lib/constants/blocks';
+import { useLayoutTheme } from '@/lib/theme/useLayoutTheme';
 
 // Layout constants
-const DEFAULT_FONT = 'Inter, system-ui, sans-serif'
-const DEFAULT_WIDTH = 1080
-const DEFAULT_HEIGHT = 1080
+const DEFAULT_FONT = 'Inter, system-ui, sans-serif';
+const DEFAULT_WIDTH = 1080;
+const DEFAULT_HEIGHT = 1080;
 
 /**
  * TwoColSlide Layout Primitive
@@ -33,35 +33,35 @@ export function TwoColSlide({
   safeInset,
   theme: providedTheme,
 }: LayoutProps) {
-  const measure = useMemo(() => createMeasurer(), [])
-  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme)
+  const measure = useMemo(() => createMeasurer(), []);
+  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme);
 
   const spec = {
     width,
     height,
     safeInset: safeInset ?? spacing.safeInset,
     baseline: spacing.baseline
-  }
-  const cr = contentRect(spec)
+  };
+  const cr = contentRect(spec);
 
   // Separate blocks into layers
-  const backgroundBlocks = slide.blocks.filter(b => b.kind === 'background')
-  const contentBlocks = slide.blocks.filter(b => isTextBlock(b) || b.kind === 'image')
-  const decorativeBlocks = slide.blocks.filter(b => b.kind === 'decorative')
+  const backgroundBlocks = slide.blocks.filter(b => b.kind === 'background');
+  const contentBlocks = slide.blocks.filter(b => isTextBlock(b) || b.kind === 'image');
+  const decorativeBlocks = slide.blocks.filter(b => b.kind === 'decorative');
 
   // Find title block (if any) - will span both columns
-  const titleBlock = contentBlocks.find(b => b.kind === 'title') as TextBlock | undefined
+  const titleBlock = contentBlocks.find(b => b.kind === 'title') as TextBlock | undefined;
 
   // Split remaining content into two columns (simple approach: first half left, second half right)
-  const nonTitleBlocks = contentBlocks.filter(b => b.kind !== 'title')
-  const midpoint = Math.ceil(nonTitleBlocks.length / 2)
-  const leftBlocks = nonTitleBlocks.slice(0, midpoint)
-  const rightBlocks = nonTitleBlocks.slice(midpoint)
+  const nonTitleBlocks = contentBlocks.filter(b => b.kind !== 'title');
+  const midpoint = Math.ceil(nonTitleBlocks.length / 2);
+  const leftBlocks = nonTitleBlocks.slice(0, midpoint);
+  const rightBlocks = nonTitleBlocks.slice(midpoint);
 
   // Define text styles based on block kind
-  const getStyleForBlock = (block: TextBlock): TextStyle => {
-    const baseFont = brand.fontBody || DEFAULT_FONT
-    const headFont = brand.fontHead || baseFont
+  const getStyleForBlock = useCallback((block: TextBlock): TextStyle => {
+    const baseFont = brand.fontBody || DEFAULT_FONT;
+    const headFont = brand.fontHead || baseFont;
 
     switch (block.kind) {
       case 'title':
@@ -69,40 +69,40 @@ export function TwoColSlide({
           fontFamily: headFont,
           ...typography.h1,
           color: colors.text,
-        }
+        };
       case 'subtitle':
         return {
           fontFamily: headFont,
           ...typography.h2,
           color: colors.textMuted,
-        }
+        };
       case 'body':
         return {
           fontFamily: baseFont,
           ...typography.body,
           color: colors.text,
-        }
+        };
       case 'bullets':
         return {
           fontFamily: baseFont,
           ...typography.body,
           color: colors.text,
-        }
+        };
     }
-  }
+  }, [brand, typography, colors]);
 
   // Render title block (if exists)
   const titleRendered = useMemo(() => {
-    if (!titleBlock || titleBlock.kind === 'bullets') return null
+    if (!titleBlock || titleBlock.kind === 'bullets') return null;
 
-    const style = getStyleForBlock(titleBlock)
+    const style = getStyleForBlock(titleBlock);
     const layout = measure({
       text: titleBlock.text,
       style,
       maxWidth: cr.w,
-    })
+    });
 
-    const frameH = Math.min(layout.totalHeight, cr.h / 3) // Max 1/3 of height
+    const frameH = Math.min(layout.totalHeight, cr.h / 3); // Max 1/3 of height
 
     return {
       block: titleBlock,
@@ -111,46 +111,49 @@ export function TwoColSlide({
       frame: { x: cr.x, y: cr.y, w: cr.w, h: frameH },
       overflow: isOverflow(layout.totalHeight, frameH),
       type: 'text' as const,
-    }
-  }, [titleBlock, measure, cr, colors, typography, brand])
+    };
+  }, [titleBlock, measure, cr, getStyleForBlock]);
 
-  const titleHeight = titleRendered ? titleRendered.frame.h + spacing.blockGap : 0
-  const columnStartY = cr.y + titleHeight
-  const columnHeight = cr.h - titleHeight
+  const titleHeight = titleRendered ? titleRendered.frame.h + spacing.blockGap : 0;
+  const columnStartY = cr.y + titleHeight;
+  const columnHeight = cr.h - titleHeight;
+
+  // Prepare a properly typed reference for JSX to avoid 'as' casts inside JSX props
+  const titleRenderBlock = titleRendered as RenderedText | undefined;
 
   // Column dimensions
-  const columnWidth = (cr.w - spacing.columnGap) / 2
+  const columnWidth = (cr.w - spacing.columnGap) / 2;
 
   // Render left column
   const leftRendered = useMemo(() => {
-    if (!leftBlocks.length) return []
+    if (!leftBlocks.length) return [];
 
-    let currentY = columnStartY
+    let currentY = columnStartY;
 
     return leftBlocks.map((block) => {
-      const frameX = cr.x
-      const frameW = columnWidth
-      const maxH = columnHeight - (currentY - columnStartY)
+      const frameX = cr.x;
+      const frameW = columnWidth;
+      const maxH = columnHeight - (currentY - columnStartY);
 
       if (block.kind === 'image') {
-        const imgHeight = block.height || spacing.imageHeight
-        const imgWidth = block.width || frameW
-        const frameH = Math.min(imgHeight, maxH)
+        const imgHeight = block.height || spacing.imageHeight;
+        const imgWidth = block.width || frameW;
+        const frameH = Math.min(imgHeight, maxH);
 
         const result = {
           block,
           frame: { x: frameX, y: currentY, w: imgWidth, h: frameH },
           type: 'image' as const,
-        }
+        };
 
-        currentY += frameH + spacing.blockGap
-        return result
+        currentY += frameH + spacing.blockGap;
+        return result;
       } else {
-        const textBlock = block as TextBlock
-        const style = getStyleForBlock(textBlock)
+        const textBlock = block as TextBlock;
+        const style = getStyleForBlock(textBlock);
 
-        let layout
-        let frameH
+        let layout;
+        let frameH;
 
         if (textBlock.kind === 'bullets') {
           layout = layoutBullets({
@@ -163,15 +166,15 @@ export function TwoColSlide({
               indent: spacing.bulletIndent,
               markerSizeRatio: 1,
             },
-          })
-          frameH = Math.min(layout.totalHeight, maxH)
+          });
+          frameH = Math.min(layout.totalHeight, maxH);
         } else {
           layout = measure({
             text: textBlock.text,
             style,
             maxWidth: frameW,
-          })
-          frameH = Math.min(layout.totalHeight, maxH)
+          });
+          frameH = Math.min(layout.totalHeight, maxH);
         }
 
         const result = {
@@ -181,44 +184,44 @@ export function TwoColSlide({
           frame: { x: frameX, y: currentY, w: frameW, h: frameH },
           overflow: isOverflow(layout.totalHeight, frameH),
           type: 'text' as const,
-        }
+        };
 
-        currentY += frameH + spacing.blockGap
-        return result
+        currentY += frameH + spacing.blockGap;
+        return result;
       }
-    })
-  }, [leftBlocks, measure, cr, columnWidth, columnStartY, columnHeight, spacing, colors, typography, brand])
+    });
+  }, [leftBlocks, measure, cr, columnWidth, columnStartY, columnHeight, spacing, getStyleForBlock]);
 
   // Render right column
   const rightRendered = useMemo(() => {
-    if (!rightBlocks.length) return []
+    if (!rightBlocks.length) return [];
 
-    let currentY = columnStartY
+    let currentY = columnStartY;
 
     return rightBlocks.map((block) => {
-      const frameX = cr.x + columnWidth + spacing.columnGap
-      const frameW = columnWidth
-      const maxH = columnHeight - (currentY - columnStartY)
+      const frameX = cr.x + columnWidth + spacing.columnGap;
+      const frameW = columnWidth;
+      const maxH = columnHeight - (currentY - columnStartY);
 
       if (block.kind === 'image') {
-        const imgHeight = block.height || spacing.imageHeight
-        const imgWidth = block.width || frameW
-        const frameH = Math.min(imgHeight, maxH)
+        const imgHeight = block.height || spacing.imageHeight;
+        const imgWidth = block.width || frameW;
+        const frameH = Math.min(imgHeight, maxH);
 
         const result = {
           block,
           frame: { x: frameX, y: currentY, w: imgWidth, h: frameH },
           type: 'image' as const,
-        }
+        };
 
-        currentY += frameH + spacing.blockGap
-        return result
+        currentY += frameH + spacing.blockGap;
+        return result;
       } else {
-        const textBlock = block as TextBlock
-        const style = getStyleForBlock(textBlock)
+        const textBlock = block as TextBlock;
+        const style = getStyleForBlock(textBlock);
 
-        let layout
-        let frameH
+        let layout;
+        let frameH;
 
         if (textBlock.kind === 'bullets') {
           layout = layoutBullets({
@@ -231,15 +234,15 @@ export function TwoColSlide({
               indent: spacing.bulletIndent,
               markerSizeRatio: 1,
             },
-          })
-          frameH = Math.min(layout.totalHeight, maxH)
+          });
+          frameH = Math.min(layout.totalHeight, maxH);
         } else {
           layout = measure({
             text: textBlock.text,
             style,
             maxWidth: frameW,
-          })
-          frameH = Math.min(layout.totalHeight, maxH)
+          });
+          frameH = Math.min(layout.totalHeight, maxH);
         }
 
         const result = {
@@ -249,20 +252,20 @@ export function TwoColSlide({
           frame: { x: frameX, y: currentY, w: frameW, h: frameH },
           overflow: isOverflow(layout.totalHeight, frameH),
           type: 'text' as const,
-        }
+        };
 
-        currentY += frameH + spacing.blockGap
-        return result
+        currentY += frameH + spacing.blockGap;
+        return result;
       }
-    })
-  }, [rightBlocks, measure, cr, columnWidth, columnStartY, columnHeight, spacing, colors, typography, brand])
+    });
+  }, [rightBlocks, measure, cr, columnWidth, columnStartY, columnHeight, spacing, getStyleForBlock]);
 
   const artboardStyle: React.CSSProperties = {
     width: spec.width,
     height: spec.height,
     position: 'relative',
     background: colors.background,
-  }
+  };
 
   return (
     <div style={artboardStyle}>
@@ -277,7 +280,7 @@ export function TwoColSlide({
       ))}
 
       {/* Title (if exists) */}
-      {titleRendered && <TextBlock renderBlock={titleRendered} />}
+      {titleRenderBlock && <TextBlock renderBlock={titleRenderBlock} />}
 
       {/* Left column */}
       {leftRendered.map((rb) => {
@@ -291,11 +294,13 @@ export function TwoColSlide({
               width={rb.frame.w}
               height={rb.frame.h}
             />
-          )
+          );
         } else if (rb.block.kind === 'bullets') {
-          return <BulletBlock key={rb.block.id} renderBlock={rb} />
+          const rendered = rb as RenderedBullet;
+          return <BulletBlock key={rb.block.id} renderBlock={rendered} />;
         }
-        return <TextBlock key={rb.block.id} renderBlock={rb} />
+        const rendered = rb as RenderedText;
+        return <TextBlock key={rb.block.id} renderBlock={rendered} />;
       })}
 
       {/* Right column */}
@@ -310,17 +315,19 @@ export function TwoColSlide({
               width={rb.frame.w}
               height={rb.frame.h}
             />
-          )
+          );
         } else if (rb.block.kind === 'bullets') {
-          return <BulletBlock key={rb.block.id} renderBlock={rb} />
+          const rendered = rb as RenderedBullet;
+          return <BulletBlock key={rb.block.id} renderBlock={rendered} />;
         }
-        return <TextBlock key={rb.block.id} renderBlock={rb} />
+        const rendered = rb as RenderedText;
+        return <TextBlock key={rb.block.id} renderBlock={rendered} />;
       })}
 
       {/* Decorative layer */}
       {decorativeBlocks.map((block) => {
-        const x = block.props?.x as number ?? spec.width / 2 - 24
-        const y = block.props?.y as number ?? spec.height - 100
+        const x = block.props?.x as number ?? spec.width / 2 - 24;
+        const y = block.props?.y as number ?? spec.height - 100;
         return (
           <DecorativeBlockRenderer
             key={block.id}
@@ -328,15 +335,23 @@ export function TwoColSlide({
             x={x}
             y={y}
           />
-        )
+        );
       })}
     </div>
-  )
+  );
 }
 
 // Text block component
-function TextBlock({ renderBlock }: { renderBlock: any }) {
-  const { style, layout, frame, overflow } = renderBlock
+type RenderedText = {
+  style: import('@/lib/types/design').TextStyle;
+  layout: MeasureOutput;
+  frame: { x: number; y: number; w: number; h: number; };
+  overflow: boolean;
+  block: TextBlock;
+};
+
+function TextBlock({ renderBlock }: { renderBlock: RenderedText; }) {
+  const { style, layout, frame, overflow } = renderBlock;
 
   return (
     <div
@@ -359,7 +374,7 @@ function TextBlock({ renderBlock }: { renderBlock: any }) {
           color: style.color,
         }}
       >
-        {layout.lines.map((ln: any, idx: number) => (
+        {layout.lines.map((ln: MeasuredLine, idx: number) => (
           <div
             key={idx}
             style={{
@@ -373,12 +388,20 @@ function TextBlock({ renderBlock }: { renderBlock: any }) {
       </div>
       {overflow && <OverflowBadge />}
     </div>
-  )
+  );
 }
 
 // Bullet block component
-function BulletBlock({ renderBlock }: { renderBlock: any }) {
-  const { style, layout, frame, overflow } = renderBlock
+type RenderedBullet = {
+  style: import('@/lib/types/design').TextStyle;
+  layout: BulletLayoutOutput;
+  frame: { x: number; y: number; w: number; h: number; };
+  overflow: boolean;
+  block: TextBlock;
+};
+
+function BulletBlock({ renderBlock }: { renderBlock: RenderedBullet; }) {
+  const { style, layout, frame, overflow } = renderBlock;
 
   return (
     <div
@@ -401,7 +424,7 @@ function BulletBlock({ renderBlock }: { renderBlock: any }) {
           color: style.color,
         }}
       >
-        {layout.lines.map((ln: any, idx: number) => (
+        {layout.lines.map((ln: BulletLine, idx: number) => (
           <div
             key={idx}
             style={{
@@ -428,7 +451,7 @@ function BulletBlock({ renderBlock }: { renderBlock: any }) {
       </div>
       {overflow && <OverflowBadge />}
     </div>
-  )
+  );
 }
 
 function OverflowBadge() {
@@ -439,5 +462,5 @@ function OverflowBadge() {
       </svg>
       <span>Overflow</span>
     </div>
-  )
+  );
 }

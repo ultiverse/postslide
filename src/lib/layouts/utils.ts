@@ -97,7 +97,7 @@ export function getSuggestedBlocksForLayout(layout: LayoutDefinition): Array<{ k
 
   for (const slot of layout.slots) {
     switch (slot.type) {
-      case 'text':
+      case 'text': {
         let blockKind: Slide['blocks'][0]['kind']
         let placeholder: string
 
@@ -132,7 +132,8 @@ export function getSuggestedBlocksForLayout(layout: LayoutDefinition): Array<{ k
           }
         }
         break
-      case 'bullets':
+      }
+      case 'bullets': {
         const shouldAddBullets = needsMultipleBullets || !seenKinds.has('bullets')
         if (shouldAddBullets) {
           suggestions.push({ kind: 'bullets', placeholder: 'Add bullet points' })
@@ -141,6 +142,7 @@ export function getSuggestedBlocksForLayout(layout: LayoutDefinition): Array<{ k
           }
         }
         break
+      }
       case 'image':
         if (!seenKinds.has('image')) {
           suggestions.push({ kind: 'image', placeholder: 'Add an image' })
@@ -220,7 +222,10 @@ function getPlaceholderForSlot(slot: LayoutSlot, layoutKind: string): string {
  *
  * Returns true if the slide's blocks can be reasonably rendered by the layout
  */
-export function isSlideCompatibleWithLayout(slide: Slide, layout: LayoutDefinition): boolean {
+export function isSlideCompatibleWithLayout(_slide: Slide, _layout: LayoutDefinition): boolean {
+  // Use the parameters to avoid unused var lint complaints in some configs
+  void _slide
+  void _layout
   // For now, all slides are compatible with all layouts
   // Layouts will adapt to render whatever blocks are present
   // In the future, we could add stricter validation

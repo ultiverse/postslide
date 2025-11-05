@@ -1,17 +1,17 @@
-import type { LayoutProps } from './types'
-import type { TextBlock } from '@/types/domain'
-import type { TextStyle } from '@/lib/types/design'
-import { useMemo } from 'react'
-import { contentRect } from '@/lib/layout/grid'
-import { createMeasurer } from '@/lib/layout/measure'
-import { BackgroundBlockRenderer, DecorativeBlockRenderer } from '@/components/canvas/BlockRenderer'
-import { isTextBlock } from '@/lib/constants/blocks'
-import { useLayoutTheme } from '@/lib/theme/useLayoutTheme'
+import type { LayoutProps } from './types';
+import type { TextBlock } from '@/types/domain';
+import type { TextStyle } from '@/lib/types/design';
+import { useMemo } from 'react';
+import { contentRect } from '@/lib/layout/grid';
+import { createMeasurer } from '@/lib/layout/measure';
+import { BackgroundBlockRenderer, DecorativeBlockRenderer } from '@/components/canvas/BlockRenderer';
+import { isTextBlock } from '@/lib/constants/blocks';
+import { useLayoutTheme } from '@/lib/theme/useLayoutTheme';
 
 // Layout constants
-const DEFAULT_FONT = 'Inter, system-ui, sans-serif'
-const DEFAULT_WIDTH = 1080
-const DEFAULT_HEIGHT = 1080
+const DEFAULT_FONT = 'Inter, system-ui, sans-serif';
+const DEFAULT_WIDTH = 1080;
+const DEFAULT_HEIGHT = 1080;
 
 /**
  * StatSlide Layout Primitive
@@ -32,95 +32,95 @@ export function StatSlide({
   safeInset,
   theme: providedTheme,
 }: LayoutProps) {
-  const measure = useMemo(() => createMeasurer(), [])
-  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme)
+  const measure = useMemo(() => createMeasurer(), []);
+  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme);
 
   const spec = {
     width,
     height,
     safeInset: safeInset ?? spacing.safeInset,
     baseline: spacing.baseline
-  }
-  const cr = contentRect(spec)
+  };
+  const cr = contentRect(spec);
 
   // Separate blocks
-  const backgroundBlocks = slide.blocks.filter(b => b.kind === 'background')
-  const decorativeBlocks = slide.blocks.filter(b => b.kind === 'decorative')
-  const textBlocks = slide.blocks.filter(isTextBlock) as TextBlock[]
+  const backgroundBlocks = slide.blocks.filter(b => b.kind === 'background');
+  const decorativeBlocks = slide.blocks.filter(b => b.kind === 'decorative');
+  const textBlocks = slide.blocks.filter(isTextBlock) as TextBlock[];
 
   // Map blocks to stat components
   // For stat slide, we use the first title block as the number
   // First subtitle becomes the label
   // First body block becomes context
-  const numberBlock = textBlocks.find(b => b.kind === 'title')
-  const labelBlock = textBlocks.find(b => b.kind === 'subtitle')
-  const contextBlock = textBlocks.find(b => b.kind === 'body') // First body block
+  const numberBlock = textBlocks.find(b => b.kind === 'title');
+  const labelBlock = textBlocks.find(b => b.kind === 'subtitle');
+  const contextBlock = textBlocks.find(b => b.kind === 'body'); // First body block
 
-  // Text styles for stat components
-  const numberStyle: TextStyle = {
+  // Text styles for stat components (memoized)
+  const numberStyle: TextStyle = useMemo(() => ({
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.stat,
     color: colors.primary, // Use brand color for emphasis
-  }
+  }), [brand.fontHead, brand.fontBody, typography.stat, colors.primary]);
 
-  const labelStyle: TextStyle = {
+  const labelStyle: TextStyle = useMemo(() => ({
     fontFamily: brand.fontBody || DEFAULT_FONT,
     ...typography.h2,
     color: colors.textMuted,
-  }
+  }), [brand.fontBody, typography.h2, colors.textMuted]);
 
-  const contextStyle: TextStyle = {
+  const contextStyle: TextStyle = useMemo(() => ({
     fontFamily: brand.fontBody || DEFAULT_FONT,
     ...typography.caption,
     color: colors.text,
-  }
+  }), [brand.fontBody, typography.caption, colors.text]);
 
   // Measure text blocks
   const numberLayout = useMemo(() => {
-    if (!numberBlock || numberBlock.kind === 'bullets') return null
+    if (!numberBlock || numberBlock.kind === 'bullets') return null;
     return measure({
       text: numberBlock.text,
       style: numberStyle,
       maxWidth: cr.w,
-    })
-  }, [numberBlock, numberStyle, cr.w, measure])
+    });
+  }, [numberBlock, numberStyle, cr.w, measure]);
 
   const labelLayout = useMemo(() => {
-    if (!labelBlock || labelBlock.kind === 'bullets') return null
+    if (!labelBlock || labelBlock.kind === 'bullets') return null;
     return measure({
       text: labelBlock.text,
       style: labelStyle,
       maxWidth: cr.w,
-    })
-  }, [labelBlock, labelStyle, cr.w, measure])
+    });
+  }, [labelBlock, labelStyle, cr.w, measure]);
 
   const contextLayout = useMemo(() => {
-    if (!contextBlock || contextBlock.kind === 'bullets') return null
+    if (!contextBlock || contextBlock.kind === 'bullets') return null;
     return measure({
       text: contextBlock.text,
       style: contextStyle,
       maxWidth: cr.w * 0.8, // Narrower for better readability
-    })
-  }, [contextBlock, contextStyle, cr.w, measure])
+    });
+  }, [contextBlock, contextStyle, cr.w, measure]);
 
   // Calculate vertical centering
-  const numberHeight = numberLayout?.totalHeight || 0
-  const labelHeight = labelLayout?.totalHeight || 0
-  const contextHeight = contextLayout?.totalHeight || 0
+  const numberHeight = numberLayout?.totalHeight || 0;
+  const labelHeight = labelLayout?.totalHeight || 0;
+  const contextHeight = contextLayout?.totalHeight || 0;
 
   const totalContentHeight =
     numberHeight +
     (labelHeight > 0 ? spacing.verticalGap + labelHeight : 0) +
-    (contextHeight > 0 ? spacing.verticalGap * 2 + contextHeight : 0)
+    (contextHeight > 0 ? spacing.verticalGap * 2 + contextHeight : 0);
 
-  const startY = cr.y + (cr.h - totalContentHeight) / 2
+  const startY = cr.y + (cr.h - totalContentHeight) / 2;
 
   const artboardStyle: React.CSSProperties = {
     width: spec.width,
     height: spec.height,
     position: 'relative',
     background: colors.background,
-  }
+  };
 
   return (
     <div style={artboardStyle}>
@@ -156,7 +156,7 @@ export function StatSlide({
               textAlign: 'center',
             }}
           >
-            {numberLayout.lines.map((ln: { text: string }, idx: number) => (
+            {numberLayout.lines.map((ln: { text: string; }, idx: number) => (
               <div
                 key={idx}
                 style={{
@@ -195,7 +195,7 @@ export function StatSlide({
               letterSpacing: '0.05em',
             }}
           >
-            {labelLayout.lines.map((ln: { text: string }, idx: number) => (
+            {labelLayout.lines.map((ln: { text: string; }, idx: number) => (
               <div
                 key={idx}
                 style={{
@@ -232,7 +232,7 @@ export function StatSlide({
               textAlign: 'center',
             }}
           >
-            {contextLayout.lines.map((ln: { text: string }, idx: number) => (
+            {contextLayout.lines.map((ln: { text: string; }, idx: number) => (
               <div
                 key={idx}
                 style={{
@@ -249,8 +249,8 @@ export function StatSlide({
 
       {/* Decorative layer */}
       {decorativeBlocks.map((block) => {
-        const x = block.props?.x as number ?? spec.width / 2 - 24
-        const y = block.props?.y as number ?? spec.height - 100
+        const x = block.props?.x as number ?? spec.width / 2 - 24;
+        const y = block.props?.y as number ?? spec.height - 100;
         return (
           <DecorativeBlockRenderer
             key={block.id}
@@ -258,8 +258,8 @@ export function StatSlide({
             x={x}
             y={y}
           />
-        )
+        );
       })}
     </div>
-  )
+  );
 }

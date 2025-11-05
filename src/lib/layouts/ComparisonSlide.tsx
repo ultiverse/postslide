@@ -1,9 +1,10 @@
 import type { LayoutProps } from './types';
 import type { TextBlock } from '@/types/domain';
+import { createMeasurer, type Line as MeasuredLine } from '@/lib/layout/measure';
+import type { BulletLine } from '@/lib/layout/bullets';
 import type { TextStyle } from '@/lib/types/design';
 import { useMemo } from 'react';
 import { contentRect } from '@/lib/layout/grid';
-import { createMeasurer } from '@/lib/layout/measure';
 import { layoutBullets } from '@/lib/layout/bullets';
 import { BackgroundBlockRenderer, DecorativeBlockRenderer } from '@/components/canvas/BlockRenderer';
 import { useLayoutTheme } from '@/lib/theme/useLayoutTheme';
@@ -28,7 +29,6 @@ const DEFAULT_HEIGHT = 1080;
  * - right-content (text, bullets): Right column content
  */
 export function ComparisonSlide({
-  slots,
   slide,
   brand,
   width = DEFAULT_WIDTH,
@@ -65,23 +65,23 @@ export function ComparisonSlide({
   const rightContent = bodyBlocks[1];
 
   // Define text styles
-  const titleStyle: TextStyle = {
+  const titleStyle: TextStyle = useMemo(() => ({
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.h1,
     color: colors.text,
-  };
+  }), [brand.fontHead, brand.fontBody, typography.h1, colors.text]);
 
-  const labelStyle: TextStyle = {
+  const labelStyle: TextStyle = useMemo(() => ({
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.h2,
     color: colors.primary,
-  };
+  }), [brand.fontHead, brand.fontBody, typography.h2, colors.primary]);
 
-  const contentStyle: TextStyle = {
+  const contentStyle: TextStyle = useMemo(() => ({
     fontFamily: brand.fontBody || DEFAULT_FONT,
     ...typography.body,
     color: colors.text,
-  };
+  }), [brand.fontBody, typography.body, colors.text]);
 
   // Measure title
   const titleLayout = useMemo(() => {
@@ -149,7 +149,8 @@ export function ComparisonSlide({
       style: contentStyle,
       maxWidth: columnWidth,
     });
-  }, [leftContent, contentStyle, columnWidth, measure]);
+    // include spacing values used by bullets so memo updates correctly
+  }, [leftContent, contentStyle, columnWidth, measure, spacing.bulletGap, spacing.bulletIndent]);
 
   // Measure right content
   const rightContentLayout = useMemo(() => {
@@ -172,7 +173,8 @@ export function ComparisonSlide({
       style: contentStyle,
       maxWidth: columnWidth,
     });
-  }, [rightContent, contentStyle, columnWidth, measure]);
+    // include spacing values used by bullets so memo updates correctly
+  }, [rightContent, contentStyle, columnWidth, measure, spacing.bulletGap, spacing.bulletIndent]);
 
   const artboardStyle: React.CSSProperties = {
     width: spec.width,
@@ -305,29 +307,29 @@ export function ComparisonSlide({
               color: contentStyle.color,
             }}
           >
-            {leftContentLayout.lines.map((ln: any, idx: number) => (
+            {leftContentLayout.lines.map((ln: BulletLine | MeasuredLine, idx: number) => (
               <div
                 key={idx}
                 style={{
                   height: contentStyle.lineHeight,
-                  paddingLeft: ln.xOffset || 0,
+                  paddingLeft: ('xOffset' in ln ? ln.xOffset : 0) as number,
                   position: 'relative',
                   overflow: 'hidden',
                 }}
               >
-                {ln.marker && (
+                {'marker' in ln && ln.marker && (
                   <span
                     style={{
                       position: 'absolute',
                       left: 0,
-                      width: ln.xOffset,
+                      width: ('xOffset' in ln ? ln.xOffset : 0) as number,
                       textAlign: 'center',
                     }}
                   >
                     {ln.marker}
                   </span>
                 )}
-                {ln.text}
+                {('text' in ln) ? ln.text : ''}
               </div>
             ))}
           </div>
@@ -355,29 +357,29 @@ export function ComparisonSlide({
               color: contentStyle.color,
             }}
           >
-            {rightContentLayout.lines.map((ln: any, idx: number) => (
+            {rightContentLayout.lines.map((ln: BulletLine | MeasuredLine, idx: number) => (
               <div
                 key={idx}
                 style={{
                   height: contentStyle.lineHeight,
-                  paddingLeft: ln.xOffset || 0,
+                  paddingLeft: ('xOffset' in ln ? ln.xOffset : 0) as number,
                   position: 'relative',
                   overflow: 'hidden',
                 }}
               >
-                {ln.marker && (
+                {'marker' in ln && ln.marker && (
                   <span
                     style={{
                       position: 'absolute',
                       left: 0,
-                      width: ln.xOffset,
+                      width: ('xOffset' in ln ? ln.xOffset : 0) as number,
                       textAlign: 'center',
                     }}
                   >
                     {ln.marker}
                   </span>
                 )}
-                {ln.text}
+                {('text' in ln) ? ln.text : ''}
               </div>
             ))}
           </div>

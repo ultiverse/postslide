@@ -1,17 +1,17 @@
-import type { LayoutProps } from './types'
-import type { TextBlock } from '@/types/domain'
-import type { TextStyle } from '@/lib/types/design'
-import { useMemo } from 'react'
-import { contentRect } from '@/lib/layout/grid'
-import { createMeasurer } from '@/lib/layout/measure'
-import { BackgroundBlockRenderer, DecorativeBlockRenderer } from '@/components/canvas/BlockRenderer'
-import { isTextBlock } from '@/lib/constants/blocks'
-import { useLayoutTheme } from '@/lib/theme/useLayoutTheme'
+import type { LayoutProps } from './types';
+import type { TextBlock } from '@/types/domain';
+import type { TextStyle } from '@/lib/types/design';
+import { useMemo } from 'react';
+import { contentRect } from '@/lib/layout/grid';
+import { createMeasurer } from '@/lib/layout/measure';
+import { BackgroundBlockRenderer, DecorativeBlockRenderer } from '@/components/canvas/BlockRenderer';
+import { isTextBlock } from '@/lib/constants/blocks';
+import { useLayoutTheme } from '@/lib/theme/useLayoutTheme';
 
 // Layout constants
-const DEFAULT_FONT = 'Inter, system-ui, sans-serif'
-const DEFAULT_WIDTH = 1080
-const DEFAULT_HEIGHT = 1080
+const DEFAULT_FONT = 'Inter, system-ui, sans-serif';
+const DEFAULT_WIDTH = 1080;
+const DEFAULT_HEIGHT = 1080;
 
 /**
  * QuoteSlide Layout Primitive
@@ -31,77 +31,77 @@ export function QuoteSlide({
   safeInset,
   theme: providedTheme,
 }: LayoutProps) {
-  const measure = useMemo(() => createMeasurer(), [])
-  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme)
+  const measure = useMemo(() => createMeasurer(), []);
+  const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme);
 
   const spec = {
     width,
     height,
     safeInset: safeInset ?? spacing.safeInset,
     baseline: spacing.baseline
-  }
-  const cr = contentRect(spec)
+  };
+  const cr = contentRect(spec);
 
   // Separate blocks
-  const backgroundBlocks = slide.blocks.filter(b => b.kind === 'background')
-  const decorativeBlocks = slide.blocks.filter(b => b.kind === 'decorative')
-  const textBlocks = slide.blocks.filter(isTextBlock) as TextBlock[]
+  const backgroundBlocks = slide.blocks.filter(b => b.kind === 'background');
+  const decorativeBlocks = slide.blocks.filter(b => b.kind === 'decorative');
+  const textBlocks = slide.blocks.filter(isTextBlock) as TextBlock[];
 
   // Map blocks to quote components
   // Use first title as the quote
   // Use subtitle as attribution
-  const quoteBlock = textBlocks.find(b => b.kind === 'title')
-  const attributionBlock = textBlocks.find(b => b.kind === 'subtitle')
+  const quoteBlock = textBlocks.find(b => b.kind === 'title');
+  const attributionBlock = textBlocks.find(b => b.kind === 'subtitle');
 
-  // Text styles for quote components
-  const quoteStyle: TextStyle = {
+  // Text styles for quote components (memoized so useMemo deps are stable)
+  const quoteStyle: TextStyle = useMemo(() => ({
     fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.quote,
     color: colors.text,
-  }
+  }), [brand.fontHead, brand.fontBody, typography.quote, colors.text]);
 
-  const attributionStyle: TextStyle = {
+  const attributionStyle: TextStyle = useMemo(() => ({
     fontFamily: brand.fontBody || DEFAULT_FONT,
     ...typography.caption,
     color: colors.textMuted,
-  }
+  }), [brand.fontBody, typography.caption, colors.textMuted]);
 
   // Measure text blocks
   const quoteLayout = useMemo(() => {
-    if (!quoteBlock || quoteBlock.kind === 'bullets') return null
+    if (!quoteBlock || quoteBlock.kind === 'bullets') return null;
     return measure({
       text: quoteBlock.text,
       style: quoteStyle,
       maxWidth: cr.w * 0.85, // Narrower for better readability
-    })
-  }, [quoteBlock, quoteStyle, cr.w, measure])
+    });
+  }, [quoteBlock, quoteStyle, cr.w, measure]);
 
   const attributionLayout = useMemo(() => {
-    if (!attributionBlock || attributionBlock.kind === 'bullets') return null
+    if (!attributionBlock || attributionBlock.kind === 'bullets') return null;
     return measure({
       text: attributionBlock.text,
       style: attributionStyle,
       maxWidth: cr.w * 0.85,
-    })
-  }, [attributionBlock, attributionStyle, cr.w, measure])
+    });
+  }, [attributionBlock, attributionStyle, cr.w, measure]);
 
   // Calculate vertical centering
-  const quoteHeight = quoteLayout?.totalHeight || 0
-  const attributionHeight = attributionLayout?.totalHeight || 0
+  const quoteHeight = quoteLayout?.totalHeight || 0;
+  const attributionHeight = attributionLayout?.totalHeight || 0;
 
   const totalContentHeight =
     quoteHeight +
-    (attributionHeight > 0 ? spacing.verticalGap + attributionHeight : 0)
+    (attributionHeight > 0 ? spacing.verticalGap + attributionHeight : 0);
 
-  const startY = cr.y + (cr.h - totalContentHeight) / 2
-  const centerX = cr.x + (cr.w - cr.w * 0.85) / 2 // Center the narrower text
+  const startY = cr.y + (cr.h - totalContentHeight) / 2;
+  const centerX = cr.x + (cr.w - cr.w * 0.85) / 2; // Center the narrower text
 
   const artboardStyle: React.CSSProperties = {
     width: spec.width,
     height: spec.height,
     position: 'relative',
     background: colors.background,
-  }
+  };
 
   return (
     <div style={artboardStyle}>
@@ -155,7 +155,7 @@ export function QuoteSlide({
               fontStyle: 'italic',
             }}
           >
-            {quoteLayout.lines.map((ln: { text: string }, idx: number) => (
+            {quoteLayout.lines.map((ln: { text: string; }, idx: number) => (
               <div
                 key={idx}
                 style={{
@@ -208,7 +208,7 @@ export function QuoteSlide({
               textAlign: 'center',
             }}
           >
-            {attributionLayout.lines.map((ln: { text: string }, idx: number) => (
+            {attributionLayout.lines.map((ln: { text: string; }, idx: number) => (
               <div
                 key={idx}
                 style={{
@@ -225,8 +225,8 @@ export function QuoteSlide({
 
       {/* Decorative layer */}
       {decorativeBlocks.map((block) => {
-        const x = block.props?.x as number ?? spec.width / 2 - 24
-        const y = block.props?.y as number ?? spec.height - 100
+        const x = block.props?.x as number ?? spec.width / 2 - 24;
+        const y = block.props?.y as number ?? spec.height - 100;
         return (
           <DecorativeBlockRenderer
             key={block.id}
@@ -234,8 +234,8 @@ export function QuoteSlide({
             x={x}
             y={y}
           />
-        )
+        );
       })}
     </div>
-  )
+  );
 }
