@@ -22,6 +22,20 @@ vi.mock('/Users/greg/Projects/slidepost/src/components/canvas/ErrorBoundary.tsx'
   ),
 }));
 
+// Mock templates registry so template.layout is deterministic for tests
+vi.mock('@/templates', () => ({
+  getTemplate: () => ({
+    // simple layout that renders block texts and an artboard-style wrapper
+    layout: (slide: { blocks: { id: string; text?: string; }[]; }) => (
+      <div data-testid="mock-template" style={{ width: '1080px', height: '1080px' }}>
+        {slide.blocks.map((b) => (
+          <div key={b.id}>{b.text}</div>
+        ))}
+      </div>
+    ),
+  }),
+}));
+
 vi.mock('/Users/greg/Projects/slidepost/src/components/canvas/FontLoader.tsx', () => ({
   default: ({ children }: { children: (ready: boolean) => React.ReactNode; }) => (
     <div data-testid="font-loader">{children(true)}</div>
