@@ -4,6 +4,8 @@ import FontLoader from './FontLoader';
 import { CanvasRenderer } from './CanvasRenderer';
 import { useProject } from '@/state/project.store';
 import type { ArtboardSpec, Theme } from '@/lib/types/design';
+import { getTemplate } from '@/templates';
+import GridOverlay from './GridOverlay';
 
 const spec: ArtboardSpec = {
   width: 1080,
@@ -48,6 +50,10 @@ export default function Canvas() {
   const showGrid = useProject(s => s.showGrid);
 
   const selectedSlide = project.slides.find(s => s.id === selectedSlideId) ?? null;
+
+  // Calculate slide index and total for position-aware decorators
+  const slideIndex = selectedSlide ? project.slides.findIndex(s => s.id === selectedSlide.id) : 0;
+  const totalSlides = project.slides.length;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.4);
@@ -100,18 +106,47 @@ export default function Canvas() {
     primary: project.brand?.primary ?? defaultTheme.primary,
   };
 
+  // Get the template if one is specified
+  const template = selectedSlide?.templateId ? getTemplate(selectedSlide.templateId) : null;
+
+  // Default brand for template rendering
+  const defaultBrand = project.brand || {
+    primary: theme.primary,
+    fontHead: headFont.family,
+    fontBody: bodyFont.family,
+  };
+
   return (
     <ErrorBoundary>
       <FontLoader head={headFont} body={bodyFont}>
         {fontsReady => (
           <div ref={containerRef} style={{ transform: `scale(${scale})`, transformOrigin: 'top center' }}>
-            <CanvasRenderer
-              slide={selectedSlide}
-              spec={spec}
-              theme={theme}
-              fontsReady={fontsReady}
-              showGrid={showGrid}
-            />
+            {template && selectedSlide ? (
+              // Use template layout if available
+              <div className="relative shadow-xl rounded-2xl overflow-hidden">
+                {template.layout(selectedSlide, defaultBrand, slideIndex, totalSlides)}
+                {showGrid && (
+                  <div className="absolute inset-0 pointer-events-none">
+                    <GridOverlay
+                      spec={spec}
+                      show={showGrid}
+                      showBaseline
+                      showSafeArea
+                      baseline={{ majorEvery: 4 }}
+                    />
+                  </div>
+                )}
+              </div>
+            ) : (
+              // Fallback to default CanvasRenderer for free-form slides
+              <CanvasRenderer
+                slide={selectedSlide}
+                spec={spec}
+                theme={theme}
+                fontsReady={fontsReady}
+                showGrid={showGrid}
+              />
+            )}
           </div>
         )}
       </FontLoader>

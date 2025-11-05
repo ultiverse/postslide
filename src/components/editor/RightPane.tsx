@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useProject } from '@/state/project.store';
 import { SortableBlockCard } from '@/components/blocks/SortableBlockCard';
 import { IconButton } from '@/components/ui';
+import { LayoutPicker } from '@/components/editor/LayoutPicker';
 import type { SlideBlock } from '@/types/domain';
 import {
     DndContext,
@@ -18,7 +19,8 @@ import {
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Type, List, Image as ImageIcon, Palette, Sparkles } from 'lucide-react';
+import { isTextBlock } from '@/lib/constants/blocks';
 
 export function RightPane() {
     const project = useProject((s) => s.project);
@@ -26,6 +28,9 @@ export function RightPane() {
     const addBlock = useProject((s) => s.addBlock);
     const updateBlock = useProject((s) => s.updateBlock);
     const updateBullets = useProject((s) => s.updateBullets);
+    const updateImageBlock = useProject((s) => s.updateImageBlock);
+    const updateBackgroundBlock = useProject((s) => s.updateBackgroundBlock);
+    const updateDecorativeBlock = useProject((s) => s.updateDecorativeBlock);
     const removeBlock = useProject((s) => s.removeBlock);
     const moveBlockUp = useProject((s) => s.moveBlockUp);
     const moveBlockDown = useProject((s) => s.moveBlockDown);
@@ -36,6 +41,7 @@ export function RightPane() {
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const justAddedBulletRef = useRef<string | null>(null); // Track which block just had a bullet added
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -91,7 +97,7 @@ export function RightPane() {
     };
 
     return (
-        <aside className="flex flex-col overflow-y-auto border-l border-brand-200/50 bg-white/80 shadow-sm backdrop-blur-sm">
+        <aside className="flex flex-col overflow-y-auto border-l border-brand-200/50 shadow-sm  bg-neutral-50/80 backdrop-blur-sm">
             <div className="relative border-b border-brand-200/50 bg-gradient-to-r from-accent-500 to-brand-500 p-4">
                 <div className="flex items-center justify-between">
                     <h2 className="text-lg font-bold text-white">Inspector</h2>
@@ -106,36 +112,64 @@ export function RightPane() {
                                 title="Add Block"
                             />
                             {isDropdownOpen && (
-                                <div className="absolute right-0 top-full mt-2 w-40 rounded-lg border border-neutral-200 bg-white shadow-lg z-20">
+                                <div className="absolute right-0 top-full mt-2 w-48 rounded-lg border border-neutral-200 bg-white shadow-lg z-20">
                                     <div className="py-1">
+                                        {/* Text Blocks */}
+                                        <div className="px-3 py-1 text-xs font-semibold text-neutral-400">Text</div>
                                         <button
                                             onClick={() => handleAddBlock('title')}
                                             className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
                                         >
-                                            <Plus className="h-3 w-3" />
+                                            <Type className="h-3 w-3" />
                                             Title
                                         </button>
                                         <button
                                             onClick={() => handleAddBlock('subtitle')}
                                             className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
                                         >
-                                            <Plus className="h-3 w-3" />
+                                            <Type className="h-3 w-3" />
                                             Subtitle
                                         </button>
                                         <button
                                             onClick={() => handleAddBlock('body')}
                                             className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
                                         >
-                                            <Plus className="h-3 w-3" />
+                                            <Type className="h-3 w-3" />
                                             Body
                                         </button>
                                         <button
                                             onClick={() => handleAddBlock('bullets')}
                                             className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
                                         >
-                                            <Plus className="h-3 w-3" />
+                                            <List className="h-3 w-3" />
                                             Bullets
                                         </button>
+
+                                        {/* Visual Blocks */}
+                                        <div className="border-t border-neutral-100 mt-1 pt-1">
+                                            <div className="px-3 py-1 text-xs font-semibold text-neutral-400">Visual</div>
+                                            <button
+                                                onClick={() => handleAddBlock('image')}
+                                                className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                                            >
+                                                <ImageIcon className="h-3 w-3" />
+                                                Image
+                                            </button>
+                                            <button
+                                                onClick={() => handleAddBlock('background')}
+                                                className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                                            >
+                                                <Palette className="h-3 w-3" />
+                                                Background
+                                            </button>
+                                            <button
+                                                onClick={() => handleAddBlock('decorative')}
+                                                className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                                            >
+                                                <Sparkles className="h-3 w-3" />
+                                                Decorative
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -144,20 +178,14 @@ export function RightPane() {
                 </div>
             </div>
 
+            {/* Layout Picker Section */}
+            {selectedSlide && <LayoutPicker slide={selectedSlide} />}
+
+            {/* Content Blocks Section */}
             <div className="space-y-6 p-4">
                 {/* Blocks Section */}
                 {selectedSlide ? (
                     <>
-                        <div className="relative py-4">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-neutral-300" />
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="bg-white px-2 font-medium text-neutral-600">
-                                    Content Blocks
-                                </span>
-                            </div>
-                        </div>
 
                         <DndContext
                             sensors={sensors}
@@ -189,11 +217,19 @@ export function RightPane() {
                                                             )
                                                         }
                                                         className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                                                        disabled={!isTextBlock(block)}
                                                     >
-                                                        <option value="title">Title</option>
-                                                        <option value="subtitle">Subtitle</option>
-                                                        <option value="body">Body</option>
-                                                        <option value="bullets">Bullets</option>
+                                                        <optgroup label="Text">
+                                                            <option value="title">Title</option>
+                                                            <option value="subtitle">Subtitle</option>
+                                                            <option value="body">Body</option>
+                                                            <option value="bullets">Bullets</option>
+                                                        </optgroup>
+                                                        <optgroup label="Visual">
+                                                            <option value="image">Image</option>
+                                                            <option value="background">Background</option>
+                                                            <option value="decorative">Decorative</option>
+                                                        </optgroup>
                                                     </select>
                                                 }
                                             >
@@ -202,6 +238,20 @@ export function RightPane() {
                                                         {block.bullets.map((bullet, bulletIdx) => (
                                                             <div key={bulletIdx} className="flex gap-1">
                                                                 <input
+                                                                    ref={(el) => {
+                                                                        // Auto-focus on the last bullet item if it was just added via button click
+                                                                        if (
+                                                                            el &&
+                                                                            bulletIdx === block.bullets.length - 1 &&
+                                                                            bullet === '' &&
+                                                                            justAddedBulletRef.current === block.id
+                                                                        ) {
+                                                                            setTimeout(() => {
+                                                                                el.focus();
+                                                                                justAddedBulletRef.current = null; // Clear the flag
+                                                                            }, 0);
+                                                                        }
+                                                                    }}
                                                                     type="text"
                                                                     value={bullet}
                                                                     onChange={(e) => {
@@ -229,12 +279,13 @@ export function RightPane() {
                                                         ))}
 
                                                         <button
-                                                            onClick={() =>
+                                                            onClick={() => {
+                                                                justAddedBulletRef.current = block.id; // Set flag before adding bullet
                                                                 updateBullets(selectedSlide.id, block.id, [
                                                                     ...block.bullets,
                                                                     '',
-                                                                ])
-                                                            }
+                                                                ]);
+                                                            }}
                                                             className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
                                                         >
                                                             <Plus className="h-3 w-3" />
@@ -251,6 +302,207 @@ export function RightPane() {
                                                         className="w-full resize-none rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                                                         placeholder={`Enter ${block.kind}...`}
                                                     />
+                                                ) : block.kind === 'image' ? (
+                                                    <div className="space-y-2">
+                                                        <label className="block text-xs font-medium text-neutral-700">
+                                                            Image URL
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={block.src}
+                                                            onChange={(e) =>
+                                                                updateImageBlock(selectedSlide.id, block.id, { src: e.target.value })
+                                                            }
+                                                            className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                                                            placeholder="https://example.com/image.jpg"
+                                                        />
+
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <div>
+                                                                <label className="block text-xs font-medium text-neutral-700 mb-1">
+                                                                    Width (px)
+                                                                </label>
+                                                                <input
+                                                                    type="number"
+                                                                    value={block.width || ''}
+                                                                    onChange={(e) =>
+                                                                        updateImageBlock(selectedSlide.id, block.id, {
+                                                                            width: e.target.value ? parseInt(e.target.value) : undefined
+                                                                        })
+                                                                    }
+                                                                    className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none"
+                                                                    placeholder="Auto"
+                                                                    min="50"
+                                                                    max="952"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-xs font-medium text-neutral-700 mb-1">
+                                                                    Height (px)
+                                                                </label>
+                                                                <input
+                                                                    type="number"
+                                                                    value={block.height || ''}
+                                                                    onChange={(e) =>
+                                                                        updateImageBlock(selectedSlide.id, block.id, {
+                                                                            height: e.target.value ? parseInt(e.target.value) : undefined
+                                                                        })
+                                                                    }
+                                                                    className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none"
+                                                                    placeholder="300"
+                                                                    min="50"
+                                                                    max="952"
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        <label className="block text-xs font-medium text-neutral-700">
+                                                            Object Fit
+                                                        </label>
+                                                        <select
+                                                            value={block.fit || 'cover'}
+                                                            onChange={(e) =>
+                                                                updateImageBlock(selectedSlide.id, block.id, { fit: e.target.value as 'cover' | 'contain' | 'fill' })
+                                                            }
+                                                            className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-colors focus:border-brand-500 focus:outline-none"
+                                                        >
+                                                            <option value="cover">Cover</option>
+                                                            <option value="contain">Contain</option>
+                                                            <option value="fill">Fill</option>
+                                                        </select>
+                                                        <p className="text-xs text-neutral-500">
+                                                            Images flow with text blocks. Leave width empty for full width.
+                                                        </p>
+                                                    </div>
+                                                ) : block.kind === 'background' ? (
+                                                    <div className="space-y-2">
+                                                        <label className="block text-xs font-medium text-neutral-700">
+                                                            Background Style
+                                                        </label>
+                                                        <select
+                                                            value={block.style}
+                                                            onChange={(e) =>
+                                                                updateBackgroundBlock(selectedSlide.id, block.id, { style: e.target.value as 'solid' | 'gradient' | 'image' })
+                                                            }
+                                                            className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-colors focus:border-brand-500 focus:outline-none"
+                                                        >
+                                                            <option value="solid">Solid Color</option>
+                                                            <option value="gradient">Gradient</option>
+                                                            <option value="image">Image</option>
+                                                        </select>
+
+                                                        {block.style === 'solid' && (
+                                                            <div>
+                                                                <label className="block text-xs font-medium text-neutral-700 mb-1">
+                                                                    Color
+                                                                </label>
+                                                                <input
+                                                                    type="color"
+                                                                    value={block.color || '#ffffff'}
+                                                                    onChange={(e) =>
+                                                                        updateBackgroundBlock(selectedSlide.id, block.id, { color: e.target.value })
+                                                                    }
+                                                                    className="w-full h-10 rounded-md border border-neutral-300 cursor-pointer"
+                                                                />
+                                                            </div>
+                                                        )}
+
+                                                        {block.style === 'gradient' && block.gradient && (
+                                                            <>
+                                                                <div>
+                                                                    <label className="block text-xs font-medium text-neutral-700 mb-1">
+                                                                        From Color
+                                                                    </label>
+                                                                    <input
+                                                                        type="color"
+                                                                        value={block.gradient.from}
+                                                                        onChange={(e) =>
+                                                                            updateBackgroundBlock(selectedSlide.id, block.id, {
+                                                                                gradient: { ...block.gradient!, from: e.target.value }
+                                                                            })
+                                                                        }
+                                                                        className="w-full h-10 rounded-md border border-neutral-300 cursor-pointer"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-xs font-medium text-neutral-700 mb-1">
+                                                                        To Color
+                                                                    </label>
+                                                                    <input
+                                                                        type="color"
+                                                                        value={block.gradient.to}
+                                                                        onChange={(e) =>
+                                                                            updateBackgroundBlock(selectedSlide.id, block.id, {
+                                                                                gradient: { ...block.gradient!, to: e.target.value }
+                                                                            })
+                                                                        }
+                                                                        className="w-full h-10 rounded-md border border-neutral-300 cursor-pointer"
+                                                                    />
+                                                                </div>
+                                                            </>
+                                                        )}
+
+                                                        {block.style === 'image' && (
+                                                            <div>
+                                                                <label className="block text-xs font-medium text-neutral-700 mb-1">
+                                                                    Image URL
+                                                                </label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={block.image || ''}
+                                                                    onChange={(e) =>
+                                                                        updateBackgroundBlock(selectedSlide.id, block.id, { image: e.target.value })
+                                                                    }
+                                                                    className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                                                                    placeholder="https://example.com/bg.jpg"
+                                                                />
+                                                            </div>
+                                                        )}
+
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-neutral-700 mb-1">
+                                                                Opacity
+                                                            </label>
+                                                            <input
+                                                                type="range"
+                                                                min="0"
+                                                                max="1"
+                                                                step="0.1"
+                                                                value={block.opacity ?? 1}
+                                                                onChange={(e) =>
+                                                                    updateBackgroundBlock(selectedSlide.id, block.id, { opacity: parseFloat(e.target.value) })
+                                                                }
+                                                                className="w-full"
+                                                            />
+                                                            <span className="text-xs text-neutral-500">{Math.round((block.opacity ?? 1) * 100)}%</span>
+                                                        </div>
+                                                    </div>
+                                                ) : block.kind === 'decorative' ? (
+                                                    <div className="space-y-2">
+                                                        <label className="block text-xs font-medium text-neutral-700">
+                                                            Decorative Type
+                                                        </label>
+                                                        <select
+                                                            value={block.variant}
+                                                            onChange={(e) =>
+                                                                updateDecorativeBlock(selectedSlide.id, block.id, { variant: e.target.value as 'arrow' | 'divider' | 'accent' | 'shape' | 'icon' })
+                                                            }
+                                                            className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-colors focus:border-brand-500 focus:outline-none"
+                                                        >
+                                                            <option value="arrow">Arrow</option>
+                                                            <option value="divider">Divider</option>
+                                                            <option value="accent">Accent</option>
+                                                            <option value="shape">Shape</option>
+                                                            <option value="icon">Icon</option>
+                                                        </select>
+                                                        <p className="text-xs text-neutral-500">
+                                                            {block.variant === 'arrow' && 'Directional arrow indicator'}
+                                                            {block.variant === 'divider' && 'Horizontal line separator'}
+                                                            {block.variant === 'accent' && 'Visual accent element'}
+                                                            {block.variant === 'shape' && 'Geometric shape'}
+                                                            {block.variant === 'icon' && 'Icon element'}
+                                                        </p>
+                                                    </div>
                                                 ) : null}
                                             </SortableBlockCard>
                                         </div>

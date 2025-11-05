@@ -1,5 +1,7 @@
 import { create } from 'zustand'
-import type { Project, Slide, SlideBlock } from '@/types/domain'
+import type { Project, Slide, SlideBlock, ImageBlock, BackgroundBlock, DecorativeBlock } from '@/types/domain'
+import { createBlock } from '@/lib/constants/blocks'
+import { getLayout, getSuggestedBlocksForLayout } from '@/lib/layouts/utils'
 
 interface ProjectState {
   project: Project
@@ -13,17 +15,25 @@ interface ProjectState {
 
   // Slide-level
   setSelectedSlide: (id: string | null) => void
-  addSlide: () => void
+  addSlide: (templateId?: string) => void
   duplicateSlide: (id: string) => void
   removeSlide: (id: string) => void
   moveSlideUp: (id: string) => void
   moveSlideDown: (id: string) => void
   reorderSlides: (slides: Slide[]) => void
+  applyTemplateToSlide: (slideId: string, templateId: string) => void
+  applyTemplateToAllSlides: (templateId: string) => void
+  applyLayoutToSlide: (slideId: string, templateId: string, layoutId: string) => void
+  applyLayoutWithBlocks: (slideId: string, templateId: string, layoutId: string) => void
+  autoMatchLayoutForSlide: (slideId: string, templateId: string) => void
 
   // Block-level
   addBlock: (slideId: string, kind: SlideBlock['kind']) => void
   updateBlock: (slideId: string, blockId: string, text: string) => void
   updateBullets: (slideId: string, blockId: string, bullets: string[]) => void
+  updateImageBlock: (slideId: string, blockId: string, updates: Partial<ImageBlock>) => void
+  updateBackgroundBlock: (slideId: string, blockId: string, updates: Partial<BackgroundBlock>) => void
+  updateDecorativeBlock: (slideId: string, blockId: string, updates: Partial<DecorativeBlock>) => void
   removeBlock: (slideId: string, blockId: string) => void
   moveBlockUp: (slideId: string, blockId: string) => void
   moveBlockDown: (slideId: string, blockId: string) => void
@@ -49,7 +59,7 @@ const seed: Project = {
 export const useProject = create<ProjectState>((set) => ({
   project: seed,
   selectedSlideId: seed.slides[0]?.id || null,
-  showGrid: true,
+  showGrid: false,
 
   // Project-level
   setProject: (p) => set({ project: p }),
@@ -59,11 +69,11 @@ export const useProject = create<ProjectState>((set) => ({
 
   // Slide-level
   setSelectedSlide: (id) => set({ selectedSlideId: id }),
-  addSlide: () =>
+  addSlide: (templateId = 'minimal-pro') =>
     set((s) => {
       const newSlide = {
         id: crypto.randomUUID(),
-        templateId: 'minimal-pro',
+        templateId, // Use provided templateId or default
         blocks: [
           { id: crypto.randomUUID(), kind: 'title' as const, text: '' }
         ]
@@ -71,6 +81,21 @@ export const useProject = create<ProjectState>((set) => ({
       return {
         project: { ...s.project, slides: [...s.project.slides, newSlide] },
         selectedSlideId: newSlide.id,
+      }
+    }),
+  autoMatchLayoutForSlide: (slideId, templateId) =>
+    set((s) => {
+      const slide = s.project.slides.find((sl) => sl.id === slideId)
+      if (!slide) return s
+
+      // Apply the template (the layout matching happens during render)
+      return {
+        project: {
+          ...s.project,
+          slides: s.project.slides.map((sl) =>
+            sl.id === slideId ? { ...sl, templateId } : sl
+          ),
+        },
       }
     }),
   duplicateSlide: (id) =>
@@ -111,6 +136,121 @@ export const useProject = create<ProjectState>((set) => ({
     }),
   reorderSlides: (slides) =>
     set((s) => ({ project: { ...s.project, slides } })),
+  applyTemplateToSlide: (slideId, templateId) =>
+    set((s) => ({
+      project: {
+        ...s.project,
+        slides: s.project.slides.map((sl) =>
+          sl.id === slideId ? { ...sl, templateId } : sl
+        ),
+      },
+    })),
+  applyTemplateToAllSlides: (templateId) =>
+    set((s) => ({
+      project: {
+        ...s.project,
+        slides: s.project.slides.map((sl) => ({ ...sl, templateId })),
+      },
+    })),
+  applyLayoutToSlide: (slideId, templateId, layoutId) =>
+    set((s) => ({
+      project: {
+        ...s.project,
+        slides: s.project.slides.map((sl) =>
+          sl.id === slideId ? { ...sl, templateId, layoutId } : sl
+        ),
+      },
+    })),
+  applyLayoutWithBlocks: (slideId, templateId, layoutId) =>
+    set((s) => {
+      const slide = s.project.slides.find((sl) => sl.id === slideId)
+      if (!slide) return s
+
+      const layout = getLayout(templateId, layoutId)
+      if (!layout) {
+        // Fallback to just applying layout without adding blocks
+        return {
+          project: {
+            ...s.project,
+            slides: s.project.slides.map((sl) =>
+              sl.id === slideId ? { ...sl, templateId, layoutId } : sl
+            ),
+          },
+        }
+      }
+
+      // Get suggested blocks for this layout
+      const suggestions = getSuggestedBlocksForLayout(layout)
+
+      // Helper to check if a block has only placeholder/empty content
+      const isBlockEmpty = (block: SlideBlock): boolean => {
+        if (block.kind === 'title' || block.kind === 'subtitle' || block.kind === 'body') {
+          return !block.text || block.text.trim() === ''
+        }
+        if (block.kind === 'bullets') {
+          return block.bullets.length === 0 || block.bullets.every((b) => !b || b.trim() === '')
+        }
+        if (block.kind === 'image') {
+          return !block.src || block.src === ''
+        }
+        // Background and decorative blocks are considered "not empty" (user-added)
+        return false
+      }
+
+      // Check if all blocks are empty (placeholders)
+      const allBlocksEmpty = slide.blocks
+        .filter((b) => b.kind !== 'background' && b.kind !== 'decorative')
+        .every(isBlockEmpty)
+
+      let finalBlocks: SlideBlock[]
+
+      if (allBlocksEmpty) {
+        // If all blocks are empty, replace with new layout's blocks
+        // Keep background and decorative blocks
+        const backgroundAndDecorative = slide.blocks.filter(
+          (b) => b.kind === 'background' || b.kind === 'decorative'
+        )
+        const newBlocks: SlideBlock[] = suggestions.map(({ kind, placeholder }) => {
+          const block = createBlock(kind)
+          // Set placeholder text
+          if ('text' in block) {
+            return { ...block, text: placeholder }
+          }
+          return block
+        })
+        finalBlocks = [...backgroundAndDecorative, ...newBlocks]
+      } else {
+        // If blocks have content, keep them and add missing ones
+        const existingBlockKinds = new Set(slide.blocks.map((b) => b.kind))
+        const newBlocks: SlideBlock[] = suggestions
+          .filter(({ kind }) => !existingBlockKinds.has(kind))
+          .map(({ kind, placeholder }) => {
+            const block = createBlock(kind)
+            // Set placeholder text
+            if ('text' in block) {
+              return { ...block, text: placeholder }
+            }
+            return block
+          })
+        finalBlocks = [...slide.blocks, ...newBlocks]
+      }
+
+      return {
+        project: {
+          ...s.project,
+          slides: s.project.slides.map((sl) =>
+            sl.id === slideId
+              ? {
+                  ...sl,
+                  templateId,
+                  layoutId,
+                  blocks: finalBlocks,
+                }
+              : sl
+          ),
+        },
+      }
+    }),
 
   // Block-level
   addBlock: (slideId, kind) =>
@@ -121,12 +261,7 @@ export const useProject = create<ProjectState>((set) => ({
           sl.id === slideId
             ? {
                 ...sl,
-                blocks: [
-                  ...sl.blocks,
-                  kind === 'bullets'
-                    ? { id: crypto.randomUUID(), kind, bullets: [''] }
-                    : { id: crypto.randomUUID(), kind, text: '' },
-                ],
+                blocks: [...sl.blocks, createBlock(kind)],
               }
             : sl,
         ),
@@ -164,6 +299,54 @@ export const useProject = create<ProjectState>((set) => ({
         ),
       },
     })),
+  updateImageBlock: (slideId, blockId, updates) =>
+    set((s) => ({
+      project: {
+        ...s.project,
+        slides: s.project.slides.map((sl) =>
+          sl.id === slideId
+            ? {
+                ...sl,
+                blocks: sl.blocks.map((b) =>
+                  b.id === blockId && b.kind === 'image' ? { ...b, ...updates } : b,
+                ),
+              }
+            : sl,
+        ),
+      },
+    })),
+  updateBackgroundBlock: (slideId, blockId, updates) =>
+    set((s) => ({
+      project: {
+        ...s.project,
+        slides: s.project.slides.map((sl) =>
+          sl.id === slideId
+            ? {
+                ...sl,
+                blocks: sl.blocks.map((b) =>
+                  b.id === blockId && b.kind === 'background' ? { ...b, ...updates } : b,
+                ),
+              }
+            : sl,
+        ),
+      },
+    })),
+  updateDecorativeBlock: (slideId, blockId, updates) =>
+    set((s) => ({
+      project: {
+        ...s.project,
+        slides: s.project.slides.map((sl) =>
+          sl.id === slideId
+            ? {
+                ...sl,
+                blocks: sl.blocks.map((b) =>
+                  b.id === blockId && b.kind === 'decorative' ? { ...b, ...updates } : b,
+                ),
+              }
+            : sl,
+        ),
+      },
+    })),
   removeBlock: (slideId, blockId) =>
     set((s) => ({
       project: {
@@ -174,7 +357,7 @@ export const useProject = create<ProjectState>((set) => ({
             : sl,
         ),
       },
-    })),
+  })),
   moveBlockUp: (slideId, blockId) =>
     set((s) => ({
       project: {
@@ -211,20 +394,35 @@ export const useProject = create<ProjectState>((set) => ({
           if (sl.id !== slideId) return sl
           return {
             ...sl,
-            blocks: sl.blocks.map((b) => {
+            blocks: sl.blocks.map((b): SlideBlock => {
               if (b.id !== blockId) return b
-              // Convert bullets to text
-              if (b.kind === 'bullets' && newKind !== 'bullets') {
-                return { id: b.id, kind: newKind, text: b.bullets.join('\n') }
+
+              // Convert bullets to a text block when newKind is a text kind
+              if (b.kind === 'bullets' && (newKind === 'title' || newKind === 'subtitle' || newKind === 'body')) {
+                return { id: b.id, kind: newKind, text: b.bullets.join('\n') } as SlideBlock
               }
-              // Convert text to bullets
+
+              // Convert bullets to another non-text kind (unlikely) - fallback to creating a new block
+              if (b.kind === 'bullets' && newKind !== 'bullets' && !(newKind === 'title' || newKind === 'subtitle' || newKind === 'body')) {
+                return createBlock(newKind) as SlideBlock
+              }
+
+              // Convert text-like blocks to bullets
               if ('text' in b && newKind === 'bullets') {
-                return { id: b.id, kind: newKind, bullets: b.text.split('\n').filter(Boolean) }
+                return { id: b.id, kind: 'bullets', bullets: b.text.split('\n').filter(Boolean) } as SlideBlock
               }
-              // Convert between text types
-              if ('text' in b && newKind !== 'bullets') {
-                return { ...b, kind: newKind }
+
+              // Convert between text types (title/subtitle/body)
+              if ('text' in b && (newKind === 'title' || newKind === 'subtitle' || newKind === 'body')) {
+                return { ...b, kind: newKind } as SlideBlock
               }
+
+              // For other conversions (e.g., to image/background/decorative), create a sane default block
+              if (newKind === 'image' || newKind === 'background' || newKind === 'decorative') {
+                return createBlock(newKind) as SlideBlock
+              }
+
+              // If none of the above matched, return the original block
               return b
             }),
           }
