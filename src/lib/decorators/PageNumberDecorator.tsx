@@ -23,17 +23,20 @@ export function PageNumberDecorator({ block, x, y }: PageNumberDecoratorProps) {
   const text = formatPageNumber(slideIndex, totalSlides, format)
 
   return (
-    <text
-      x={x}
-      y={y}
-      fontSize={fontSize}
-      fontFamily={fontFamily}
-      fontWeight={fontWeight}
-      fill={color}
-      textAnchor="middle"
-      dominantBaseline="middle"
+    <div
+      className="absolute"
+      style={{
+        left: x,
+        top: y,
+        fontFamily,
+        fontSize: `${fontSize}px`,
+        fontWeight,
+        color,
+        transform: 'translate(-50%, -50%)',
+        whiteSpace: 'nowrap',
+      }}
     >
       {text}
-    </text>
+    </div>
   )
 }

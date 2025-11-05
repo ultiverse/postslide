@@ -51,13 +51,17 @@ export default function Templates() {
               {/* Preview */}
               <div className="mb-4 bg-neutral-100 rounded-lg overflow-hidden" style={{ height: '240px' }}>
                 <div style={{ transform: 'scale(0.22)', transformOrigin: 'top left', width: '1080px', height: '1080px' }}>
-                  {template.layout(
-                    {
-                      id: 'preview',
-                      templateId: template.id,
-                      blocks: template.defaults.blocks || [],
-                    },
-                    defaultBrand
+                  {template.preview ? (
+                    template.preview()
+                  ) : (
+                    template.layout(
+                      {
+                        id: 'preview',
+                        templateId: template.id,
+                        blocks: template.defaults.blocks || [],
+                      },
+                      defaultBrand
+                    )
                   )}
                 </div>
               </div>

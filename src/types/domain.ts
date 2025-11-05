@@ -147,6 +147,7 @@ export type Template = {
   theme?: import('../lib/types/design').ThemeDefinition // Optional: theme definition
   themeVariants?: Record<string, import('../lib/types/design').ThemeDefinition> // Optional: theme variants
   layout: (slide: Slide, brand: Brand, slideIndex?: number, totalSlides?: number) => ReactElement // Position-aware for decorators
+  preview?: () => ReactElement // Optional: custom preview for gallery
   defaults: Partial<Slide>
   coverStyle?: CoverStyle
 }
