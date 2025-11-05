@@ -8,6 +8,7 @@ import { ImageBlockRenderer, BackgroundBlockRenderer, DecorativeBlockRenderer } 
 import { isTextBlock } from '@/lib/constants/blocks';
 import { renderSlideFromSchema } from '@/lib/layouts';
 import { DEFAULT_LIGHT_THEME, DEFAULT_DARK_THEME } from '@/lib/theme';
+import { OverflowBadge } from '@/components/ui/OverflowBadge';
 
 /**
  * Minimal Pro Template
@@ -15,10 +16,41 @@ import { DEFAULT_LIGHT_THEME, DEFAULT_DARK_THEME } from '@/lib/theme';
  * Emphasizes readability with generous spacing
  */
 
+// --- Rendered Block Types ---
+
+type Frame = {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+};
+
+type TextLayout = {
+  lines: Array<{ text: string; xOffset?: number; marker?: string; }>;
+  totalHeight: number;
+};
+
+type RenderedTextBlock = {
+  type: 'text';
+  block: TextBlock;
+  style: TextStyle;
+  layout: TextLayout;
+  frame: Frame;
+  overflow: boolean;
+};
+
+type RenderedImageBlock = {
+  type: 'image';
+  block: { kind: 'image'; id: string; src: string; width?: number; height?: number; };
+  frame: Frame;
+};
+
+type RenderedBlock = RenderedTextBlock | RenderedImageBlock;
+
 const ARTBOARD_SPEC: ArtboardSpec = {
   width: 1080,
   height: 1080,
-  safeInset: 64,
+  safeInset: 80,
   baseline: 8,
 };
 
@@ -31,32 +63,32 @@ function getStyleForBlock(block: TextBlock, theme: Theme, brand: Brand): TextSty
       return {
         fontFamily: headFont,
         fontWeight: 700,
-        fontSize: 72,
-        lineHeight: 80,
+        fontSize: 80,
+        lineHeight: 88,
         color: theme.text,
       };
     case 'subtitle':
       return {
         fontFamily: headFont,
         fontWeight: 600,
-        fontSize: 48,
-        lineHeight: 56,
+        fontSize: 52,
+        lineHeight: 64,
         color: theme.textMuted,
       };
     case 'body':
       return {
         fontFamily: baseFont,
         fontWeight: 400,
-        fontSize: 32,
-        lineHeight: 40,
+        fontSize: 36,
+        lineHeight: 48,
         color: theme.text,
       };
     case 'bullets':
       return {
         fontFamily: baseFont,
         fontWeight: 400,
-        fontSize: 28,
-        lineHeight: 40,
+        fontSize: 32,
+        lineHeight: 48,
         color: theme.text,
       };
   }
@@ -68,7 +100,7 @@ function MinimalProLayout({ slide, brand }: { slide: Slide; brand: Brand; }) {
   const theme: Theme = useMemo(() => ({
     primary: brand.primary,
     text: '#1a1a1a',
-    textMuted: '#666666',
+    textMuted: '#525252',
     background: '#ffffff',
   }), [brand.primary]);
 
@@ -81,11 +113,11 @@ function MinimalProLayout({ slide, brand }: { slide: Slide; brand: Brand; }) {
   const decorativeBlocks = slide.blocks.filter(b => b.kind === 'decorative');
 
   // Calculate block positions with vertical stacking for content blocks (text + images)
-  const renderedBlocks = useMemo(() => {
+  const renderedBlocks = useMemo((): RenderedBlock[] => {
     if (!contentBlocks.length) return [];
 
     let currentY = cr.y;
-    const blockGap = 24; // Gap between blocks
+    const blockGap = 32; // Increased from 24 for stronger consistent spacing
 
     return contentBlocks.map((block) => {
       const frameX = cr.x;
@@ -121,8 +153,8 @@ function MinimalProLayout({ slide, brand }: { slide: Slide; brand: Brand; }) {
             frameWidth: frameW,
             bullet: {
               marker: '•',
-              gap: 12,
-              indent: 32,
+              gap: 16,
+              indent: 40,
               markerSizeRatio: 1,
             },
           });
@@ -208,8 +240,7 @@ function MinimalProLayout({ slide, brand }: { slide: Slide; brand: Brand; }) {
 }
 
 // Text block component
-/* eslint-disable @typescript-eslint/no-explicit-any */
-function TextBlock({ renderBlock }: { renderBlock: any; }) {
+function TextBlock({ renderBlock }: { renderBlock: RenderedTextBlock; }) {
   const { style, layout, frame, overflow } = renderBlock;
 
   return (
@@ -233,7 +264,7 @@ function TextBlock({ renderBlock }: { renderBlock: any; }) {
           color: style.color,
         }}
       >
-        {layout.lines.map((ln: any, idx: number) => (
+        {layout.lines.map((ln, idx) => (
           <div
             key={idx}
             style={{
@@ -251,7 +282,7 @@ function TextBlock({ renderBlock }: { renderBlock: any; }) {
 }
 
 // Bullet block component
-function BulletBlock({ renderBlock }: { renderBlock: any; }) {
+function BulletBlock({ renderBlock }: { renderBlock: RenderedTextBlock; }) {
   const { style, layout, frame, overflow } = renderBlock;
 
   return (
@@ -275,7 +306,7 @@ function BulletBlock({ renderBlock }: { renderBlock: any; }) {
           color: style.color,
         }}
       >
-        {layout.lines.map((ln: any, idx: number) => (
+        {layout.lines.map((ln, idx) => (
           <div
             key={idx}
             style={{
@@ -305,17 +336,6 @@ function BulletBlock({ renderBlock }: { renderBlock: any; }) {
   );
 }
 
-function OverflowBadge() {
-  return (
-    <div className="absolute right-2 bottom-2 px-2 py-1 rounded-md bg-amber-500 text-white text-xs font-semibold shadow-lg flex items-center gap-1">
-      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-      </svg>
-      <span>Overflow</span>
-    </div>
-  );
-}
-
 // Schema definition for Minimal Pro
 const minimalProSchema: TemplateSchema = {
   id: 'minimal-pro',
@@ -330,7 +350,7 @@ const minimalProSchema: TemplateSchema = {
     first: [
       {
         type: 'arrow',
-        position: { anchor: 'bottom-right', offsetX: -64, offsetY: -64 },
+        position: { anchor: 'bottom-right', offsetX: -80, offsetY: -80 },
         props: {
           direction: 'right',
           size: 120,
@@ -342,7 +362,7 @@ const minimalProSchema: TemplateSchema = {
     middle: [
       {
         type: 'arrow',
-        position: { anchor: 'bottom-left', offsetX: 64, offsetY: -64 },
+        position: { anchor: 'bottom-left', offsetX: 80, offsetY: -80 },
         props: {
           direction: 'left',
           size: 120,
@@ -351,7 +371,7 @@ const minimalProSchema: TemplateSchema = {
       },
       {
         type: 'arrow',
-        position: { anchor: 'bottom-right', offsetX: -64, offsetY: -64 },
+        position: { anchor: 'bottom-right', offsetX: -80, offsetY: -80 },
         props: {
           direction: 'right',
           size: 120,
@@ -360,11 +380,11 @@ const minimalProSchema: TemplateSchema = {
       },
       {
         type: 'pageNumber',
-        position: { anchor: 'bottom-center', offsetY: -80 },
+        position: { anchor: 'bottom-center', offsetY: -96 },
         props: {
           format: 'current/total',
-          fontSize: 18,
-          color: '#666666',
+          fontSize: 20,
+          color: '#525252',
         },
       },
     ],
@@ -372,7 +392,7 @@ const minimalProSchema: TemplateSchema = {
     last: [
       {
         type: 'arrow',
-        position: { anchor: 'bottom-left', offsetX: 64, offsetY: -64 },
+        position: { anchor: 'bottom-left', offsetX: 80, offsetY: -80 },
         props: {
           direction: 'left',
           size: 120,
