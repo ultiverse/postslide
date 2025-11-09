@@ -17,7 +17,6 @@ interface ProjectState {
 
   // Brand-level
   updateBrand: (brand: Partial<Brand>) => void
-  applyBrandToAllSlides: () => void
 
   // Slide-level
   setSelectedSlide: (id: string | null) => void
@@ -97,12 +96,6 @@ export const useProject = create<ProjectState>()(
           brand: newBrand,
         },
       };
-    }),
-  applyBrandToAllSlides: () =>
-    set((s) => {
-      // This will trigger re-renders with new brand values
-      // Blocks without explicit style overrides will inherit the new brand
-      return { project: { ...s.project } }
     }),
 
   // Slide-level
