@@ -48,6 +48,8 @@ export default function Canvas() {
   const project = useProject(s => s.project);
   const selectedSlideId = useProject(s => s.selectedSlideId);
   const showGrid = useProject(s => s.showGrid);
+  // Subscribe to brand explicitly to ensure re-renders on brand changes
+  const brand = useProject(s => s.project.brand);
 
   const selectedSlide = project.slides.find(s => s.id === selectedSlideId) ?? null;
 
@@ -109,8 +111,8 @@ export default function Canvas() {
   // Get the template if one is specified
   const template = selectedSlide?.templateId ? getTemplate(selectedSlide.templateId) : null;
 
-  // Default brand for template rendering
-  const defaultBrand = project.brand || {
+  // Default brand for template rendering - use the brand from the hook subscription
+  const defaultBrand = brand || {
     primary: theme.primary,
     fontHead: headFont.family,
     fontBody: bodyFont.family,
@@ -123,7 +125,8 @@ export default function Canvas() {
           <div ref={containerRef} style={{ transform: `scale(${scale})`, transformOrigin: 'top center' }}>
             {template && selectedSlide ? (
               // Use template layout if available
-              <div className="relative shadow-xl rounded-2xl overflow-hidden">
+              // Key forces re-render when brand changes (including all brand properties)
+              <div key={`${selectedSlide.id}-${brand?.primary}-${brand?.fontHead}-${brand?.fontBody}`} className="relative shadow-xl rounded-2xl overflow-hidden">
                 {template.layout(selectedSlide, defaultBrand, slideIndex, totalSlides)}
                 {showGrid && (
                   <div className="absolute inset-0 pointer-events-none">

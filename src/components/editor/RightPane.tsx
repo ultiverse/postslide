@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useProject } from '@/state/project.store';
 import { SortableBlockCard } from '@/components/blocks/SortableBlockCard';
+import { BlockStyleControls } from '@/components/blocks/BlockStyleControls';
 import { IconButton } from '@/components/ui';
 import { LayoutPicker } from '@/components/editor/LayoutPicker';
 import type { SlideBlock } from '@/types/domain';
@@ -25,6 +26,8 @@ import { isTextBlock } from '@/lib/constants/blocks';
 export function RightPane() {
     const project = useProject((s) => s.project);
     const selectedSlideId = useProject((s) => s.selectedSlideId);
+    const selectedBlockId = useProject((s) => s.selectedBlockId);
+    const setSelectedBlock = useProject((s) => s.setSelectedBlock);
     const addBlock = useProject((s) => s.addBlock);
     const updateBlock = useProject((s) => s.updateBlock);
     const updateBullets = useProject((s) => s.updateBullets);
@@ -206,6 +209,11 @@ export function RightPane() {
                                                 onRemove={() => removeBlock(selectedSlide.id, block.id)}
                                                 canMoveUp={idx > 0}
                                                 canMoveDown={idx < selectedSlide.blocks.length - 1}
+                                                onClick={() => setSelectedBlock(block.id)}
+                                                isSelected={selectedBlockId === block.id}
+                                                styleControls={
+                                                    <BlockStyleControls slideId={selectedSlide.id} block={block} />
+                                                }
                                                 headerContent={
                                                     <select
                                                         value={block.kind}

@@ -56,14 +56,14 @@ export function CoverSlide({
 
   // Text styles for cover slide - memoized to avoid changing object identities
   const titleStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.display,
+    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT, // Apply after typography to override
     color: colors.text,
   }), [brand.fontHead, brand.fontBody, typography.display, colors.text]);
 
   const subtitleStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontBody || DEFAULT_FONT,
     ...typography.h2,
+    fontFamily: brand.fontBody || DEFAULT_FONT, // Apply after typography to override
     color: colors.textMuted,
   }), [brand.fontBody, typography.h2, colors.textMuted]);
 

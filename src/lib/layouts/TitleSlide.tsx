@@ -53,14 +53,14 @@ export function TitleSlide({
 
   // Define text styles based on slot styles (memoized)
   const titleStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.h1,
+    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT, // Apply after typography to override
     color: colors.text,
   }), [brand.fontHead, brand.fontBody, typography.h1, colors.text]);
 
   const subtitleStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.h2,
+    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT, // Apply after typography to override
     color: colors.textMuted,
   }), [brand.fontHead, brand.fontBody, typography.h2, colors.textMuted]);
 

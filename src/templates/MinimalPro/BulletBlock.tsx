@@ -8,7 +8,11 @@ import type { RenderedTextBlock } from './types';
  * Shows an overflow badge if content exceeds the available space.
  */
 export function BulletBlock({ renderBlock }: { renderBlock: RenderedTextBlock }) {
-  const { style, layout, frame, overflow } = renderBlock;
+  const { style, layout, frame, overflow, block } = renderBlock;
+
+  // Apply block-level style overrides
+  const textAlign = block.style?.textAlign || 'left';
+  const textTransform = block.style?.uppercase ? 'uppercase' : 'none';
 
   return (
     <div
@@ -29,6 +33,8 @@ export function BulletBlock({ renderBlock }: { renderBlock: RenderedTextBlock })
           lineHeight: `${style.lineHeight}px`,
           letterSpacing: style.letterSpacing ?? 0,
           color: style.color,
+          textAlign,
+          textTransform,
         }}
       >
         {layout.lines.map((ln, idx) => (

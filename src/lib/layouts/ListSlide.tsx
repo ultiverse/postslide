@@ -53,42 +53,44 @@ export function ListSlide({
 
   // Define text styles based on block kind (stable callback to satisfy hook deps)
   const getStyleForBlock = useCallback((block: TextBlock): TextStyle => {
-    const baseFont = brand.fontBody || DEFAULT_FONT;
-    const headFont = brand.fontHead || baseFont;
-
+    // Get base style from block kind
+    let baseStyle: TextStyle;
     switch (block.kind) {
       case 'title':
-        return {
-          fontFamily: headFont,
+        baseStyle = {
+          fontFamily: DEFAULT_FONT,
           ...typography.h1,
-          color: colors.text,
+          color: colors.primary, // Use brand primary for titles
         };
+        break;
       case 'subtitle':
-        return {
-          fontFamily: headFont,
+        baseStyle = {
+          fontFamily: DEFAULT_FONT,
           ...typography.h2,
-          color: colors.textMuted,
+          color: colors.textMuted, // Use muted gray for subtitles
         };
+        break;
       case 'body':
-        return {
-          fontFamily: baseFont,
-          ...typography.body,
-          color: colors.text,
-        };
       case 'bullets':
-        return {
-          fontFamily: baseFont,
-          ...typography.body,
-          color: colors.text,
-        };
       default:
-        return {
-          fontFamily: baseFont,
+        baseStyle = {
+          fontFamily: DEFAULT_FONT,
           ...typography.body,
           color: colors.text,
         };
     }
-  }, [brand, typography, colors]);
+
+    // Apply block-level style overrides
+    if (block.style) {
+      return {
+        ...baseStyle,
+        ...(block.style.color && { color: block.style.color }),
+        ...(block.style.fontFamily && { fontFamily: block.style.fontFamily }),
+      };
+    }
+
+    return baseStyle;
+  }, [brand.primary, typography, colors]);
 
   // Calculate block positions with vertical stacking
   const renderedBlocks = useMemo(() => {
@@ -197,7 +199,8 @@ export function ListSlide({
           return <BulletBlock key={rb.block.id} renderBlock={rendered} />;
         }
         const rendered = rb as RenderedText;
-        return <TextBlock key={rb.block.id} renderBlock={rendered} />;
+        // Include fontFamily in key to force re-mount when font changes
+        return <TextBlock key={`${rb.block.id}-${rendered.style.fontFamily}`} renderBlock={rendered} />;
       })}
 
       {/* Decorative layer */}
@@ -227,7 +230,7 @@ type RenderedText = {
 };
 
 function TextBlock({ renderBlock }: { renderBlock: RenderedText; }) {
-  const { style, layout, frame, overflow } = renderBlock;
+  const { style, layout, frame, overflow, block } = renderBlock;
 
   return (
     <div
@@ -239,10 +242,12 @@ function TextBlock({ renderBlock }: { renderBlock: RenderedText; }) {
         height: frame.h,
         overflow: 'hidden',
       }}
+      data-block-kind={block.kind}
+      data-font-family={style.fontFamily}
     >
       <div
         style={{
-          fontFamily: style.fontFamily,
+          fontFamily: `"${style.fontFamily}"`,
           fontWeight: style.fontWeight,
           fontSize: style.fontSize,
           lineHeight: `${style.lineHeight}px`,

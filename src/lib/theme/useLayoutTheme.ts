@@ -9,7 +9,9 @@ import { DEFAULT_LIGHT_THEME, DEFAULT_TYPOGRAPHY, DEFAULT_SPACING } from './defa
  */
 export function useLayoutTheme(brand: Brand, providedTheme?: Theme) {
   const theme: Theme = useMemo(() => {
-    if (providedTheme) return providedTheme
+    if (providedTheme) {
+      return providedTheme;
+    }
 
     return {
       primary: brand.primary,

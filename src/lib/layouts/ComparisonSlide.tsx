@@ -66,20 +66,20 @@ export function ComparisonSlide({
 
   // Define text styles
   const titleStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.h1,
+    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT, // Apply after typography to override
     color: colors.text,
   }), [brand.fontHead, brand.fontBody, typography.h1, colors.text]);
 
   const labelStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.h2,
+    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT, // Apply after typography to override
     color: colors.primary,
   }), [brand.fontHead, brand.fontBody, typography.h2, colors.primary]);
 
   const contentStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontBody || DEFAULT_FONT,
     ...typography.body,
+    fontFamily: brand.fontBody || DEFAULT_FONT, // Apply after typography to override
     color: colors.text,
   }), [brand.fontBody, typography.body, colors.text]);
 

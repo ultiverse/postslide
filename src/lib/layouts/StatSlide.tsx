@@ -32,6 +32,8 @@ export function StatSlide({
   safeInset,
   theme: providedTheme,
 }: LayoutProps) {
+  console.log('[StatSlide] Component rendering with brand.primary:', brand.primary);
+
   const measure = useMemo(() => createMeasurer(), []);
   const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme);
 
@@ -58,20 +60,20 @@ export function StatSlide({
 
   // Text styles for stat components (memoized)
   const numberStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.stat,
+    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT, // Apply after typography to override
     color: colors.primary, // Use brand color for emphasis
   }), [brand.fontHead, brand.fontBody, typography.stat, colors.primary]);
 
   const labelStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontBody || DEFAULT_FONT,
     ...typography.h2,
+    fontFamily: brand.fontBody || DEFAULT_FONT, // Apply after typography to override
     color: colors.textMuted,
   }), [brand.fontBody, typography.h2, colors.textMuted]);
 
   const contextStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontBody || DEFAULT_FONT,
     ...typography.caption,
+    fontFamily: brand.fontBody || DEFAULT_FONT, // Apply after typography to override
     color: colors.text,
   }), [brand.fontBody, typography.caption, colors.text]);
 

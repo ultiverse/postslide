@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAutosave } from '@/hooks/useAutosave';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useFontLoader } from '@/hooks/useFontLoader';
 import { LeftPane } from '@/components/editor/LeftPane';
 import { CenterPane } from '@/components/editor/CenterPane';
 import { RightPane } from '@/components/editor/RightPane';
@@ -10,6 +11,7 @@ const MIN_WIDTH = 1024;
 export default function Editor() {
     useAutosave();
     useKeyboardShortcuts();
+    useFontLoader();
 
     // SSR-safe initial width
     const [w, setW] = useState<number>(() =>

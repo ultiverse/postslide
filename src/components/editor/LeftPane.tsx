@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useProject } from '@/state/project.store';
 import { SortableSlideCard } from '@/components/slides/SortableSlideCard';
+import { BrandSettings } from '@/components/brand/BrandSettings';
 import { IconButton } from '@/components/ui';
 import { Plus, Pencil, Check } from 'lucide-react';
 import {
@@ -112,6 +113,9 @@ export function LeftPane() {
                     </div>
                 )}
             </div>
+
+            {/* Brand Settings */}
+            <BrandSettings />
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext

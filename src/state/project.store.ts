@@ -1,17 +1,23 @@
 import { create } from 'zustand'
-import type { Project, Slide, SlideBlock, ImageBlock, BackgroundBlock, DecorativeBlock } from '@/types/domain'
+import { persist } from 'zustand/middleware'
+import type { Project, Slide, SlideBlock, ImageBlock, BackgroundBlock, DecorativeBlock, Brand, BlockStyle } from '@/types/domain'
 import { createBlock } from '@/lib/constants/blocks'
 import { getLayout, getSuggestedBlocksForLayout } from '@/lib/layouts/utils'
 
 interface ProjectState {
   project: Project
   selectedSlideId: string | null
+  selectedBlockId: string | null
   showGrid: boolean
 
   // Project-level
   setProject: (p: Project) => void
   updateProjectTitle: (title: string) => void
   toggleGrid: () => void
+
+  // Brand-level
+  updateBrand: (brand: Partial<Brand>) => void
+  applyBrandToAllSlides: () => void
 
   // Slide-level
   setSelectedSlide: (id: string | null) => void
@@ -28,9 +34,12 @@ interface ProjectState {
   autoMatchLayoutForSlide: (slideId: string, templateId: string) => void
 
   // Block-level
+  setSelectedBlock: (id: string | null) => void
   addBlock: (slideId: string, kind: SlideBlock['kind']) => void
   updateBlock: (slideId: string, blockId: string, text: string) => void
   updateBullets: (slideId: string, blockId: string, bullets: string[]) => void
+  updateBlockStyle: (slideId: string, blockId: string, style: Partial<BlockStyle>) => void
+  resetBlockStyle: (slideId: string, blockId: string) => void
   updateImageBlock: (slideId: string, blockId: string, updates: Partial<ImageBlock>) => void
   updateBackgroundBlock: (slideId: string, blockId: string, updates: Partial<BackgroundBlock>) => void
   updateDecorativeBlock: (slideId: string, blockId: string, updates: Partial<DecorativeBlock>) => void
@@ -44,6 +53,11 @@ interface ProjectState {
 const seed: Project = {
   id: 'demo',
   title: 'Demo Carousel',
+  brand: {
+    primary: '#3b82f6',
+    fontHead: 'Inter',
+    fontBody: 'Inter',
+  },
   slides: [
     { id: 's1', templateId: 'minimal-pro', blocks: [
       { id: 'b1', kind: 'title', text: '5 Tips to Improve Your Resume' },
@@ -56,9 +70,12 @@ const seed: Project = {
   ],
 }
 
-export const useProject = create<ProjectState>((set) => ({
+export const useProject = create<ProjectState>()(
+  persist(
+    (set) => ({
   project: seed,
   selectedSlideId: seed.slides[0]?.id || null,
+  selectedBlockId: null,
   showGrid: false,
 
   // Project-level
@@ -66,6 +83,27 @@ export const useProject = create<ProjectState>((set) => ({
   updateProjectTitle: (title) =>
     set((s) => ({ project: { ...s.project, title } })),
   toggleGrid: () => set((s) => ({ showGrid: !s.showGrid })),
+
+  // Brand-level
+  updateBrand: (brand) =>
+    set((s) => {
+      const newBrand = {
+        primary: s.project.brand?.primary || '#3b82f6',
+        ...brand
+      };
+      return {
+        project: {
+          ...s.project,
+          brand: newBrand,
+        },
+      };
+    }),
+  applyBrandToAllSlides: () =>
+    set((s) => {
+      // This will trigger re-renders with new brand values
+      // Blocks without explicit style overrides will inherit the new brand
+      return { project: { ...s.project } }
+    }),
 
   // Slide-level
   setSelectedSlide: (id) => set({ selectedSlideId: id }),
@@ -253,6 +291,7 @@ export const useProject = create<ProjectState>((set) => ({
     }),
 
   // Block-level
+  setSelectedBlock: (id) => set({ selectedBlockId: id }),
   addBlock: (slideId, kind) =>
     set((s) => ({
       project: {
@@ -294,6 +333,45 @@ export const useProject = create<ProjectState>((set) => ({
                 blocks: sl.blocks.map((b) =>
                   b.id === blockId && b.kind === 'bullets' ? { ...b, bullets } : b,
                 ),
+              }
+            : sl,
+        ),
+      },
+    })),
+  updateBlockStyle: (slideId, blockId, style) =>
+    set((s) => ({
+      project: {
+        ...s.project,
+        slides: s.project.slides.map((sl) =>
+          sl.id === slideId
+            ? {
+                ...sl,
+                blocks: sl.blocks.map((b) => {
+                  if (b.id === blockId && ('text' in b || b.kind === 'bullets')) {
+                    return { ...b, style: { ...b.style, ...style } }
+                  }
+                  return b
+                }),
+              }
+            : sl,
+        ),
+      },
+    })),
+  resetBlockStyle: (slideId, blockId) =>
+    set((s) => ({
+      project: {
+        ...s.project,
+        slides: s.project.slides.map((sl) =>
+          sl.id === slideId
+            ? {
+                ...sl,
+                blocks: sl.blocks.map((b) => {
+                  if (b.id === blockId && ('text' in b || b.kind === 'bullets')) {
+                    const { style, ...rest } = b
+                    return rest as SlideBlock
+                  }
+                  return b
+                }),
               }
             : sl,
         ),
@@ -449,4 +527,13 @@ export const useProject = create<ProjectState>((set) => ({
           },
         };
       }),
-}))
+    }),
+    {
+      name: 'slidepost-project-storage',
+      partialize: (state) => ({
+        project: state.project,
+        selectedSlideId: state.selectedSlideId,
+      }),
+    }
+  )
+)

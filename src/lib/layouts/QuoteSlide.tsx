@@ -55,14 +55,14 @@ export function QuoteSlide({
 
   // Text styles for quote components (memoized so useMemo deps are stable)
   const quoteStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.quote,
+    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT, // Apply after typography to override
     color: colors.text,
   }), [brand.fontHead, brand.fontBody, typography.quote, colors.text]);
 
   const attributionStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontBody || DEFAULT_FONT,
     ...typography.caption,
+    fontFamily: brand.fontBody || DEFAULT_FONT, // Apply after typography to override
     color: colors.textMuted,
   }), [brand.fontBody, typography.caption, colors.textMuted]);
 

@@ -66,30 +66,30 @@ export function TwoColSlide({
     switch (block.kind) {
       case 'title':
         return {
-          fontFamily: headFont,
           ...typography.h1,
+          fontFamily: headFont, // Apply after typography to override
           color: colors.text,
         };
       case 'subtitle':
         return {
-          fontFamily: headFont,
           ...typography.h2,
+          fontFamily: headFont, // Apply after typography to override
           color: colors.textMuted,
         };
       case 'body':
         return {
-          fontFamily: baseFont,
           ...typography.body,
+          fontFamily: baseFont, // Apply after typography to override
           color: colors.text,
         };
       case 'bullets':
         return {
-          fontFamily: baseFont,
           ...typography.body,
+          fontFamily: baseFont, // Apply after typography to override
           color: colors.text,
         };
     }
-  }, [brand, typography, colors]);
+  }, [brand.fontHead, brand.fontBody, brand.primary, typography, colors]);
 
   // Render title block (if exists)
   const titleRendered = useMemo(() => {
