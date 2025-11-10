@@ -43,7 +43,9 @@ export function RightPane() {
     const selectedSlide = project.slides.find((s) => s.id === selectedSlideId);
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isBottomDropdownOpen, setIsBottomDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const bottomDropdownRef = useRef<HTMLDivElement>(null);
     const justAddedBulletRef = useRef<string | null>(null); // Track which block just had a bullet added
 
     // Close dropdown when clicking outside
@@ -52,21 +54,25 @@ export function RightPane() {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setIsDropdownOpen(false);
             }
+            if (bottomDropdownRef.current && !bottomDropdownRef.current.contains(event.target as Node)) {
+                setIsBottomDropdownOpen(false);
+            }
         };
 
-        if (isDropdownOpen) {
+        if (isDropdownOpen || isBottomDropdownOpen) {
             document.addEventListener('mousedown', handleClickOutside);
         }
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [isDropdownOpen]);
+    }, [isDropdownOpen, isBottomDropdownOpen]);
 
     const handleAddBlock = (kind: SlideBlock['kind']) => {
         if (selectedSlide) {
             addBlock(selectedSlide.id, kind);
             setIsDropdownOpen(false);
+            setIsBottomDropdownOpen(false);
 
             // Scroll to the new block after it's been added
             setTimeout(() => {
@@ -518,6 +524,81 @@ export function RightPane() {
                                 </div>
                             </SortableContext>
                         </DndContext>
+
+                        {/* Add Block Button Below Cards */}
+                        <div className="mt-3">
+                            <div ref={bottomDropdownRef} className="relative">
+                                <button
+                                    onClick={() => setIsBottomDropdownOpen(!isBottomDropdownOpen)}
+                                    className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    Add Block
+                                </button>
+                                {isBottomDropdownOpen && (
+                                    <div className="absolute left-0 bottom-full mb-2 w-48 rounded-lg border border-neutral-200 bg-white shadow-lg z-20">
+                                        <div className="py-1">
+                                            {/* Text Blocks */}
+                                            <div className="px-3 py-1 text-xs font-semibold text-neutral-400">Text</div>
+                                            <button
+                                                onClick={() => handleAddBlock('title')}
+                                                className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                                            >
+                                                <Type className="h-3 w-3" />
+                                                Title
+                                            </button>
+                                            <button
+                                                onClick={() => handleAddBlock('subtitle')}
+                                                className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                                            >
+                                                <Type className="h-3 w-3" />
+                                                Subtitle
+                                            </button>
+                                            <button
+                                                onClick={() => handleAddBlock('body')}
+                                                className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                                            >
+                                                <Type className="h-3 w-3" />
+                                                Body
+                                            </button>
+                                            <button
+                                                onClick={() => handleAddBlock('bullets')}
+                                                className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                                            >
+                                                <List className="h-3 w-3" />
+                                                Bullets
+                                            </button>
+
+                                            {/* Visual Blocks */}
+                                            <div className="border-t border-neutral-100 mt-1 pt-1">
+                                                <div className="px-3 py-1 text-xs font-semibold text-neutral-400">Visual</div>
+                                                <button
+                                                    onClick={() => handleAddBlock('image')}
+                                                    className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                                                >
+                                                    <ImageIcon className="h-3 w-3" />
+                                                    Image
+                                                </button>
+                                                <button
+                                                    onClick={() => handleAddBlock('background')}
+                                                    className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                                                >
+                                                    <Palette className="h-3 w-3" />
+                                                    Background
+                                                </button>
+                                                <button
+                                                    onClick={() => handleAddBlock('decorative')}
+                                                    className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                                                >
+                                                    <Sparkles className="h-3 w-3" />
+                                                    Decorative
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </>
                 ) : (
                     <div className="text-center text-sm text-neutral-500 py-8">

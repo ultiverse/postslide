@@ -18,7 +18,7 @@ const ARTBOARD_SPEC: ArtboardSpec = {
 };
 
 function getStyleForBlock(block: TextBlockType, theme: Theme, brand: Brand): TextStyle {
-  const defaultFont = 'Inter, system-ui, sans-serif';
+  const defaultFont = 'Inter';
 
   switch (block.kind) {
     case 'title':

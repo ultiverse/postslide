@@ -11,7 +11,7 @@ import { useLayoutTheme } from '@/lib/theme/useLayoutTheme';
 import { isTextBlock } from '@/lib/constants/blocks';
 
 // Layout constants
-const DEFAULT_FONT = 'Inter, system-ui, sans-serif';
+const DEFAULT_FONT = 'Inter';
 const DEFAULT_WIDTH = 1080;
 const DEFAULT_HEIGHT = 1080;
 

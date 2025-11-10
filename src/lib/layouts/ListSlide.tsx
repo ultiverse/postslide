@@ -11,7 +11,7 @@ import { isTextBlock } from '@/lib/constants/blocks';
 import { useLayoutTheme } from '@/lib/theme/useLayoutTheme';
 
 // Layout constants (kept for backward compatibility)
-const DEFAULT_FONT = 'Inter, system-ui, sans-serif';
+const DEFAULT_FONT = 'Inter';
 const DEFAULT_WIDTH = 1080;
 const DEFAULT_HEIGHT = 1080;
 
@@ -58,15 +58,15 @@ export function ListSlide({
     switch (block.kind) {
       case 'title':
         baseStyle = {
-          fontFamily: DEFAULT_FONT,
           ...typography.h1,
+          fontFamily: DEFAULT_FONT, // Apply after typography to ensure it's set
           color: colors.primary, // Use brand primary for titles
         };
         break;
       case 'subtitle':
         baseStyle = {
-          fontFamily: DEFAULT_FONT,
           ...typography.h2,
+          fontFamily: DEFAULT_FONT, // Apply after typography to ensure it's set
           color: colors.textMuted, // Use muted gray for subtitles
         };
         break;
@@ -74,8 +74,8 @@ export function ListSlide({
       case 'bullets':
       default:
         baseStyle = {
-          fontFamily: DEFAULT_FONT,
           ...typography.body,
+          fontFamily: DEFAULT_FONT, // Apply after typography to ensure it's set
           color: colors.text,
         };
     }
