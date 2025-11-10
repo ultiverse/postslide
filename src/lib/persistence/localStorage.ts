@@ -4,8 +4,10 @@
  */
 
 import type { Project } from '@/types/domain'
+import { APP_STORAGE_PREFIX } from '@/lib/constants/app'
 
-const PROJECT_STORAGE_KEY = 'slidepost_project'
+// Export the storage key so other modules can use the same key
+export const PROJECT_STORAGE_KEY = `${APP_STORAGE_PREFIX}_project`
 
 /**
  * Save project to localStorage

@@ -93,14 +93,9 @@ export default function Canvas() {
     return () => window.removeEventListener('resize', updateScale);
   }, []);
 
-  // Use brand fonts from project if available, otherwise defaults
-  const headFont = project.brand?.fontHead
-    ? { ...defaultFonts.head, family: project.brand.fontHead }
-    : defaultFonts.head;
-
-  const bodyFont = project.brand?.fontBody
-    ? { ...defaultFonts.body, family: project.brand.fontBody }
-    : defaultFonts.body;
+  // Use default fonts
+  const headFont = defaultFonts.head;
+  const bodyFont = defaultFonts.body;
 
   // Use brand primary color if available
   const theme: Theme = {
@@ -114,8 +109,6 @@ export default function Canvas() {
   // Default brand for template rendering - use the brand from the hook subscription
   const defaultBrand = brand || {
     primary: theme.primary,
-    fontHead: headFont.family,
-    fontBody: bodyFont.family,
   };
 
   return (
@@ -125,8 +118,8 @@ export default function Canvas() {
           <div ref={containerRef} style={{ transform: `scale(${scale})`, transformOrigin: 'top center' }}>
             {template && selectedSlide ? (
               // Use template layout if available
-              // Key forces re-render when brand changes (including all brand properties)
-              <div key={`${selectedSlide.id}-${brand?.primary}-${brand?.fontHead}-${brand?.fontBody}`} className="relative shadow-xl rounded-2xl overflow-hidden">
+              // Key forces re-render when brand changes
+              <div key={`${selectedSlide.id}-${brand?.primary}`} className="relative shadow-xl rounded-2xl overflow-hidden">
                 {template.layout(selectedSlide, defaultBrand, slideIndex, totalSlides)}
                 {showGrid && (
                   <div className="absolute inset-0 pointer-events-none">

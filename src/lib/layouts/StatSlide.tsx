@@ -61,21 +61,21 @@ export function StatSlide({
   // Text styles for stat components (memoized)
   const numberStyle: TextStyle = useMemo(() => ({
     ...typography.stat,
-    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT, // Apply after typography to override
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.primary, // Use brand color for emphasis
-  }), [brand.fontHead, brand.fontBody, typography.stat, colors.primary]);
+  }), [typography.stat, colors.primary]);
 
   const labelStyle: TextStyle = useMemo(() => ({
     ...typography.h2,
-    fontFamily: brand.fontBody || DEFAULT_FONT, // Apply after typography to override
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.textMuted,
-  }), [brand.fontBody, typography.h2, colors.textMuted]);
+  }), [typography.h2, colors.textMuted]);
 
   const contextStyle: TextStyle = useMemo(() => ({
     ...typography.caption,
-    fontFamily: brand.fontBody || DEFAULT_FONT, // Apply after typography to override
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.text,
-  }), [brand.fontBody, typography.caption, colors.text]);
+  }), [typography.caption, colors.text]);
 
   // Measure text blocks
   const numberLayout = useMemo(() => {

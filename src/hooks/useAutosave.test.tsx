@@ -4,6 +4,7 @@ import { act } from 'react';
 
 import { useAutosave } from './useAutosave';
 import { useProject } from '@/state/project.store';
+import { PROJECT_STORAGE_KEY } from '@/lib/persistence/localStorage';
 
 // helper to reset the real store to a small test seed
 const seedProject = {
@@ -26,7 +27,7 @@ describe('useAutosave', () => {
         // reset real store
         useProject.setState({ project: seedProject });
         render(<TestComp />);
-        await waitFor(() => expect(window.localStorage.getItem('slidepost.project')).toBe(JSON.stringify(seedProject)));
+        await waitFor(() => expect(window.localStorage.getItem(PROJECT_STORAGE_KEY)).toBe(JSON.stringify(seedProject)));
     });
 
     it('writes project again when project changes', async () => {
@@ -40,6 +41,6 @@ describe('useAutosave', () => {
             rerender(<TestComp />);
         });
 
-        await waitFor(() => expect(window.localStorage.getItem('slidepost.project')).toContain('Updated'));
+        await waitFor(() => expect(window.localStorage.getItem(PROJECT_STORAGE_KEY)).toContain('Updated'));
     });
 });

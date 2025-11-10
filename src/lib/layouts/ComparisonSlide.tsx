@@ -67,21 +67,21 @@ export function ComparisonSlide({
   // Define text styles
   const titleStyle: TextStyle = useMemo(() => ({
     ...typography.h1,
-    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT, // Apply after typography to override
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.text,
-  }), [brand.fontHead, brand.fontBody, typography.h1, colors.text]);
+  }), [typography.h1, colors.text]);
 
   const labelStyle: TextStyle = useMemo(() => ({
     ...typography.h2,
-    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT, // Apply after typography to override
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.primary,
-  }), [brand.fontHead, brand.fontBody, typography.h2, colors.primary]);
+  }), [typography.h2, colors.primary]);
 
   const contentStyle: TextStyle = useMemo(() => ({
     ...typography.body,
-    fontFamily: brand.fontBody || DEFAULT_FONT, // Apply after typography to override
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.text,
-  }), [brand.fontBody, typography.body, colors.text]);
+  }), [typography.body, colors.text]);
 
   // Measure title
   const titleLayout = useMemo(() => {

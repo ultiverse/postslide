@@ -60,36 +60,33 @@ export function TwoColSlide({
 
   // Define text styles based on block kind
   const getStyleForBlock = useCallback((block: TextBlock): TextStyle => {
-    const baseFont = brand.fontBody || DEFAULT_FONT;
-    const headFont = brand.fontHead || baseFont;
-
     switch (block.kind) {
       case 'title':
         return {
           ...typography.h1,
-          fontFamily: headFont, // Apply after typography to override
+          fontFamily: DEFAULT_FONT,
           color: colors.text,
         };
       case 'subtitle':
         return {
           ...typography.h2,
-          fontFamily: headFont, // Apply after typography to override
+          fontFamily: DEFAULT_FONT,
           color: colors.textMuted,
         };
       case 'body':
         return {
           ...typography.body,
-          fontFamily: baseFont, // Apply after typography to override
+          fontFamily: DEFAULT_FONT,
           color: colors.text,
         };
       case 'bullets':
         return {
           ...typography.body,
-          fontFamily: baseFont, // Apply after typography to override
+          fontFamily: DEFAULT_FONT,
           color: colors.text,
         };
     }
-  }, [brand.fontHead, brand.fontBody, brand.primary, typography, colors]);
+  }, [brand.primary, typography, colors]);
 
   // Render title block (if exists)
   const titleRendered = useMemo(() => {

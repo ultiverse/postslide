@@ -58,15 +58,15 @@ export function SectionBreakSlide({
   // Define text styles - memoized for stable deps
   const titleStyle: TextStyle = useMemo(() => ({
     ...typography.display,
-    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT, // Apply after typography to override
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.text,
-  }), [brand.fontHead, brand.fontBody, typography.display, colors.text]);
+  }), [typography.display, colors.text]);
 
   const subtitleStyle: TextStyle = useMemo(() => ({
     ...typography.h2,
-    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT, // Apply after typography to override
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.textMuted,
-  }), [brand.fontHead, brand.fontBody, typography.h2, colors.textMuted]);
+  }), [typography.h2, colors.textMuted]);
 
   // Measure text blocks
   const titleLayout = useMemo(() => {

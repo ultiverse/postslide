@@ -6,13 +6,6 @@ import App from '@/routes/App';
 import Editor from '@/routes/Editor';
 import Templates from '@/routes/Templates';
 import Export from '@/routes/Export';
-import { useProject } from '@/state/project.store';
-
-// Rehydrate from localStorage
-const saved = localStorage.getItem('slidepost.project');
-if (saved) {
-  useProject.setState({ project: JSON.parse(saved) });
-}
 
 const router = createBrowserRouter([
   { path: '/', element: <App /> },

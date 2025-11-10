@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import type { Project, Slide, SlideBlock, ImageBlock, BackgroundBlock, DecorativeBlock, Brand, BlockStyle } from '@/types/domain'
 import { createBlock } from '@/lib/constants/blocks'
 import { getLayout, getSuggestedBlocksForLayout } from '@/lib/layouts/utils'
+import { PROJECT_STORAGE_KEY } from '@/lib/persistence/localStorage'
 
 interface ProjectState {
   project: Project
@@ -54,8 +55,6 @@ const seed: Project = {
   title: 'Demo Carousel',
   brand: {
     primary: '#3b82f6',
-    fontHead: 'Inter',
-    fontBody: 'Inter',
   },
   slides: [
     { id: 's1', templateId: 'minimal-pro', blocks: [
@@ -522,7 +521,7 @@ export const useProject = create<ProjectState>()(
       }),
     }),
     {
-      name: 'slidepost-project-storage',
+      name: PROJECT_STORAGE_KEY,
       partialize: (state) => ({
         project: state.project,
         selectedSlideId: state.selectedSlideId,

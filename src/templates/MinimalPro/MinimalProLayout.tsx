@@ -18,13 +18,12 @@ const ARTBOARD_SPEC: ArtboardSpec = {
 };
 
 function getStyleForBlock(block: TextBlockType, theme: Theme, brand: Brand): TextStyle {
-  const baseFont = brand.fontBody || 'Inter, system-ui, sans-serif';
-  const headFont = brand.fontHead || baseFont;
+  const defaultFont = 'Inter, system-ui, sans-serif';
 
   switch (block.kind) {
     case 'title':
       return {
-        fontFamily: headFont,
+        fontFamily: defaultFont,
         fontWeight: 700,
         fontSize: 80,
         lineHeight: 88,
@@ -32,7 +31,7 @@ function getStyleForBlock(block: TextBlockType, theme: Theme, brand: Brand): Tex
       };
     case 'subtitle':
       return {
-        fontFamily: headFont,
+        fontFamily: defaultFont,
         fontWeight: 600,
         fontSize: 52,
         lineHeight: 64,
@@ -40,7 +39,7 @@ function getStyleForBlock(block: TextBlockType, theme: Theme, brand: Brand): Tex
       };
     case 'body':
       return {
-        fontFamily: baseFont,
+        fontFamily: defaultFont,
         fontWeight: 400,
         fontSize: 36,
         lineHeight: 48,
@@ -48,7 +47,7 @@ function getStyleForBlock(block: TextBlockType, theme: Theme, brand: Brand): Tex
       };
     case 'bullets':
       return {
-        fontFamily: baseFont,
+        fontFamily: defaultFont,
         fontWeight: 400,
         fontSize: 32,
         lineHeight: 48,

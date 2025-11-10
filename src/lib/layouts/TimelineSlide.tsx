@@ -63,21 +63,21 @@ export function TimelineSlide({
   // Define text styles (memoized)
   const titleStyle: TextStyle = useMemo(() => ({
     ...typography.h1,
-    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT, // Apply after typography to override
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.text,
-  }), [brand.fontHead, brand.fontBody, typography.h1, colors.text]);
+  }), [typography.h1, colors.text]);
 
   const labelStyle: TextStyle = useMemo(() => ({
     ...typography.h2,
-    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT, // Apply after typography to override
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.text,
-  }), [brand.fontHead, brand.fontBody, typography.h2, colors.text]);
+  }), [typography.h2, colors.text]);
 
   const descriptionStyle: TextStyle = useMemo(() => ({
     ...typography.caption,
-    fontFamily: brand.fontBody || DEFAULT_FONT, // Apply after typography to override
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.textMuted,
-  }), [brand.fontBody, typography.caption, colors.textMuted]);
+  }), [typography.caption, colors.textMuted]);
 
   // Measure title
   const titleLayout = useMemo(() => {
