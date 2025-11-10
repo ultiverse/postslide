@@ -17,7 +17,7 @@ const ARTBOARD_SPEC: ArtboardSpec = {
   baseline: 8,
 };
 
-function getStyleForBlock(block: TextBlockType, theme: Theme, brand: Brand): TextStyle {
+function getStyleForBlock(block: TextBlockType, theme: Theme): TextStyle {
   const defaultFont = 'Inter';
 
   switch (block.kind) {
@@ -112,7 +112,7 @@ export function MinimalProLayout({ slide, brand }: { slide: Slide; brand: Brand 
       } else {
         // Text block
         const textBlock = block as TextBlockType;
-        const style: TextStyle = getStyleForBlock(textBlock, theme, brand);
+        const style: TextStyle = getStyleForBlock(textBlock, theme);
 
         let layout;
         let frameH;
@@ -152,7 +152,7 @@ export function MinimalProLayout({ slide, brand }: { slide: Slide; brand: Brand 
         return result;
       }
     });
-  }, [contentBlocks, measure, cr, theme, brand]);
+  }, [contentBlocks, measure, cr, theme]);
 
   const artboardStyle: React.CSSProperties = {
     width: spec.width,

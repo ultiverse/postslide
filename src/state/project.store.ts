@@ -359,6 +359,7 @@ export const useProject = create<ProjectState>()(
                 ...sl,
                 blocks: sl.blocks.map((b) => {
                   if (b.id === blockId && ('text' in b || b.kind === 'bullets')) {
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     const { style, ...rest } = b
                     return rest as SlideBlock
                   }

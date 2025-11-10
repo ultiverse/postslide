@@ -90,7 +90,7 @@ export function ListSlide({
     }
 
     return baseStyle;
-  }, [brand.primary, typography, colors]);
+  }, [typography, colors]);
 
   // Calculate block positions with vertical stacking
   const renderedBlocks = useMemo(() => {

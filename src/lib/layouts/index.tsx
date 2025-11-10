@@ -13,7 +13,8 @@ import { ImageFocusSlide } from './ImageFocusSlide';
 import { ComparisonSlide } from './ComparisonSlide';
 import { TimelineSlide } from './TimelineSlide';
 import { SectionBreakSlide } from './SectionBreakSlide';
-import { getLayoutTheme, themeDefinitionToTheme } from '@/lib/theme';
+// Unused imports removed - keeping for potential future use
+// import { getLayoutTheme, themeDefinitionToTheme } from '@/lib/theme';
 import { resolveDecorators, decoratorToBlock, createProgressBarDecorator } from '@/lib/decorators';
 
 /**
@@ -54,7 +55,7 @@ export function renderSlideFromSchema(
   // DON'T pass a theme - let useLayoutTheme create it from the brand
   // This ensures brand colors are always applied
   // The template theme is mainly for typography and spacing, which are handled by defaults
-  let theme: Theme | undefined = undefined;
+  const theme: Theme | undefined = undefined;
 
   // Inject position-aware decorators if position info is available
   let enhancedSlide = slide;

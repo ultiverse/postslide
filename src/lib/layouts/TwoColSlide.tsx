@@ -86,7 +86,7 @@ export function TwoColSlide({
           color: colors.text,
         };
     }
-  }, [brand.primary, typography, colors]);
+  }, [typography, colors]);
 
   // Render title block (if exists)
   const titleRendered = useMemo(() => {
