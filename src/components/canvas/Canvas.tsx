@@ -48,6 +48,7 @@ export default function Canvas() {
   const project = useProject(s => s.project);
   const selectedSlideId = useProject(s => s.selectedSlideId);
   const showGrid = useProject(s => s.showGrid);
+  const setSelectedBlock = useProject(s => s.setSelectedBlock);
   // Subscribe to brand explicitly to ensure re-renders on brand changes
   const brand = useProject(s => s.project.brand);
 
@@ -120,7 +121,7 @@ export default function Canvas() {
               // Use template layout if available
               // Key forces re-render when brand changes
               <div key={`${selectedSlide.id}-${brand?.primary}`} className="relative shadow-xl rounded-2xl overflow-hidden">
-                {template.layout(selectedSlide, defaultBrand, slideIndex, totalSlides)}
+                {template.layout(selectedSlide, defaultBrand, slideIndex, totalSlides, setSelectedBlock)}
                 {showGrid && (
                   <div className="absolute inset-0 pointer-events-none">
                     <GridOverlay

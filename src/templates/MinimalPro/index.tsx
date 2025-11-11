@@ -33,12 +33,12 @@ export const minimalPro: Template = {
     light: DEFAULT_LIGHT_THEME,
     dark: DEFAULT_DARK_THEME,
   },
-  layout: (slide: Slide, brand: Brand, slideIndex?: number, totalSlides?: number) => {
+  layout: (slide: Slide, brand: Brand, slideIndex?: number, totalSlides?: number, onBlockClick?: (blockId: string) => void) => {
     // Create schema with brand-aware colors
     const brandedSchema = createMinimalProSchema(brand);
 
     // Use schema-driven renderer
-    return renderSlideFromSchema(brandedSchema, slide, brand, minimalPro, slideIndex, totalSlides);
+    return renderSlideFromSchema(brandedSchema, slide, brand, minimalPro, slideIndex, totalSlides, onBlockClick);
   },
   preview: () => <PreviewBlock />,
   defaults: {

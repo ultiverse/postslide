@@ -34,6 +34,7 @@ export function ListSlide({
   height = DEFAULT_HEIGHT,
   safeInset,
   theme: providedTheme,
+  onBlockClick,
 }: LayoutProps) {
   const measure = useMemo(() => createMeasurer(), []);
   const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme);
@@ -192,15 +193,16 @@ export function ListSlide({
               y={rb.frame.y}
               width={rb.frame.w}
               height={rb.frame.h}
+              onBlockClick={onBlockClick}
             />
           );
         } else if (rb.block.kind === 'bullets') {
           const rendered = rb as RenderedBullet;
-          return <BulletBlock key={rb.block.id} renderBlock={rendered} />;
+          return <BulletBlock key={rb.block.id} renderBlock={rendered} onBlockClick={onBlockClick} />;
         }
         const rendered = rb as RenderedText;
         // Include fontFamily in key to force re-mount when font changes
-        return <TextBlock key={`${rb.block.id}-${rendered.style.fontFamily}`} renderBlock={rendered} />;
+        return <TextBlock key={`${rb.block.id}-${rendered.style.fontFamily}`} renderBlock={rendered} onBlockClick={onBlockClick} />;
       })}
 
       {/* Decorative layer */}
@@ -229,7 +231,7 @@ type RenderedText = {
   block: TextBlock;
 };
 
-function TextBlock({ renderBlock }: { renderBlock: RenderedText; }) {
+function TextBlock({ renderBlock, onBlockClick }: { renderBlock: RenderedText; onBlockClick?: (blockId: string) => void; }) {
   const { style, layout, frame, overflow, block } = renderBlock;
 
   return (
@@ -244,6 +246,7 @@ function TextBlock({ renderBlock }: { renderBlock: RenderedText; }) {
       }}
       data-block-kind={block.kind}
       data-font-family={style.fontFamily}
+      onClick={() => onBlockClick?.(block.id)}
     >
       <div
         style={{
@@ -281,8 +284,8 @@ type RenderedBullet = {
   block: TextBlock;
 };
 
-function BulletBlock({ renderBlock }: { renderBlock: RenderedBullet; }) {
-  const { style, layout, frame, overflow } = renderBlock;
+function BulletBlock({ renderBlock, onBlockClick }: { renderBlock: RenderedBullet; onBlockClick?: (blockId: string) => void; }) {
+  const { style, layout, frame, overflow, block } = renderBlock;
 
   return (
     <div
@@ -294,6 +297,7 @@ function BulletBlock({ renderBlock }: { renderBlock: RenderedBullet; }) {
         height: frame.h,
         overflow: 'hidden',
       }}
+      onClick={() => onBlockClick?.(block.id)}
     >
       <div
         style={{

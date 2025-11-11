@@ -16,14 +16,16 @@ interface ImageBlockProps {
   y: number;
   width: number;
   height: number;
+  onBlockClick?: (blockId: string) => void;
 }
 
-export function ImageBlockRenderer({ block, x, y, width, height }: ImageBlockProps) {
+export function ImageBlockRenderer({ block, x, y, width, height, onBlockClick }: ImageBlockProps) {
   if (!block.src) {
     return (
       <div
         className="absolute bg-neutral-100 border-2 border-dashed border-neutral-300 flex items-center justify-center"
         style={{ left: x, top: y, width, height }}
+        onClick={() => onBlockClick?.(block.id)}
       >
         <div className="text-center text-neutral-400">
           <svg className="mx-auto h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -38,7 +40,7 @@ export function ImageBlockRenderer({ block, x, y, width, height }: ImageBlockPro
   const objectFit = block.fit || 'cover';
 
   return (
-    <div className="absolute overflow-hidden" style={{ left: x, top: y, width, height }}>
+    <div className="absolute overflow-hidden" style={{ left: x, top: y, width, height }} onClick={() => onBlockClick?.(block.id)}>
       <img
         src={block.src}
         alt={block.alt || ''}

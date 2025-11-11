@@ -29,6 +29,7 @@ import { resolveDecorators, decoratorToBlock, createProgressBarDecorator } from 
  * @param template Optional template for theme support
  * @param slideIndex Optional index of current slide (0-based)
  * @param totalSlides Optional total number of slides
+ * @param onBlockClick Optional callback when a block is clicked
  */
 export function renderSlideFromSchema(
   schema: TemplateSchema,
@@ -36,7 +37,8 @@ export function renderSlideFromSchema(
   brand: Brand,
   template?: Template,
   slideIndex?: number,
-  totalSlides?: number
+  totalSlides?: number,
+  onBlockClick?: (blockId: string) => void
 ): ReactElement {
   // Try to use the layoutId stored on the slide, otherwise use first layout
   let layout = slide.layoutId
@@ -95,6 +97,7 @@ export function renderSlideFromSchema(
     slide: enhancedSlide,
     brand,
     theme,
+    onBlockClick,
   };
 
   // Render based on layout kind
