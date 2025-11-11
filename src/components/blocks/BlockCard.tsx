@@ -47,7 +47,6 @@ const BlockCard = React.forwardRef<HTMLDivElement, BlockCardProps>(
           isSelected
             ? 'border-brand-500 ring-2 ring-brand-500/20'
             : 'border-brand-200/50 hover:border-brand-300/70',
-          onClick && 'cursor-pointer',
           className
         )}
         {...props}

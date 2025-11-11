@@ -87,7 +87,7 @@ export function FontPicker({
         ref={triggerRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between rounded border border-brand-300 bg-white px-3 py-2 text-sm text-brand-900 transition-colors hover:border-brand-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+        className="w-full flex items-center justify-between rounded border border-brand-300 bg-white px-3 py-2 text-sm text-brand-900 transition-colors hover:border-brand-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer"
       >
         <span className="truncate">{getDisplayName()}</span>
         <ChevronDown className={`h-4 w-4 text-brand-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -109,7 +109,12 @@ export function FontPicker({
             {showInherit && (
               <>
                 <button
-                  onClick={() => handleSelect('')}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSelect('');
+                  }}
                   className="w-full px-4 py-2 text-left hover:bg-brand-50 transition-colors flex items-center justify-between"
                 >
                   <span className="text-sm text-brand-900">
@@ -130,7 +135,12 @@ export function FontPicker({
             {AVAILABLE_FONTS.map((font) => (
               <button
                 key={font.name}
-                onClick={() => handleSelect(font.name)}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSelect(font.name);
+                }}
                 className="w-full px-4 py-2 text-left hover:bg-brand-50 transition-colors flex items-center justify-between"
               >
                 <span
@@ -153,7 +163,12 @@ export function FontPicker({
             {SYSTEM_FONTS.map((font) => (
               <button
                 key={font.name}
-                onClick={() => handleSelect(font.name)}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSelect(font.name);
+                }}
                 className="w-full px-4 py-2 text-left hover:bg-neutral-50 transition-colors flex items-center justify-between"
               >
                 <span
