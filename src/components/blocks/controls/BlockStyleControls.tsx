@@ -52,7 +52,7 @@ export function BlockStyleControls({ slideId, block }: BlockStyleControlsProps) 
   return (
     <div className="space-y-3 border-t border-brand-200/50 bg-gradient-to-b from-brand-50/20 to-transparent px-3 py-3">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between cursor-default">
         <h4 className="text-xs font-semibold text-brand-700">Style Overrides</h4>
         {hasOverrides && (
           <button

@@ -11,7 +11,7 @@ export function BlockKindSelector({ value, onChange, disabled = false }: BlockKi
     <select
       value={value}
       onChange={(e) => onChange(e.target.value as SlideBlock['kind'])}
-      className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+      className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 cursor-pointer disabled:cursor-not-allowed"
       disabled={disabled}
     >
       <optgroup label="Text">
