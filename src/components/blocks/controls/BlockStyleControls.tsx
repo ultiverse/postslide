@@ -1,6 +1,6 @@
 import { useProject } from '@/state/project.store'
 import { RotateCcw } from 'lucide-react'
-import { AVAILABLE_FONTS } from '@/lib/fonts/google-fonts'
+import { FontPicker } from '@/components/ui'
 import { LIGHT_COLORS } from '@/lib/theme/defaults'
 import type { SlideBlock, TextBlock } from '@/types/domain'
 
@@ -96,23 +96,12 @@ export function BlockStyleControls({ slideId, block }: BlockStyleControlsProps) 
         <label className="block text-xs font-medium text-brand-700">
           Font Family
         </label>
-        <select
+        <FontPicker
           value={style.fontFamily || ''}
-          onChange={(e) => {
-            const selectedFont = e.target.value || undefined;
-            updateBlockStyle(slideId, block.id, { fontFamily: selectedFont });
-          }}
-          className="w-full rounded border border-brand-300 bg-white px-2 py-1.5 text-xs text-brand-900 transition-colors hover:border-brand-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-        >
-          <option value="">
-            Inherit ({inheritedFont})
-          </option>
-          {AVAILABLE_FONTS.map((font) => (
-            <option key={font.name} value={font.name}>
-              {font.name}
-            </option>
-          ))}
-        </select>
+          onChange={(font) => updateBlockStyle(slideId, block.id, { fontFamily: font })}
+          inheritedFont={inheritedFont}
+          showInherit={true}
+        />
         <p className="text-xs text-brand-500">
           {style.fontFamily ? `Overriding inherited font (${inheritedFont})` : `Inherited from template`}
         </p>
