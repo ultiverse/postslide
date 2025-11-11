@@ -10,7 +10,7 @@ import { isTextBlock } from '@/lib/constants/blocks';
 import { useLayoutTheme } from '@/lib/theme/useLayoutTheme';
 
 // Layout constants
-const DEFAULT_FONT = 'Inter, system-ui, sans-serif';
+const DEFAULT_FONT = 'Inter';
 const DEFAULT_WIDTH = 1080;
 const DEFAULT_HEIGHT = 1080;
 
@@ -60,36 +60,33 @@ export function TwoColSlide({
 
   // Define text styles based on block kind
   const getStyleForBlock = useCallback((block: TextBlock): TextStyle => {
-    const baseFont = brand.fontBody || DEFAULT_FONT;
-    const headFont = brand.fontHead || baseFont;
-
     switch (block.kind) {
       case 'title':
         return {
-          fontFamily: headFont,
           ...typography.h1,
+          fontFamily: DEFAULT_FONT,
           color: colors.text,
         };
       case 'subtitle':
         return {
-          fontFamily: headFont,
           ...typography.h2,
+          fontFamily: DEFAULT_FONT,
           color: colors.textMuted,
         };
       case 'body':
         return {
-          fontFamily: baseFont,
           ...typography.body,
+          fontFamily: DEFAULT_FONT,
           color: colors.text,
         };
       case 'bullets':
         return {
-          fontFamily: baseFont,
           ...typography.body,
+          fontFamily: DEFAULT_FONT,
           color: colors.text,
         };
     }
-  }, [brand, typography, colors]);
+  }, [typography, colors]);
 
   // Render title block (if exists)
   const titleRendered = useMemo(() => {

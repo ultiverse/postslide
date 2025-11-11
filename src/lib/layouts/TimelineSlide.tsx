@@ -9,7 +9,7 @@ import { isTextBlock } from '@/lib/constants/blocks';
 import { useLayoutTheme } from '@/lib/theme/useLayoutTheme';
 
 // Layout constants
-const DEFAULT_FONT = 'Inter, system-ui, sans-serif';
+const DEFAULT_FONT = 'Inter';
 const DEFAULT_WIDTH = 1080;
 const DEFAULT_HEIGHT = 1080;
 const TITLE_GAP = 48;
@@ -62,22 +62,22 @@ export function TimelineSlide({
 
   // Define text styles (memoized)
   const titleStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.h1,
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.text,
-  }), [brand.fontHead, brand.fontBody, typography.h1, colors.text]);
+  }), [typography.h1, colors.text]);
 
   const labelStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.h2,
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.text,
-  }), [brand.fontHead, brand.fontBody, typography.h2, colors.text]);
+  }), [typography.h2, colors.text]);
 
   const descriptionStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontBody || DEFAULT_FONT,
     ...typography.caption,
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.textMuted,
-  }), [brand.fontBody, typography.caption, colors.textMuted]);
+  }), [typography.caption, colors.textMuted]);
 
   // Measure title
   const titleLayout = useMemo(() => {

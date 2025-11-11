@@ -9,4 +9,5 @@ export interface LayoutProps {
   height?: number // Artboard height (default 1080)
   safeInset?: number // Safe area inset (default 64)
   theme?: Theme // Optional theme override
+  onBlockClick?: (blockId: string) => void // Optional callback when a block is clicked
 }

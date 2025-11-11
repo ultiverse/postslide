@@ -11,7 +11,7 @@ import { isTextBlock } from '@/lib/constants/blocks';
 import { useLayoutTheme } from '@/lib/theme/useLayoutTheme';
 
 // Layout constants (kept for backward compatibility)
-const DEFAULT_FONT = 'Inter, system-ui, sans-serif';
+const DEFAULT_FONT = 'Inter';
 const DEFAULT_WIDTH = 1080;
 const DEFAULT_HEIGHT = 1080;
 
@@ -34,6 +34,7 @@ export function ListSlide({
   height = DEFAULT_HEIGHT,
   safeInset,
   theme: providedTheme,
+  onBlockClick,
 }: LayoutProps) {
   const measure = useMemo(() => createMeasurer(), []);
   const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme);
@@ -53,42 +54,44 @@ export function ListSlide({
 
   // Define text styles based on block kind (stable callback to satisfy hook deps)
   const getStyleForBlock = useCallback((block: TextBlock): TextStyle => {
-    const baseFont = brand.fontBody || DEFAULT_FONT;
-    const headFont = brand.fontHead || baseFont;
-
+    // Get base style from block kind
+    let baseStyle: TextStyle;
     switch (block.kind) {
       case 'title':
-        return {
-          fontFamily: headFont,
+        baseStyle = {
           ...typography.h1,
-          color: colors.text,
+          fontFamily: DEFAULT_FONT, // Apply after typography to ensure it's set
+          color: colors.primary, // Use brand primary for titles
         };
+        break;
       case 'subtitle':
-        return {
-          fontFamily: headFont,
+        baseStyle = {
           ...typography.h2,
-          color: colors.textMuted,
+          fontFamily: DEFAULT_FONT, // Apply after typography to ensure it's set
+          color: colors.textMuted, // Use muted gray for subtitles
         };
+        break;
       case 'body':
-        return {
-          fontFamily: baseFont,
-          ...typography.body,
-          color: colors.text,
-        };
       case 'bullets':
-        return {
-          fontFamily: baseFont,
-          ...typography.body,
-          color: colors.text,
-        };
       default:
-        return {
-          fontFamily: baseFont,
+        baseStyle = {
           ...typography.body,
+          fontFamily: DEFAULT_FONT, // Apply after typography to ensure it's set
           color: colors.text,
         };
     }
-  }, [brand, typography, colors]);
+
+    // Apply block-level style overrides
+    if (block.style) {
+      return {
+        ...baseStyle,
+        ...(block.style.color && { color: block.style.color }),
+        ...(block.style.fontFamily && { fontFamily: block.style.fontFamily }),
+      };
+    }
+
+    return baseStyle;
+  }, [typography, colors]);
 
   // Calculate block positions with vertical stacking
   const renderedBlocks = useMemo(() => {
@@ -190,14 +193,16 @@ export function ListSlide({
               y={rb.frame.y}
               width={rb.frame.w}
               height={rb.frame.h}
+              onBlockClick={onBlockClick}
             />
           );
         } else if (rb.block.kind === 'bullets') {
           const rendered = rb as RenderedBullet;
-          return <BulletBlock key={rb.block.id} renderBlock={rendered} />;
+          return <BulletBlock key={rb.block.id} renderBlock={rendered} onBlockClick={onBlockClick} />;
         }
         const rendered = rb as RenderedText;
-        return <TextBlock key={rb.block.id} renderBlock={rendered} />;
+        // Include fontFamily in key to force re-mount when font changes
+        return <TextBlock key={`${rb.block.id}-${rendered.style.fontFamily}`} renderBlock={rendered} onBlockClick={onBlockClick} />;
       })}
 
       {/* Decorative layer */}
@@ -226,8 +231,8 @@ type RenderedText = {
   block: TextBlock;
 };
 
-function TextBlock({ renderBlock }: { renderBlock: RenderedText; }) {
-  const { style, layout, frame, overflow } = renderBlock;
+function TextBlock({ renderBlock, onBlockClick }: { renderBlock: RenderedText; onBlockClick?: (blockId: string) => void; }) {
+  const { style, layout, frame, overflow, block } = renderBlock;
 
   return (
     <div
@@ -239,10 +244,13 @@ function TextBlock({ renderBlock }: { renderBlock: RenderedText; }) {
         height: frame.h,
         overflow: 'hidden',
       }}
+      data-block-kind={block.kind}
+      data-font-family={style.fontFamily}
+      onClick={() => onBlockClick?.(block.id)}
     >
       <div
         style={{
-          fontFamily: style.fontFamily,
+          fontFamily: `"${style.fontFamily}"`,
           fontWeight: style.fontWeight,
           fontSize: style.fontSize,
           lineHeight: `${style.lineHeight}px`,
@@ -276,8 +284,8 @@ type RenderedBullet = {
   block: TextBlock;
 };
 
-function BulletBlock({ renderBlock }: { renderBlock: RenderedBullet; }) {
-  const { style, layout, frame, overflow } = renderBlock;
+function BulletBlock({ renderBlock, onBlockClick }: { renderBlock: RenderedBullet; onBlockClick?: (blockId: string) => void; }) {
+  const { style, layout, frame, overflow, block } = renderBlock;
 
   return (
     <div
@@ -289,6 +297,7 @@ function BulletBlock({ renderBlock }: { renderBlock: RenderedBullet; }) {
         height: frame.h,
         overflow: 'hidden',
       }}
+      onClick={() => onBlockClick?.(block.id)}
     >
       <div
         style={{

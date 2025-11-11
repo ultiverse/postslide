@@ -11,6 +11,9 @@ interface SortableBlockCardProps {
   canMoveUp?: boolean;
   canMoveDown?: boolean;
   headerContent?: React.ReactNode;
+  onClick?: () => void;
+  isSelected?: boolean;
+  styleControls?: React.ReactNode;
 }
 
 export function SortableBlockCard({
@@ -22,6 +25,9 @@ export function SortableBlockCard({
   canMoveUp,
   canMoveDown,
   headerContent,
+  onClick,
+  isSelected,
+  styleControls,
 }: SortableBlockCardProps) {
   const {
     attributes,
@@ -48,6 +54,9 @@ export function SortableBlockCard({
         canMoveUp={canMoveUp}
         canMoveDown={canMoveDown}
         headerContent={headerContent}
+        onClick={onClick}
+        isSelected={isSelected}
+        styleControls={styleControls}
       >
         {children}
       </BlockCard>

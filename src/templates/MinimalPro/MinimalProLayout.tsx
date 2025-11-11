@@ -17,14 +17,13 @@ const ARTBOARD_SPEC: ArtboardSpec = {
   baseline: 8,
 };
 
-function getStyleForBlock(block: TextBlockType, theme: Theme, brand: Brand): TextStyle {
-  const baseFont = brand.fontBody || 'Inter, system-ui, sans-serif';
-  const headFont = brand.fontHead || baseFont;
+function getStyleForBlock(block: TextBlockType, theme: Theme): TextStyle {
+  const defaultFont = 'Inter';
 
   switch (block.kind) {
     case 'title':
       return {
-        fontFamily: headFont,
+        fontFamily: defaultFont,
         fontWeight: 700,
         fontSize: 80,
         lineHeight: 88,
@@ -32,7 +31,7 @@ function getStyleForBlock(block: TextBlockType, theme: Theme, brand: Brand): Tex
       };
     case 'subtitle':
       return {
-        fontFamily: headFont,
+        fontFamily: defaultFont,
         fontWeight: 600,
         fontSize: 52,
         lineHeight: 64,
@@ -40,7 +39,7 @@ function getStyleForBlock(block: TextBlockType, theme: Theme, brand: Brand): Tex
       };
     case 'body':
       return {
-        fontFamily: baseFont,
+        fontFamily: defaultFont,
         fontWeight: 400,
         fontSize: 36,
         lineHeight: 48,
@@ -48,7 +47,7 @@ function getStyleForBlock(block: TextBlockType, theme: Theme, brand: Brand): Tex
       };
     case 'bullets':
       return {
-        fontFamily: baseFont,
+        fontFamily: defaultFont,
         fontWeight: 400,
         fontSize: 32,
         lineHeight: 48,
@@ -113,7 +112,7 @@ export function MinimalProLayout({ slide, brand }: { slide: Slide; brand: Brand 
       } else {
         // Text block
         const textBlock = block as TextBlockType;
-        const style: TextStyle = getStyleForBlock(textBlock, theme, brand);
+        const style: TextStyle = getStyleForBlock(textBlock, theme);
 
         let layout;
         let frameH;
@@ -153,7 +152,7 @@ export function MinimalProLayout({ slide, brand }: { slide: Slide; brand: Brand 
         return result;
       }
     });
-  }, [contentBlocks, measure, cr, theme, brand]);
+  }, [contentBlocks, measure, cr, theme]);
 
   const artboardStyle: React.CSSProperties = {
     width: spec.width,

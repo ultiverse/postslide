@@ -9,7 +9,7 @@ import { isTextBlock } from '@/lib/constants/blocks'
 import { useLayoutTheme } from '@/lib/theme/useLayoutTheme'
 
 // Layout constants
-const DEFAULT_FONT = 'Inter, system-ui, sans-serif'
+const DEFAULT_FONT = 'Inter'
 const DEFAULT_WIDTH = 1080
 const DEFAULT_HEIGHT = 1080
 
@@ -56,16 +56,16 @@ export function CoverSlide({
 
   // Text styles for cover slide - memoized to avoid changing object identities
   const titleStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.display,
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.text,
-  }), [brand.fontHead, brand.fontBody, typography.display, colors.text]);
+  }), [typography.display, colors.text]);
 
   const subtitleStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontBody || DEFAULT_FONT,
     ...typography.h2,
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.textMuted,
-  }), [brand.fontBody, typography.h2, colors.textMuted]);
+  }), [typography.h2, colors.textMuted]);
 
   // Measure text blocks
   const titleLayout = useMemo(() => {

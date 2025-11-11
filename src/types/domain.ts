@@ -1,9 +1,17 @@
 import type { ReactElement } from 'react';
 
+// Block-level style overrides
+export type BlockStyle = {
+  color?: string            // Text color override
+  fontFamily?: string       // Font family override ('inherit' or font name)
+  textAlign?: 'left' | 'center' | 'right'  // Text alignment
+  uppercase?: boolean       // Text transformation
+}
+
 // Text-based blocks with editable content
 export type TextBlock =
-  | { id: string; kind: 'title' | 'subtitle' | 'body'; text: string }
-  | { id: string; kind: 'bullets'; bullets: string[] }
+  | { id: string; kind: 'title' | 'subtitle' | 'body'; text: string; style?: BlockStyle }
+  | { id: string; kind: 'bullets'; bullets: string[]; style?: BlockStyle }
 
 // Visual blocks
 export type ImageBlock = {
@@ -48,10 +56,13 @@ export type Project = {
   id: string
   title: string
   slides: Slide[]
-  brand?: { primary: string; fontHead: string; fontBody: string }
+  brand?: { primary: string }
 }
 
-export type Brand = { primary: string; fontHead: string; fontBody: string }
+// Extended brand configuration with customization options
+export type Brand = {
+  primary: string      // Primary brand color
+}
 
 export type CoverStyle = 'title-heavy' | 'image-forward' | 'stat'
 
@@ -146,7 +157,7 @@ export type Template = {
   schema?: TemplateSchema // Optional: new schema-based definition
   theme?: import('../lib/types/design').ThemeDefinition // Optional: theme definition
   themeVariants?: Record<string, import('../lib/types/design').ThemeDefinition> // Optional: theme variants
-  layout: (slide: Slide, brand: Brand, slideIndex?: number, totalSlides?: number) => ReactElement // Position-aware for decorators
+  layout: (slide: Slide, brand: Brand, slideIndex?: number, totalSlides?: number, onBlockClick?: (blockId: string) => void) => ReactElement // Position-aware for decorators
   preview?: () => ReactElement // Optional: custom preview for gallery
   defaults: Partial<Slide>
   coverStyle?: CoverStyle

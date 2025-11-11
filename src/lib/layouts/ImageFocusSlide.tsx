@@ -9,7 +9,7 @@ import { isTextBlock } from '@/lib/constants/blocks';
 import { useLayoutTheme } from '@/lib/theme/useLayoutTheme';
 
 // Layout constants
-const DEFAULT_FONT = 'Inter, system-ui, sans-serif';
+const DEFAULT_FONT = 'Inter';
 const DEFAULT_WIDTH = 1080;
 const DEFAULT_HEIGHT = 1080;
 const IMAGE_MAX_HEIGHT_RATIO = 0.65; // Image takes up to 65% of content height
@@ -57,16 +57,16 @@ export function ImageFocusSlide({
 
   // Define text styles (memoized)
   const titleStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.h2,
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.text,
-  }), [brand.fontHead, brand.fontBody, typography.h2, colors.text]);
+  }), [typography.h2, colors.text]);
 
   const captionStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontBody || DEFAULT_FONT,
     ...typography.caption,
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.textMuted,
-  }), [brand.fontBody, typography.caption, colors.textMuted]);
+  }), [typography.caption, colors.textMuted]);
 
   // Calculate image dimensions
   const maxImageHeight = cr.h * IMAGE_MAX_HEIGHT_RATIO;

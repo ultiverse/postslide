@@ -2,8 +2,7 @@
 import type { Template, Slide, Brand } from '@/types/domain';
 import { renderSlideFromSchema } from '@/lib/layouts';
 import { DEFAULT_LIGHT_THEME, DEFAULT_DARK_THEME } from '@/lib/theme';
-import { MinimalProLayout } from './MinimalProLayout';
-import { minimalProSchema } from './schema';
+import { createMinimalProSchema, minimalProSchema } from './schema';
 import { PreviewBlock } from './PreviewBlock';
 
 // Export types
@@ -16,7 +15,7 @@ export { BulletBlock } from './BulletBlock';
 export { PreviewBlock } from './PreviewBlock';
 
 // Export schema
-export { minimalProSchema } from './schema';
+export { createMinimalProSchema, minimalProSchema } from './schema';
 
 /**
  * Minimal Pro Template
@@ -34,13 +33,12 @@ export const minimalPro: Template = {
     light: DEFAULT_LIGHT_THEME,
     dark: DEFAULT_DARK_THEME,
   },
-  layout: (slide: Slide, brand: Brand, slideIndex?: number, totalSlides?: number) => {
-    // Use schema-driven renderer if schema is available
-    if (minimalProSchema) {
-      return renderSlideFromSchema(minimalProSchema, slide, brand, minimalPro, slideIndex, totalSlides);
-    }
-    // Fallback to original implementation
-    return <MinimalProLayout slide={slide} brand={brand} />;
+  layout: (slide: Slide, brand: Brand, slideIndex?: number, totalSlides?: number, onBlockClick?: (blockId: string) => void) => {
+    // Create schema with brand-aware colors
+    const brandedSchema = createMinimalProSchema(brand);
+
+    // Use schema-driven renderer
+    return renderSlideFromSchema(brandedSchema, slide, brand, minimalPro, slideIndex, totalSlides, onBlockClick);
   },
   preview: () => <PreviewBlock />,
   defaults: {

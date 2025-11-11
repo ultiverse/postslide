@@ -9,7 +9,7 @@ import { isTextBlock } from '@/lib/constants/blocks';
 import { useLayoutTheme } from '@/lib/theme/useLayoutTheme';
 
 // Layout constants
-const DEFAULT_FONT = 'Inter, system-ui, sans-serif';
+const DEFAULT_FONT = 'Inter';
 const DEFAULT_WIDTH = 1080;
 const DEFAULT_HEIGHT = 1080;
 
@@ -55,16 +55,16 @@ export function QuoteSlide({
 
   // Text styles for quote components (memoized so useMemo deps are stable)
   const quoteStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.quote,
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.text,
-  }), [brand.fontHead, brand.fontBody, typography.quote, colors.text]);
+  }), [typography.quote, colors.text]);
 
   const attributionStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontBody || DEFAULT_FONT,
     ...typography.caption,
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.textMuted,
-  }), [brand.fontBody, typography.caption, colors.textMuted]);
+  }), [typography.caption, colors.textMuted]);
 
   // Measure text blocks
   const quoteLayout = useMemo(() => {

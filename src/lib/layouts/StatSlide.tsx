@@ -9,7 +9,7 @@ import { isTextBlock } from '@/lib/constants/blocks';
 import { useLayoutTheme } from '@/lib/theme/useLayoutTheme';
 
 // Layout constants
-const DEFAULT_FONT = 'Inter, system-ui, sans-serif';
+const DEFAULT_FONT = 'Inter';
 const DEFAULT_WIDTH = 1080;
 const DEFAULT_HEIGHT = 1080;
 
@@ -32,6 +32,8 @@ export function StatSlide({
   safeInset,
   theme: providedTheme,
 }: LayoutProps) {
+  console.log('[StatSlide] Component rendering with brand.primary:', brand.primary);
+
   const measure = useMemo(() => createMeasurer(), []);
   const { spacing, typography, colors } = useLayoutTheme(brand, providedTheme);
 
@@ -58,22 +60,22 @@ export function StatSlide({
 
   // Text styles for stat components (memoized)
   const numberStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontHead || brand.fontBody || DEFAULT_FONT,
     ...typography.stat,
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.primary, // Use brand color for emphasis
-  }), [brand.fontHead, brand.fontBody, typography.stat, colors.primary]);
+  }), [typography.stat, colors.primary]);
 
   const labelStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontBody || DEFAULT_FONT,
     ...typography.h2,
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.textMuted,
-  }), [brand.fontBody, typography.h2, colors.textMuted]);
+  }), [typography.h2, colors.textMuted]);
 
   const contextStyle: TextStyle = useMemo(() => ({
-    fontFamily: brand.fontBody || DEFAULT_FONT,
     ...typography.caption,
+    fontFamily: DEFAULT_FONT, // Apply after typography to override
     color: colors.text,
-  }), [brand.fontBody, typography.caption, colors.text]);
+  }), [typography.caption, colors.text]);
 
   // Measure text blocks
   const numberLayout = useMemo(() => {

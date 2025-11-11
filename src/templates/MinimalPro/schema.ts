@@ -1,73 +1,77 @@
-import type { TemplateSchema } from '@/types/domain';
+import type { TemplateSchema, Brand } from '@/types/domain';
 
 /**
- * Minimal Pro Template Schema
+ * Minimal Pro Template Schema (Factory Function)
  *
  * Defines layouts, decorators, and visual configuration for the Minimal Pro template.
+ * Takes brand configuration to apply brand primary color to decorators and progress bar.
  */
-export const minimalProSchema: TemplateSchema = {
-  id: 'minimal-pro',
-  name: 'Minimal Pro',
-  description: 'Clean, professional layout with vertical block stacking and generous spacing',
-  theme: {
-    id: 'light',
-    variants: ['light', 'dark'],
-  },
-  decorators: {
-    // Navigation arrow on first slide (bottom-right, follows outer gutter)
-    first: [
-      {
-        type: 'arrow',
-        position: { anchor: 'bottom-right', offsetX: -80, offsetY: -80 },
-        props: {
-          direction: 'right',
-          size: 120,
-          color: '#3b82f6',
+export function createMinimalProSchema(brand?: Brand): TemplateSchema {
+  const primaryColor = brand?.primary || '#3b82f6';
+
+  return {
+    id: 'minimal-pro',
+    name: 'Minimal Pro',
+    description: 'Clean, professional layout with vertical block stacking and generous spacing',
+    theme: {
+      id: 'light',
+      variants: ['light', 'dark'],
+    },
+    decorators: {
+      // Navigation arrow on first slide (bottom-right, follows outer gutter)
+      first: [
+        {
+          type: 'arrow',
+          position: { anchor: 'bottom-right', offsetX: -80, offsetY: -80 },
+          props: {
+            direction: 'right',
+            size: 120,
+            color: primaryColor,
+          },
         },
-      },
-    ],
-    // Navigation arrows on middle slides (both sides, follow outer gutter)
-    middle: [
-      {
-        type: 'arrow',
-        position: { anchor: 'bottom-left', offsetX: 80, offsetY: -80 },
-        props: {
-          direction: 'left',
-          size: 120,
-          color: '#3b82f6',
+      ],
+      // Navigation arrows on middle slides (both sides, follow outer gutter)
+      middle: [
+        {
+          type: 'arrow',
+          position: { anchor: 'bottom-left', offsetX: 80, offsetY: -80 },
+          props: {
+            direction: 'left',
+            size: 120,
+            color: primaryColor,
+          },
         },
-      },
-      {
-        type: 'arrow',
-        position: { anchor: 'bottom-right', offsetX: -80, offsetY: -80 },
-        props: {
-          direction: 'right',
-          size: 120,
-          color: '#3b82f6',
+        {
+          type: 'arrow',
+          position: { anchor: 'bottom-right', offsetX: -80, offsetY: -80 },
+          props: {
+            direction: 'right',
+            size: 120,
+            color: primaryColor,
+          },
         },
-      },
-    ],
-    // Back arrow on last slide (bottom-left, follows outer gutter)
-    last: [
-      {
-        type: 'arrow',
-        position: { anchor: 'bottom-left', offsetX: 80, offsetY: -80 },
-        props: {
-          direction: 'left',
-          size: 120,
-          color: '#3b82f6',
+      ],
+      // Back arrow on last slide (bottom-left, follows outer gutter)
+      last: [
+        {
+          type: 'arrow',
+          position: { anchor: 'bottom-left', offsetX: 80, offsetY: -80 },
+          props: {
+            direction: 'left',
+            size: 120,
+            color: primaryColor,
+          },
         },
-      },
-    ],
-  },
-  progressBar: {
-    enabled: true,
-    position: 'bottom',
-    height: 4,
-    startColor: '#3b82f6',
-    endColor: '#8b5cf6',
-    style: 'gradient',
-  },
+      ],
+    },
+    progressBar: {
+      enabled: true,
+      position: 'bottom',
+      height: 4,
+      startColor: primaryColor,
+      endColor: '#8b5cf6',
+      style: 'gradient',
+    },
   layouts: [
     {
       id: 'list',
@@ -161,4 +165,8 @@ export const minimalProSchema: TemplateSchema = {
       ],
     },
   ],
-};
+  };
+}
+
+// Backward compatibility export
+export const minimalProSchema = createMinimalProSchema();

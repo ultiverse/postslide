@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { GripVertical, ChevronUp, ChevronDown, X } from 'lucide-react';
+import { GripVertical, ChevronUp, ChevronDown, X, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IconButton } from '@/components/ui/Button/IconButton';
 
@@ -13,6 +13,9 @@ interface BlockCardProps {
   canMoveDown?: boolean;
   dragHandleProps?: React.ButtonHTMLAttributes<HTMLButtonElement>;
   headerContent?: React.ReactNode;
+  onClick?: () => void;
+  isSelected?: boolean;
+  styleControls?: React.ReactNode;
 }
 
 const BlockCard = React.forwardRef<HTMLDivElement, BlockCardProps>(
@@ -27,15 +30,23 @@ const BlockCard = React.forwardRef<HTMLDivElement, BlockCardProps>(
       canMoveDown = true,
       dragHandleProps,
       headerContent,
+      onClick,
+      isSelected,
+      styleControls,
       ...props
     },
     ref
   ) => {
+    const [showStyleControls, setShowStyleControls] = React.useState(false);
     return (
       <div
         ref={ref}
+        onClick={onClick}
         className={cn(
-          'bg-gradient-to-br from-white to-brand-50/30 border border-brand-200/50 rounded-lg shadow-sm hover:shadow-md hover:border-brand-300/70 transition-all overflow-hidden',
+          'bg-gradient-to-br from-white to-brand-50/30 border rounded-lg shadow-sm hover:shadow-md transition-all overflow-hidden',
+          isSelected
+            ? 'border-brand-500 ring-2 ring-brand-500/20'
+            : 'border-brand-200/50 hover:border-brand-300/70',
           className
         )}
         {...props}
@@ -65,6 +76,21 @@ const BlockCard = React.forwardRef<HTMLDivElement, BlockCardProps>(
 
           {/* Control buttons */}
           <div className="flex items-center gap-1">
+            {styleControls && (
+              <IconButton
+                icon={Settings}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowStyleControls(!showStyleControls);
+                }}
+                variant="ghost"
+                size="xs"
+                title={showStyleControls ? "Hide style controls" : "Show style controls"}
+                className={cn(
+                  showStyleControls && "bg-brand-100 text-brand-700"
+                )}
+              />
+            )}
             {onMoveUp && (
               <IconButton
                 icon={ChevronUp}
@@ -99,6 +125,9 @@ const BlockCard = React.forwardRef<HTMLDivElement, BlockCardProps>(
 
         {/* Content */}
         <div className="p-3">{children}</div>
+
+        {/* Style Controls (conditionally rendered) */}
+        {styleControls && showStyleControls && styleControls}
       </div>
     );
   }
