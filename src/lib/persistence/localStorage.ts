@@ -1,32 +1,45 @@
 /**
  * LocalStorage Persistence Utilities
- * Handles saving and loading project data with brand and block styles
+ * Supports multiple projects with individual storage keys
  */
 
 import type { Project } from '@/types/domain'
 import { APP_STORAGE_PREFIX } from '@/lib/constants/app'
 
-// Export the storage key so other modules can use the same key
-export const PROJECT_STORAGE_KEY = `${APP_STORAGE_PREFIX}_project`
+// Storage keys
+export const CURRENT_PROJECT_KEY = `${APP_STORAGE_PREFIX}_current_project`
+export const LAST_URL_KEY = `${APP_STORAGE_PREFIX}_last_url`
 
 /**
- * Save project to localStorage
+ * Get storage key for a specific project
+ */
+function getProjectKey(projectId: string): string {
+  return `${APP_STORAGE_PREFIX}_project_${projectId}`
+}
+
+/**
+ * Save project to localStorage using its own key
  */
 export function saveProject(project: Project): void {
   try {
+    const projectKey = getProjectKey(project.id)
     const json = JSON.stringify(project)
-    localStorage.setItem(PROJECT_STORAGE_KEY, json)
+    localStorage.setItem(projectKey, json)
+
+    // Update current project reference
+    localStorage.setItem(CURRENT_PROJECT_KEY, project.id)
   } catch (error) {
     console.error('Failed to save project to localStorage:', error)
   }
 }
 
 /**
- * Load project from localStorage
+ * Load a specific project by ID
  */
-export function loadProject(): Project | null {
+export function loadProject(projectId: string): Project | null {
   try {
-    const json = localStorage.getItem(PROJECT_STORAGE_KEY)
+    const projectKey = getProjectKey(projectId)
+    const json = localStorage.getItem(projectKey)
     if (!json) return null
 
     const project = JSON.parse(json) as Project
@@ -38,22 +51,112 @@ export function loadProject(): Project | null {
 }
 
 /**
- * Clear project from localStorage
+ * Load the current project (last active)
  */
-export function clearProject(): void {
+export function loadCurrentProject(): Project | null {
   try {
-    localStorage.removeItem(PROJECT_STORAGE_KEY)
+    const currentProjectId = localStorage.getItem(CURRENT_PROJECT_KEY)
+    if (!currentProjectId) return null
+
+    return loadProject(currentProjectId)
   } catch (error) {
-    console.error('Failed to clear project from localStorage:', error)
+    console.error('Failed to load current project:', error)
+    return null
   }
 }
 
 /**
- * Check if there's a saved project in localStorage
+ * Get the current project ID
  */
-export function hasSavedProject(): boolean {
+export function getCurrentProjectId(): string | null {
   try {
-    return localStorage.getItem(PROJECT_STORAGE_KEY) !== null
+    return localStorage.getItem(CURRENT_PROJECT_KEY)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Set the current project ID
+ */
+export function setCurrentProjectId(projectId: string): void {
+  try {
+    localStorage.setItem(CURRENT_PROJECT_KEY, projectId)
+  } catch (error) {
+    console.error('Failed to set current project:', error)
+  }
+}
+
+/**
+ * Delete a specific project
+ */
+export function deleteProject(projectId: string): void {
+  try {
+    const projectKey = getProjectKey(projectId)
+    localStorage.removeItem(projectKey)
+
+    // Clear current project if it was the deleted one
+    const currentId = getCurrentProjectId()
+    if (currentId === projectId) {
+      localStorage.removeItem(CURRENT_PROJECT_KEY)
+    }
+  } catch (error) {
+    console.error('Failed to delete project from localStorage:', error)
+  }
+}
+
+/**
+ * Get all project IDs from localStorage
+ */
+export function getAllProjectIds(): string[] {
+  try {
+    const projectIds: string[] = []
+    const prefix = `${APP_STORAGE_PREFIX}_project_`
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key?.startsWith(prefix)) {
+        const projectId = key.substring(prefix.length)
+        projectIds.push(projectId)
+      }
+    }
+
+    return projectIds
+  } catch (error) {
+    console.error('Failed to get project IDs:', error)
+    return []
+  }
+}
+
+/**
+ * Save last URL
+ */
+export function saveLastUrl(url: string): void {
+  try {
+    localStorage.setItem(LAST_URL_KEY, url)
+  } catch (error) {
+    console.error('Failed to save last URL:', error)
+  }
+}
+
+/**
+ * Load last URL
+ */
+export function loadLastUrl(): string | null {
+  try {
+    return localStorage.getItem(LAST_URL_KEY)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Check if a project exists in localStorage
+ */
+export function hasProject(projectId: string): boolean {
+  try {
+    const projectKey = getProjectKey(projectId)
+    return localStorage.getItem(projectKey) !== null
   } catch {
     return false
   }

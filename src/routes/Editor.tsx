@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useAutosave } from '@/hooks/useAutosave';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useFontLoader } from '@/hooks/useFontLoader';
 import { LeftPane } from '@/components/editor/LeftPane';
@@ -9,7 +8,6 @@ import { RightPane } from '@/components/editor/RightPane';
 const MIN_WIDTH = 1024;
 
 export default function Editor() {
-    useAutosave();
     useKeyboardShortcuts();
     useFontLoader();
 
