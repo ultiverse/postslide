@@ -59,7 +59,8 @@ export function useUrlSync() {
 
     // Save current URL as last URL
     saveLastUrl(window.location.href)
-  }, []) // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Only run on mount - intentionally ignoring deps
 
   // Update URL when project or slide changes (after initialization)
   useEffect(() => {
@@ -117,5 +118,5 @@ export function useUrlSync() {
     })
 
     return cleanup
-  }, [project.id, selectedSlideId, setProject, setSelectedSlide])
+  }, [project.id, project.slides, selectedSlideId, setProject, setSelectedSlide])
 }
