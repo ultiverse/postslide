@@ -1,9 +1,44 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage, StateStorage } from 'zustand/middleware'
 import type { Project, Slide, SlideBlock, ImageBlock, BackgroundBlock, DecorativeBlock, Brand, BlockStyle } from '@/types/domain'
 import { createBlock } from '@/lib/constants/blocks'
 import { getLayout, getSuggestedBlocksForLayout } from '@/lib/layouts/utils'
-import { PROJECT_STORAGE_KEY } from '@/lib/persistence/localStorage'
+import { saveProject, loadCurrentProject } from '@/lib/persistence/localStorage'
+
+// Custom storage implementation that uses our multi-project localStorage system
+const projectStorage: StateStorage = {
+  getItem: (): string | null => {
+    // Load the current project
+    const project = loadCurrentProject()
+    if (!project) return null
+
+    // Return in Zustand's expected format
+    return JSON.stringify({
+      state: {
+        project,
+        selectedSlideId: null, // Default - will be set by the store
+      },
+      version: 0,
+    })
+  },
+  setItem: (_name: string, value: string): void => {
+    try {
+      const parsed = JSON.parse(value)
+      const state = parsed.state
+
+      if (state?.project) {
+        // Save the project using our multi-project system
+        saveProject(state.project)
+      }
+    } catch (error) {
+      console.error('Failed to save project:', error)
+    }
+  },
+  removeItem: (): void => {
+    // We don't remove projects automatically - they're managed separately
+    // This is called when clearing the store, but we keep projects in storage
+  },
+}
 
 interface ProjectState {
   project: Project
@@ -522,7 +557,8 @@ export const useProject = create<ProjectState>()(
       }),
     }),
     {
-      name: PROJECT_STORAGE_KEY,
+      name: 'project-store', // Name doesn't matter since we use custom storage
+      storage: createJSONStorage(() => projectStorage),
       partialize: (state) => ({
         project: state.project,
         selectedSlideId: state.selectedSlideId,
